@@ -1,8 +1,8 @@
 # HCL Assistant Product Status
 
-**L2_IMPLEMENTING / MOCK_UI_FUNCTIONAL**
+**L2_IMPLEMENTING / SYNTHETIC_REPLAY_ONLY**
 
-**NEXT_READY: L2-02_SYNTHETIC_COGNITION_SYNTHESIS**
+**NEXT_READY: L2-03_EXPLAIN_MEMORY_CONTROLS**
 
 - physical split = COMPLETE
 - repository isolation = COMPLETE at repository boundary

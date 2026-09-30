@@ -39,6 +39,7 @@ class Context:
         for ref in refs:
             source=self.store.source(tenant,ref,conversation,topic); roots.add(source['family'])
         groups=data.get('support_groups',[])
+        support_roots=set()
         for group in groups:
             if not group:
                 raise Fault(422,'Empty support group')
@@ -48,6 +49,13 @@ class Context:
                 if support['lifecycle_status']!='ACTIVE':
                     raise Fault(422,'Inactive supporting record')
                 roots.update(support['provenance_roots'])
+                support_roots.update(support['provenance_roots'])
+        if data['kind']=='SYSTEM_INTERPRETATION': roots=support_roots
+        repetition=None
+        if data['kind']=='USER_GUESS':
+            prior=[r for r in self.records(tenant).values() if r['kind']=='USER_GUESS' and r['content']==data['content'] and r['subject_refs']==data.get('subject_refs',[]) and r['branch_id']==branch and (r['conversation_id']==conversation or (topic and r['topic_id']==topic)) and r['lifecycle_status'] not in {'DELETED','STOPPED'}]
+            if prior:
+                roots=set(prior[0]['provenance_roots']); repetition=prior[0]['record_id']
         if not roots:
             raise Fault(422,'Rootless context/cycle is unsupported')
         if data['kind']=='SYSTEM_INTERPRETATION' and not groups:
@@ -55,6 +63,7 @@ class Context:
         record={'schema_version':'1.0','record_id':uid(),'tenant_id':tenant,'conversation_id':conversation,'topic_id':topic,'branch_id':branch,'kind':data['kind'],'content':data['content'],'subject_refs':data.get('subject_refs',[]),'source_refs':refs,'origin':'system' if data['kind']=='SYSTEM_INTERPRETATION' else data.get('origin','direct_user'),'epistemic_status':'CONDITIONAL_SUPPORT' if data['kind'] in {'SYSTEM_INTERPRETATION','HYPOTHETICAL','CONDITIONAL_RULE'} else 'REPORTED','valid_time':data.get('valid_time',{'start':None,'end':None,'before':[]}), 'recorded_at':now(), 'created_at':now(),'disclosure_time':data.get('disclosure_time'), 'person_access_events':data.get('person_access_events',[]),'retention_policy':data.get('retention_policy',{'expires_at':None}),'reuse_policy':{'memory':data.get('memory','CONVERSATION')},'provenance_roots':sorted(roots),'support_groups':groups,'challenges':data.get('challenges',[]),'assumptions':data.get('assumptions',[]),'read_dependencies':data.get('read_dependencies',{'records':list({i for g in groups for i in g}),'absence':[]}), 'lifecycle_status':'ACTIVE'}
         for identity in record['challenges']+record['read_dependencies'].get('records',[]):
             self.check_scope(self.get(tenant,identity),conversation,topic,branch)
+        if repetition: record['repetition_of']=repetition
         return self.save(tenant,record,version)
 
     @staticmethod

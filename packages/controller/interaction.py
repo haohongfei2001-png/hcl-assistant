@@ -6,6 +6,8 @@ import time
 from packages.store.ledger import Fault, canonical, digest, now, uid
 from packages.policy.privacy import PolicyContext
 from packages.adapter.mock import MockAdapter
+from packages.mock_runtime.scripted import extract
+from packages.synthesis.answer import synthesize
 
 
 class Controller:
@@ -37,17 +39,21 @@ class Controller:
             ref={'source_id':source['id'],'version':source['version'],'sha256':source['sha256'],'span':[0,len(text)]}
             event_id=uid(); changes=[]; invalidated=[]; unresolved=[]
             typed=event.get('records',[])
+            revisions=event.get('revisions',[])
+            if not typed and not revisions:
+                typed,revisions,unparsed=extract(text,self.context,tenant,conversation,topic)
+                unresolved=[{'event_id':event_id,'reason':reason} for reason in unparsed]
             for data in typed:
                 data={**data,'source_refs':data.get('source_refs') or [ref],'memory':memory}
                 receipt=self.context.process(tenant,conversation,topic,{'action':'ADD','new_record':data},version)
                 changes+=receipt['changed_ids']; invalidated+=receipt['invalidated_ids']
-            for command in event.get('revisions',[]):
+            for command in revisions:
                 command={**command,'branch_id':scope.get('branch_id','actual')}
                 if command.get('new_record'):
                     command['new_record']={**command['new_record'],'source_refs':command['new_record'].get('source_refs') or [ref],'memory':memory}
                 receipt=self.context.process(tenant,conversation,topic,command,version)
                 changes+=receipt['changed_ids']; invalidated+=receipt['invalidated_ids']
-            if not typed and not event.get('revisions') and not self.direct(text):
+            if not typed and not revisions and not self.direct(text) and not unresolved:
                 unresolved=[{'event_id':event_id,'reason':'Unsupported text; no semantic extraction claimed'}]
             committed={'schema_version':'1.0','id':event_id,'tenant_id':tenant,'conversation_id':conversation,'topic_id':topic,'state_version':version,'source_refs':[ref], 'recorded_at':now(),'status':'UNRESOLVED' if unresolved else 'RECORDED'}
             self.store.db.execute('INSERT INTO events VALUES(?,?,?,?,?)',(event_id,tenant,conversation,version,canonical(committed)))
@@ -92,8 +98,9 @@ class Controller:
 
     def preparation(self, run, text):
         refs=run['selected_context']['record_ids']
-        answer='2 + 2 = 4。' if self.direct(text) else ('已记录你提供的背景；这些是报告或猜测，仍需核对关键条件。' if refs else '这段输入尚未解析。可以说明具体事件、人物和时间；当前模拟不具备任意语言理解能力。')
-        prep={'snapshot_id':run['snapshot_id'],'valid_context_refs':refs,'operation_output_refs':[],'main_judgment':answer,'claim_bindings':[{'claim':r['content'],'record_id':r['record_id'],'kind':r['kind']} for r in run['selected_context']['records']],'alternatives':[],'material_uncertainties':[] if self.direct(text) else ['背景未验证；模拟不覆盖任意语义。'],'assumptions':run['selected_context']['assumptions'],'forbidden_promotions':['guess_to_fact','system_to_independent_evidence'],'response_intent':'answer','length_style_policy':'concise','coverage':run['selected_context']['coverage'],'resource_remaining':{'provider_calls':0}}
+        answer,claims,uncertainties=synthesize(run['selected_context']['records'])
+        if self.direct(text): answer,claims,uncertainties='2 + 2 = 4。',[],[]
+        prep={'snapshot_id':run['snapshot_id'],'valid_context_refs':refs,'operation_output_refs':[],'main_judgment':answer,'claim_bindings':claims,'alternatives':[],'material_uncertainties':uncertainties,'assumptions':run['selected_context']['assumptions'],'forbidden_promotions':['guess_to_fact','system_to_independent_evidence'],'response_intent':'answer','length_style_policy':'concise','coverage':run['selected_context']['coverage'],'resource_remaining':{'provider_calls':0}}
         return answer,prep
 
     def finish(self, tenant, run_id, delay=0):
@@ -131,6 +138,7 @@ class Controller:
                 if not current['pending']: return
                 answer_id=uid()
                 current['answer']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'text':answer,'claim_bindings':prep['claim_bindings'],'citation_refs':run['selected_context']['source_versions'],'material_uncertainties':prep['material_uncertainties'],'coverage':prep['coverage'],'published_at':now(),'status':'PUBLISHED'}
+                current['scripted_extraction']='EXPLICIT_PREFIX_GRAMMAR_ONLY'
                 current['explain_projection']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'judgment_basis':prep['claim_bindings'],'source_links':run['selected_context']['source_versions'],'redactions':[],'recorded_at':now()}
                 current['pending']=False; current['run_receipt']['route']=current['route']; current['run_receipt']['outcome']='UNRESOLVED' if current['unresolved_updates'] else 'COMPLETED'; current['run_receipt']['finished_at']=now(); current['run_receipt']['usage']['latency_ms']=round((time.monotonic()-start)*1000)
                 self.emit(current,'answer.completed',current['answer']); self.store.put(tenant,'run',current)

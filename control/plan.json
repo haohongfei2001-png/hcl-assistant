@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "product": "HCL Assistant",
   "phase": "L2_IMPLEMENTING",
-  "next_ready": "L2-02_SYNTHETIC_COGNITION_SYNTHESIS",
-  "next_package_id": "L2-02",
+  "next_ready": "L2-03_EXPLAIN_MEMORY_CONTROLS",
+  "next_package_id": "L2-03",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2-04_OR_L3_GATE",
   "future_work_allowed_through": "L2-04",
@@ -102,8 +102,9 @@
       "depends_on": [
         "L2-01"
       ],
-      "state": "NEXT_READY",
-      "delta": "multi-session synthetic cognition and natural synthesis"
+      "state": "COMPLETE",
+      "delta": "multi-session synthetic cognition and natural synthesis",
+      "evidence": "SYNTHETIC_REPLAY_ONLY"
     },
     {
       "id": "L2-03",
@@ -111,7 +112,7 @@
       "depends_on": [
         "L2-02"
       ],
-      "state": "WAITING_DEPENDENCY",
+      "state": "NEXT_READY",
       "delta": "Explain correction and memory controls"
     },
     {
@@ -135,7 +136,7 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "MOCK_UI_FUNCTIONAL",
+    "product_implementation": "SYNTHETIC_REPLAY_ONLY",
     "real_runtime": "NOT_INTEGRATED",
     "efficacy": "UNTESTED"
   },
