@@ -6,6 +6,14 @@ Assistant → 按需 Explain → 高级只读 HCL Lab。所有模拟输入、修
 
 Python >=3.11 标准库 / SQLite；React/TypeScript/Vite 与 headless Playwright 精确版本在 npm lock。无托管服务、provider transport、研究代码或部署依赖。SQLite 与临时测试输出不入 Git。
 
+## GitHub Pages synthetic preview
+
+A browser-only synthetic preview is published at:
+
+https://haohongfei2001-png.github.io/hcl-assistant/
+
+It is intentionally narrower than the local L2 product: no Python/SQLite backend, no real HCL runtime, no provider calls, no server-side persistence, and no research/evaluation data. Preview state stays in the visitor's browser localStorage. **Do not enter real private data.** See [Pages preview boundary](docs/PAGES_PREVIEW.md).
+
 ## Run the synthetic desktop locally
 
 仅使用合成数据。HTTP 服务固定 loopback，身份为隔离测试身份，不是生产认证。临时会话正文只留进程内存，重启丢失。持久会话可重启恢复；中断 run 标 UNKNOWN，不自动重调 adapter。
@@ -33,4 +41,4 @@ npm run test:browser
 
 Hosted `HCL Assistant Planning` materializes only this public product repository at exact SHA, runs root checks and synthetic behavior/browser acceptance, and publishes SHA/content digest/results in its job summary. Checks certify the tested mock contracts, not production privacy, real HCL semantics or efficacy.
 
-L2 closes with **STOP_WITH_HANDOFF_L3_GATED**. L3 requires I06 disposition, a pinned permitted runtime artifact/interface, product adapter scope validation, and explicit execution/data authorization. No real integration, paid API, real/private data, public deployment or external onboarding is authorized by L1/L2 completion. Physical repository split is complete; it is not an outstanding blocker or cryptographic isolation claim.
+L2 closes with **STOP_WITH_HANDOFF_L3_GATED**. L3 requires I06 disposition, a pinned permitted runtime artifact/interface, product adapter scope validation, and explicit execution/data authorization. No real integration, paid API, real/private data, production public deployment or external onboarding is authorized by L1/L2 completion. The browser-only synthetic GitHub Pages preview is a separately bounded inspection surface. Physical repository split is complete; it is not an outstanding blocker or cryptographic isolation claim.

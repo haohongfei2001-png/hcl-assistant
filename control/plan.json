@@ -24,7 +24,18 @@
     "mode": "INDEPENDENT_PRODUCT_REPOSITORY",
     "real_data_allowed": false,
     "public_deployment_allowed": false,
-    "research_import_allowed": false
+    "research_import_allowed": false,
+    "synthetic_static_preview_allowed": true,
+    "synthetic_static_preview_mode": "GITHUB_PAGES_BROWSER_ONLY",
+    "synthetic_static_preview_url": "https://haohongfei2001-png.github.io/hcl-assistant/",
+    "synthetic_static_preview_constraints": [
+      "NO_BACKEND",
+      "NO_PROVIDER",
+      "NO_REAL_HCL",
+      "NO_RESEARCH_DATA",
+      "NO_SERVER_PERSISTENCE",
+      "NO_REAL_PRIVATE_DATA"
+    ]
   },
   "invariants": {
     "assistant_first": true,
