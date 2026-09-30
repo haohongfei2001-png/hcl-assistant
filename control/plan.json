@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "product": "HCL Assistant",
   "phase": "L1_IMPLEMENTING",
-  "next_ready": "L1-03_PRIVACY_EXPIRY_RETRIEVAL",
-  "next_package_id": "L1-03",
+  "next_ready": "L1-04_CONTROLLER_RUN_LIFECYCLE",
+  "next_package_id": "L1-04",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2-04_OR_L3_GATE",
   "future_work_allowed_through": "L2-04",
@@ -72,8 +72,9 @@
       "depends_on": [
         "L1-02"
       ],
-      "state": "NEXT_READY",
-      "delta": "privacy expiry and correction-aware retrieval"
+      "state": "COMPLETE",
+      "delta": "privacy expiry and correction-aware retrieval",
+      "evidence": "PROVIDER_FREE_PRIVACY_RETRIEVAL_IMPLEMENTED"
     },
     {
       "id": "L1-04",
@@ -81,7 +82,7 @@
       "depends_on": [
         "L1-03"
       ],
-      "state": "WAITING_DEPENDENCY",
+      "state": "NEXT_READY",
       "delta": "always-on controller and run lifecycle"
     },
     {
@@ -132,7 +133,7 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "PROVIDER_FREE_REVISION_IMPLEMENTED",
+    "product_implementation": "PROVIDER_FREE_PRIVACY_RETRIEVAL_IMPLEMENTED",
     "real_runtime": "NOT_INTEGRATED",
     "efficacy": "UNTESTED"
   },

@@ -36,6 +36,7 @@ class Ledger:
         self.db = sqlite3.connect(path, isolation_level=None, check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.lock = threading.RLock()
+        self.volatile = path == ':memory:'
         self.db.executescript('''
         PRAGMA foreign_keys=ON;
         PRAGMA secure_delete=ON;
@@ -95,6 +96,8 @@ class Ledger:
             return self.put(tenant, 'topic', {'title': title})
 
     def conversation(self, tenant, title='新对话', topic_id=None, memory='CONVERSATION'):
+        if memory == 'TEMPORARY' and not self.volatile:
+            raise Fault(403, 'Temporary conversations require the volatile store')
         if memory not in {'TEMPORARY', 'CONVERSATION', 'TOPIC'}:
             raise Fault(403, 'Cross-topic reuse is not implemented')
         with self.transaction():
