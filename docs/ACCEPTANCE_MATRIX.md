@@ -36,3 +36,36 @@
 轨迹三：同词不同reading→假设换判据→回实际讨论。检查fact/concept/value分离、假设不污染。
 
 L4另用新的非确认材料测真实中文、多轮、合成/Explain忠实性、必要推断、反向伤害、普通任务非干扰与完整费用；不以偏好/长度/节点数/多拒答单独认定增益。
+
+## L2 closure — actual synthetic results
+
+Commands: both root checkers; `python3 -m unittest discover -s tests -v` (90 checks PASS); `npm run build` (typecheck/build PASS); `npm run test:browser` (10 headless Chromium journeys PASS). No tests skipped or removed. Package checkpoint counts and repaired failures are recorded in [execution](EXECUTION.md). Exact tested HEAD and adopted main SHAs are published by hosted CI's materialization/check summaries; branch-local completion is conditional on those checks and merge. No self-SHA is fabricated in this document.
+
+All rows below are PASS **within authored/synthetic/mock coverage**. These are implementation obligations, not arbitrary-language or efficacy results. Test paths name the actual positive, negative and persistence/history evidence.
+
+| ID | Actual evidence | Limit |
+|---|---|---|
+| A01 | `test_ledger`: restart raw/hash/parse and corrupt/truncated source refusal | UTF-8 TXT/Markdown; 64 KiB |
+| A02 | `test_ledger`, `test_controller`, `test_integrated`; browser lost acknowledgement | Scoped keys; retry is a new attempt, not repeated input |
+| A03 | `test_ledger`, `test_controller`, `test_integrated` | Conservative account-wide state version |
+| A04 | `test_revision` and browser person/time correction | Explicit scoped identities; no general identity resolution |
+| A05 | `test_revision`, `test_scenarios`, `test_privacy` | OR-of-AND, deduplicated guess roots and independent-source survival |
+| A06 | `test_revision`, `test_integrated` | Conservative absence invalidation within allowed scope |
+| A07 | `test_revision`, `test_scenarios`, `test_integrated` | Authored learned/event time; unknown stays unknown |
+| A08 | `test_revision`, `test_scenarios`, `test_integrated` | Authored hypothetical snapshot; actual background unchanged |
+| A09 | `test_privacy` volatile store/restart and persistent byte inspection | Process-local temporary state; no provider logging path exists |
+| A10 | `test_privacy`, `test_explain`, `test_lab`, browser stop/delete/file purge | Simulated local restore deletion replay; no production backup certification |
+| A11 | `test_privacy`, `test_integrated`, `test_transport` | Synthetic account identity, explicit perspective access, separate memory scope |
+| A12 | `test_privacy`, `test_revision`, `test_integrated` | Whole eligible small-corpus closure, bounded refusal above 100 records |
+| A13 | `test_controller`, `test_scenarios` | Scripted correction first; unsupported changes remain unresolved even with arithmetic |
+| A14 | `test_controller`, `test_transport` | One governed mock entry; server permit; no provider transport |
+| A15 | `test_controller`, `test_transport`, `test_recovery`, browser cancel/retry/lost ack | SSE replay only; interrupted restart UNKNOWN; no blind regeneration |
+| A16 | Browser desktop/upload/keyboard/focus/refresh/error/narrow flows | Desktop/headless Chromium; mobile and other browsers untested |
+| A17 | Three original trajectories in `test_scenarios` | Source-bound natural mock synthesis, not persistent real cognition |
+| A18 | `test_scenarios`, `test_integrated` | Prefix grammar only; arbitrary Chinese/anaphora unresolved |
+| A19 | `test_explain` and browser Explain/correction | Recorded binding fidelity; no semantic judge or hidden reasoning |
+| A20 | `test_lab` and browser Lab | Read-only MOCK; Compare disabled with L3 gate |
+| A21 | `test_controller`, `test_lab`, `test_recovery`, `test_integrated` | Failure/UNKNOWN retained; mock provider cost 0 with explicit source, unknown tokens null |
+| A22 | Root repository/planning checks, `test_repository_split`, exact-SHA hosted product-only export | Bounded source/import/credential scan; not universal or cryptographic isolation proof |
+
+Open limits: synthetic identity only; no production authentication, remote retention/deletion guarantees, real user data, real HCL runtime, general language extraction, calibrated cognition or efficacy. Future L4 needs new authorized non-confirmation material. L3 gate is unchanged and unsatisfied.

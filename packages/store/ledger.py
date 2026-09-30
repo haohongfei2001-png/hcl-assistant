@@ -5,6 +5,7 @@ import json
 import sqlite3
 import threading
 import uuid
+from functools import wraps
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
@@ -29,6 +30,13 @@ class Fault(ValueError):
     def __init__(self, status, message):
         self.status = status
         super().__init__(message)
+
+
+def locked(method):
+    @wraps(method)
+    def call(self,*args,**kwargs):
+        with self.lock: return method(self,*args,**kwargs)
+    return call
 
 
 class Ledger:
@@ -65,13 +73,16 @@ class Ledger:
                 self.db.execute('ROLLBACK')
                 raise
 
+    @locked
     def account(self, tenant):
         self.db.execute('INSERT OR IGNORE INTO accounts(tenant) VALUES(?)', (tenant,))
         return dict(self.db.execute('SELECT * FROM accounts WHERE tenant=?', (tenant,)).fetchone())
 
+    @locked
     def version(self, tenant):
         return self.account(tenant)['version']
 
+    @locked
     def put(self, tenant, typ, body):
         body = dict(body)
         body.setdefault('id', uid())
@@ -81,12 +92,14 @@ class Ledger:
         self.db.execute('INSERT OR REPLACE INTO objects VALUES(?,?,?,?)', (body['id'], tenant, typ, canonical(body)))
         return body
 
+    @locked
     def get(self, tenant, typ, identity):
         row = self.db.execute('SELECT body FROM objects WHERE id=? AND tenant=? AND type=?', (identity, tenant, typ)).fetchone()
         if not row:
             raise Fault(403, 'Object is unavailable in this account')
         return json.loads(row['body'])
 
+    @locked
     def list(self, tenant, typ):
         return [json.loads(r['body']) for r in self.db.execute('SELECT body FROM objects WHERE tenant=? AND type=? ORDER BY rowid', (tenant, typ))]
 
@@ -108,13 +121,15 @@ class Ledger:
                 raise Fault(400, 'Topic membership required')
             return self.put(tenant, 'conversation', {'title': title, 'topic_id': topic_id, 'memory': memory})
 
+    @locked
     def scope(self, tenant, conversation, topic_id=None):
         obj = self.get(tenant, 'conversation', conversation)
         if obj['topic_id'] != topic_id:
             raise Fault(403, 'Conversation/topic mismatch')
         return obj
 
-    def source(self, tenant, ref, conversation=None, topic_id=None):
+    @locked
+    def source(self, tenant, ref, conversation=None, topic_id=None, allow_stopped=False):
         if type(ref.get('version')) is not int or ref['version']<1: raise Fault(400,'Integer source version required')
         row = self.db.execute('SELECT body FROM sources WHERE id=? AND tenant=? AND version=?', (ref['source_id'], tenant, ref['version'])).fetchone()
         if not row:
@@ -122,15 +137,19 @@ class Ledger:
         obj = json.loads(row['body'])
         if obj.get('deleted') or digest(obj['text'])!=obj['sha256'] or obj['parse_source_version']!=obj['version'] or obj['sha256'] != ref.get('sha256', ref.get('content_sha256')):
             raise Fault(409, 'Source hash/version mismatch')
-        if conversation and obj['conversation_id'] != conversation and not (obj['memory'] == 'TOPIC' and topic_id and obj['topic_id'] == topic_id):
+        if conversation and obj['conversation_id'] != conversation and not (obj['memory'] == 'TOPIC' and topic_id and obj['topic_id'] == topic_id and self.get(tenant,'conversation',conversation)['memory']=='TOPIC'):
             raise Fault(403, 'Source outside allowed scope')
+        if obj.get('stopped') and not allow_stopped: raise Fault(403,'Source reuse stopped')
         span = ref.get('span')
         if span and not (0 <= span[0] <= span[1] <= len(obj['text'])):
             raise Fault(400, 'Invalid exact span')
         return obj
 
-    def write_source(self, tenant, conversation, topic_id, text, name='message', source_id=None, family=None, memory='CONVERSATION'):
-        self.scope(tenant, conversation, topic_id)
+    @locked
+    def write_source(self, tenant, conversation, topic_id, text, name='message', source_id=None, family=None, memory=None):
+        scope=self.scope(tenant, conversation, topic_id)
+        memory=memory or scope['memory']
+        if memory!=scope['memory']: raise Fault(403,'Source cannot expand memory scope')
         if not isinstance(text, str) or len(text.encode()) > 65536:
             raise Fault(413, 'Text limit: 64 KiB')
         if name != 'message' and not name.lower().endswith(('.txt', '.md')):
@@ -142,7 +161,7 @@ class Ledger:
             if old['tenant_id'] != tenant or old['conversation_id'] != conversation:
                 raise Fault(403, 'Source ownership mismatch')
         version = len(versions) + 1
-        obj = {'schema_version':'1.0', 'id':identity, 'source_id':identity, 'tenant_id':tenant, 'conversation_id':conversation, 'topic_id':topic_id, 'memory':memory, 'version':version, 'parse_version':1, 'parse_source_version':version, 'sha256':digest(text), 'text':text, 'name':name, 'family':family or (json.loads(versions[0]['body'])['family'] if versions else identity), 'created_at':now(), 'coverage':'PARTIAL', 'deleted':False}
+        obj = {'schema_version':'1.0', 'id':identity, 'source_id':identity, 'tenant_id':tenant, 'conversation_id':conversation, 'topic_id':topic_id, 'memory':memory, 'version':version, 'parse_version':1, 'parse_source_version':version, 'sha256':digest(text), 'text':text, 'name':name, 'family':family or (json.loads(versions[0]['body'])['family'] if versions else identity), 'created_at':now(), 'coverage':'PARTIAL', 'deleted':False, 'stopped':False}
         self.db.execute('INSERT INTO sources VALUES(?,?,?,?)', (identity, tenant, version, canonical(obj)))
         return obj
 
@@ -174,6 +193,7 @@ class Ledger:
             return {'event':event, 'source':source, 'state_version':version}
         return self.atomic(tenant, conversation, key, payload, expected, work)
 
+    @locked
     def history(self, tenant, conversation):
         self.get(tenant, 'conversation', conversation)
         return [json.loads(r['body']) for r in self.db.execute('SELECT body FROM events WHERE tenant=? AND conversation=? ORDER BY version', (tenant, conversation))]

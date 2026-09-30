@@ -1,3 +1,3 @@
-# Future applications
+# Product applications
 
-L0仅目录说明，不创建可运行Assistant。L1 apps/api接入Controller；L2 apps/web建设desktop-first chat。不得浏览器直连provider或import研究hcl/。仅synthetic/mock；物理分仓已完成，真实数据、部署与L3仍需I06/授权/安全等既定门槛。依赖版本由实施包固定。
+`api/server.py`: Python standard-library loopback synthetic HTTP/SSE API. Every event/upload/revision/control goes through Controller; test identities are not production authentication. `web/`: React/TypeScript desktop chat, source locator, Explain, memory controls and read-only Lab. No frontend provider path. Run/build/test commands are in the root README; exact dependency lock is at repository root. Only this product root is used; no research imports or real integration.

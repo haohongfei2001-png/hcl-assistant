@@ -26,6 +26,7 @@ class Controller:
         event=req.get('event',{}); text=event.get('text','')
         if not isinstance(text,str): raise Fault(400,'Text required')
         event_type=event.get('type','message')
+        if event_type=='upload' and event.get('revisions'): raise Fault(403,'Documents have no control-command authority')
         if event_type not in {'message','upload','revision','control'}: raise Fault(400,'Unknown input event')
         if len(text.encode())>65536: raise Fault(413,'Text limit: 64 KiB')
         for ref in req.get('source_refs',[]):
@@ -42,22 +43,28 @@ class Controller:
             revisions=event.get('revisions',[])
             if not typed and not revisions:
                 typed,revisions,unparsed=extract(text,self.context,tenant,conversation,topic)
+                if event_type=='upload':
+                    if revisions: unparsed.append('Document commands are data, not authorized revisions')
+                    revisions=[]
+                    typed=[{**data,'origin':'uploaded_source'} for data in typed]
                 unresolved=[{'event_id':event_id,'reason':reason} for reason in unparsed]
             for data in typed:
                 data={**data,'source_refs':data.get('source_refs') or [ref],'memory':memory}
                 receipt=self.context.process(tenant,conversation,topic,{'action':'ADD','new_record':data},version)
                 changes+=receipt['changed_ids']; invalidated+=receipt['invalidated_ids']
+            answer_branch=scope.get('branch_id','actual')
             for command in revisions:
                 command={**command,'branch_id':scope.get('branch_id','actual')}
                 if command.get('new_record'):
                     command['new_record']={**command['new_record'],'source_refs':command['new_record'].get('source_refs') or [ref],'memory':memory}
                 receipt=self.context.process(tenant,conversation,topic,command,version)
+                if command['action']=='HYPOTHETICAL_BRANCH': answer_branch=receipt['branch_id']
                 changes+=receipt['changed_ids']; invalidated+=receipt['invalidated_ids']
             if not typed and not revisions and not self.direct(text) and not unresolved:
                 unresolved=[{'event_id':event_id,'reason':'Unsupported text; no semantic extraction claimed'}]
             committed={'schema_version':'1.0','id':event_id,'tenant_id':tenant,'conversation_id':conversation,'topic_id':topic,'state_version':version,'source_refs':[ref], 'recorded_at':now(),'status':'UNRESOLVED' if unresolved else 'RECORDED'}
             self.store.db.execute('INSERT INTO events VALUES(?,?,?,?,?)',(event_id,tenant,conversation,version,canonical(committed)))
-            selected=self.context.selection(tenant,conversation,topic,scope.get('branch_id','actual'),scope.get('perspective_id'),scope.get('time'))
+            selected=self.context.selection(tenant,conversation,topic,answer_branch,scope.get('perspective_id'),scope.get('time'))
             selected['state_version']=version
             run_id=uid(); snapshot_id=uid(); receipt_id=uid()
             selected_mock=any(r['kind']=='SYSTEM_INTERPRETATION' for r in selected['records']) and not self.direct(text)
@@ -80,7 +87,9 @@ class Controller:
 
     @staticmethod
     def emit(run, typ, payload):
-        run['stream'].append({'seq':len(run['stream'])+1,'type':typ,'run_id':run['run_id'],'state_version':run['state_version_after'],'payload':payload})
+        seq=run.get('last_seq',max((e['seq'] for e in run['stream']),default=0))+1
+        run['last_seq']=seq
+        run['stream'].append({'seq':seq,'type':typ,'run_id':run['run_id'],'state_version':run['state_version_after'],'payload':payload})
 
     def read(self, tenant, run_id):
         with self.store.lock:
@@ -125,6 +134,7 @@ class Controller:
                 with self.store.transaction():
                     current=self.store.get(tenant,'run',run_id)
                     if not current['pending']: return
+                    if (time.monotonic()-start)*1000 > run['budget'].get('max_latency_ms',10000): raise TimeoutError('Bounded mock latency exceeded')
                     current['run_receipt']['usage']=run['run_receipt']['usage']
                     if self.store.version(tenant)!=run['state_version_after'] or self.store.account(tenant)['policy']!=run['selected_context']['policy_revision'] or any(not self.context.allowed(tenant,r) for r in run['selected_context']['records']):
                         current.update(pending=False,errors=['STALE_OUTPUT_WITHHELD'],answer=None)
@@ -168,7 +178,7 @@ class Controller:
                 retry=next(r for r in self.store.list(tenant,'run') if r.get('retry_key')==key)
                 if retry.get('parent_run_id')!=run_id: raise Fault(409,'Retry key conflict')
                 return self.read(tenant,retry['id'])
-            retry=copy.deepcopy(old); identity=uid(); parent=old['run_receipt']['attempt_id']; retry.update(id=identity,run_id=identity,parent_run_id=run_id,retry_key=key,pending=True,executing=False,errors=[],stream=[],answer=None,answer_preparation=None,explain_projection=None)
+            retry=copy.deepcopy(old); identity=uid(); parent=old['run_receipt']['attempt_id']; retry.update(id=identity,run_id=identity,parent_run_id=run_id,retry_key=key,pending=True,executing=False,errors=[],stream=[],last_seq=0,answer=None,answer_preparation=None,explain_projection=None)
             retry['run_receipt'].update(run_id=identity,attempt_id=uid(),parent_attempt_id=parent,controller_receipt_id=uid(),outcome='UNRESOLVED',started_at=now(),finished_at=None,errors=[])
             retry['run_receipt']['usage']['adapter_invocations']=0
             self.emit(retry,'run.accepted',{'retry_of':run_id}); self.store.put(tenant,'run',retry)

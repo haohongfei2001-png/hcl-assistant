@@ -1,11 +1,11 @@
 import shutil
 from pathlib import Path
-from tests.test_revision import RevisionTests
+from tests import test_revision
 from packages.policy.privacy import PolicyContext
 from packages.store.ledger import Ledger, Fault
 
 
-class PrivacyTests(RevisionTests):
+class PrivacyTests(test_revision.RevisionTests):
     def setUp(self):
         super().setUp(); self.ctx=PolicyContext(self.s)
 

@@ -35,16 +35,28 @@ class PolicyContext(Context):
             return super().process(tenant,conversation,topic,command,version)
         targets=command.get('target_ids',[])
         if not targets: raise Fault(422,'Explicit target required')
-        records=self.records(tenant); affected=set(targets)
+        records=self.records(tenant); affected=set(); source_ids=set()
         for identity in targets:
-            self.check_scope(self.get(tenant,identity),conversation,topic,command.get('branch_id','actual'))
-        source_ids={ref['source_id'] for identity in targets for ref in records[identity]['source_refs']}
+            if identity in records:
+                self.check_scope(records[identity],conversation,topic,command.get('branch_id','actual')); affected.add(identity)
+                source_ids.update(ref['source_id'] for ref in records[identity]['source_refs'])
+            else:
+                row=self.store.db.execute('SELECT body FROM sources WHERE id=? AND tenant=? ORDER BY version DESC LIMIT 1',(identity,tenant)).fetchone()
+                if not row: raise Fault(403,'Revision target unavailable')
+                source=json.loads(row['body'])
+                self.store.source(tenant,{'source_id':identity,'version':source['version'],'sha256':source['sha256']},conversation,topic,allow_stopped=True)
+                source_ids.add(identity)
         # Derived content and copied references are conservatively withheld/purged.
         while True:
             new={r['record_id'] for r in records.values() if any(ref['source_id'] in source_ids for ref in r['source_refs']) or set(r['read_dependencies'].get('records',[])) & affected or any(set(g)&affected for g in r['support_groups']) or set(r['challenges'])&affected or set(r.get('predecessor_ids',[]))&affected}
             if new<=affected: break
             affected|=new
             source_ids|={ref['source_id'] for i in affected for ref in records[i]['source_refs']}
+        if action=='STOP_USING':
+            for identity in source_ids:
+                for row in list(self.store.db.execute('SELECT * FROM sources WHERE id=? AND tenant=?',(identity,tenant))):
+                    body=json.loads(row['body']); body['stopped']=True
+                    self.store.db.execute('UPDATE sources SET body=? WHERE id=? AND version=?',(canonical(body),identity,row['version']))
         for identity in affected:
             record=records[identity]
             if action=='STOP_USING':
@@ -58,7 +70,7 @@ class PolicyContext(Context):
             self.replay_deletions(tenant)
         else:
             self.redact_objects(tenant,affected|source_ids)
-        receipt={'id':uid(),'new_state_version':version,'action':action,'changed_ids':sorted(affected),'invalidated_ids':sorted(affected),'recomputed_ids':[],'reused_ids':[],'unchanged_checked_ids':[],'not_evaluated_ids':[],'unresolved_ids':[],'deletion_status':'PURGED' if action=='DELETE' else 'STOPPED'}
+        receipt={'id':uid(),'new_state_version':version,'action':action,'changed_ids':sorted(affected|source_ids),'invalidated_ids':sorted(affected),'recomputed_ids':[],'reused_ids':[],'unchanged_checked_ids':[],'not_evaluated_ids':[],'unresolved_ids':[],'deletion_status':'PURGED' if action=='DELETE' else 'STOPPED'}
         return self.store.put(tenant,'revision',receipt)
 
     def redact_objects(self, tenant, identities):

@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "product": "HCL Assistant",
-  "phase": "L2_IMPLEMENTING",
-  "next_ready": "L2-04_LAB_INTEGRATED_HANDOFF",
-  "next_package_id": "L2-04",
+  "phase": "L2_COMPLETE",
+  "next_ready": "STOP_WITH_HANDOFF_L3_GATED",
+  "next_package_id": null,
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2-04_OR_L3_GATE",
   "future_work_allowed_through": "L2-04",
@@ -122,8 +122,9 @@
       "depends_on": [
         "L2-03"
       ],
-      "state": "NEXT_READY",
-      "delta": "Lab shell and integrated mock acceptance"
+      "state": "COMPLETE",
+      "delta": "Lab shell and integrated mock acceptance",
+      "evidence": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS"
     }
   ],
   "satisfied_gates": [
@@ -137,13 +138,17 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "MOCK_EXPLAIN_MEMORY_FUNCTIONAL",
+    "product_implementation": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS",
     "real_runtime": "NOT_INTEGRATED",
-    "efficacy": "UNTESTED"
+    "efficacy": "NOT_TESTED",
+    "real_language_generalization": "NOT_TESTED",
+    "browser": "HEADLESS_CHROMIUM_MOCK_JOURNEYS",
+    "acceptance_matrix": "docs/ACCEPTANCE_MATRIX.md"
   },
   "writer": {
     "branch": "product/l1-01",
     "scope": "L1-01_THROUGH_L2-04",
-    "status": "CLAIMED"
-  }
+    "status": "COMPLETED_HANDOFF"
+  },
+  "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED"
 }

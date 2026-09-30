@@ -7,19 +7,32 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
-from packages.store.ledger import Ledger, Fault
+from packages.store.ledger import Ledger, Fault, now
 from packages.store.registry import Stores
 from packages.controller.interaction import Controller
 from packages.explain.projection import project
+from packages.controller.lab import inspect
+from packages.store.pagination import page
 
 
 class Application:
     def __init__(self, path=':memory:'):
-        self.stores=Stores(Ledger(path)); self.controllers={}
+        self.stores=Stores(Ledger(path)); self.controllers={}; self.lock=threading.RLock()
+        store=self.stores.persistent
+        with store.transaction():
+            for account in store.db.execute('SELECT tenant FROM accounts').fetchall():
+                tenant=account['tenant']
+                for run in store.list(tenant,'run'):
+                    if run['pending']:
+                        run['pending']=False; run['errors']=['PROCESS_RESTART_UNKNOWN']; run['run_receipt'].update(outcome='UNKNOWN',errors=run['errors'],finished_at=now())
+                        if run.get('executing'): run['run_receipt']['usage']['adapter_invocations']=None
+                        Controller.emit(run,'run.failed',{'reason':'Process restart; transport not automatically repeated'})
+                        store.put(tenant,'run',run)
 
     def controller(self, store):
-        if store not in self.controllers: self.controllers[store]=Controller(store)
-        return self.controllers[store]
+        with self.lock:
+            if store not in self.controllers: self.controllers[store]=Controller(store)
+            return self.controllers[store]
 
     def start(self, ctrl, tenant, run):
         if run['pending']:
@@ -35,6 +48,8 @@ def handler(application):
         def log_message(self, *args): pass  # Never log user bodies or request URLs.
 
         def tenant(self):
+            origin=self.headers.get('Origin')
+            if origin and origin not in {'http://127.0.0.1:5173','http://localhost:5173','http://127.0.0.1:'+str(self.server.server_port),'http://localhost:'+str(self.server.server_port)}: raise Fault(403,'Synthetic API accepts only loopback app origins')
             identity=self.headers.get('X-Synthetic-Identity','demo-a')
             if identity not in {'demo-a','demo-b'}: raise Fault(401,'Synthetic test identity required')
             return 'synthetic-'+identity
@@ -95,6 +110,8 @@ def handler(application):
                             time.sleep(.03)
                     except (BrokenPipeError,ConnectionResetError): pass
                     return
+                elif len(parts)==4 and parts[:2]==['v1','lab'] and parts[2] in {'runs','export'}:
+                    ctrl=application.controller(application.stores.for_run(tenant,parts[3])); result=inspect(ctrl,tenant,parts[3])
                 elif len(parts)==4 and parts[:2]==['v1','answers'] and parts[3]=='explain':
                     result=None
                     for store in [application.stores.persistent,application.stores.temporary]:
@@ -115,10 +132,18 @@ def handler(application):
                             except Fault: continue
                             if record['lifecycle_status']!='DELETED': managed.append(record)
                         result['managed_records']=managed
+                        sources={}
+                        for row in store.db.execute('SELECT body FROM sources WHERE tenant=? ORDER BY version',(tenant,)):
+                            source=json.loads(row['body'])
+                            if source['conversation_id']==conversation and not source['deleted']: sources[source['id']]=source
+                        result['managed_sources']=list(sources.values())
                 elif len(parts)==3 and parts[:2]==['v1','sources']:
                     conversation=query['conversation_id'][0]; store=application.stores.for_conversation(tenant,conversation); c=store.get(tenant,'conversation',conversation)
-                    ref={'source_id':parts[2],'version':int(query['version'][0]),'sha256':query['sha256'][0]}; result=store.source(tenant,ref,conversation,c['topic_id'])
+                    ref={'source_id':parts[2],'version':int(query['version'][0]),'sha256':query['sha256'][0]}; result=store.source(tenant,ref,conversation,c['topic_id'],allow_stopped=True)
                 else: raise Fault(404,'Unknown API route')
+                if 'limit' in query and path in {'/v1/conversations','/v1/topics'}:
+                    account=application.stores.persistent.account(tenant)
+                    result=page(result,tenant,account['version'],account['policy'],int(query['limit'][0]),query.get('cursor',[None])[0],path)
                 self.json(200,result)
             except Fault as exc: self.json(exc.status,{'error':str(exc)})
             except (KeyError,TypeError,ValueError): self.json(400,{'error':'Malformed query'})
