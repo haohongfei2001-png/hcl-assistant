@@ -31,9 +31,9 @@ PR #6曾将其维护条款命名“Canonical Amendment A2 — verified upstream 
 
 当前唯一产品开发队列是 **product_development**；Status和Development Plan只镜像其中的next_ready。顶层legacy字段及旧CI输出不是第二候选任务。runtime_sync是已采用的维护配置，不是新的产品队列。
 
-本版明确标注automation_support=LEGACY_STAGE_CHECKS_ONLY_CURRENT_QUEUE_MANUALLY_REVIEWED。既有检查通过不代表自动验证A2队列。P0-01先迁移checker/reporting/tests与产品队列消费者，继续严格验证旧11包与安全边界；未适配者不得基于legacy字段自动认领/调度新的产品包。已采用runtime维护继续遵从其独立固定锁、writer/main冲突和CI检查，不由此扩大权限或替产品排第二个下一任务。
+A2文档采用时标注automation_support=LEGACY_STAGE_CHECKS_ONLY_CURRENT_QUEUE_MANUALLY_REVIEWED；当时旧检查不覆盖新队列。P0-01现已将checker/reporting/tests/advance迁移为CURRENT_PRODUCT_QUEUE_AND_LEGACY_SAFETY_CHECKED，验证完整当前摘要/next/状态镜像与依赖，并继续严格验证旧11包与四个L3门槛。未适配消费者仍不得基于legacy字段新调度。已采用runtime维护继续遵从其独立固定锁、writer/main冲突和CI检查，不由此扩大权限或替产品排第二个下一任务。
 
-这是显式兼容迁移，不是放宽断言或绕过CI；迁移代码属于下一项任务，本次未实现。
+这是显式兼容迁移，不放宽断言或绕过CI；实际代码和验证见 [P0 evidence](P0_01_EVIDENCE.md)。
 
 ## 3. 旧冲突设计处置
 

@@ -23,6 +23,7 @@ REQUIRED_DOCS = (
     'contracts/capabilities.json', 'contracts/capability-manifest.schema.json',
     'control/plan.json', 'docs/L0_L2_WORK_PACKAGES.md',
     'docs/ACCEPTANCE_MATRIX.md', 'docs/UX_SPEC.md',
+    'docs/DOCUMENT_AUTHORITY.md', 'docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md', 'docs/VISUAL_SYSTEM.md',
     'docs/BOUNDARY_AND_ISOLATION.md', 'docs/RESEARCH_BASELINE.md',
     'control/repository-migration.json', 'docs/REPOSITORY_MIGRATION.md',
     'scripts/check_repository.py', 'tests/test_repository_split.py',
@@ -135,6 +136,82 @@ def validate_plan(plan: dict[str, Any]) -> None:
     require('I06_DISPOSITION' in plan.get('l3_gates', []), 'I06 gate missing')
     require(plan.get('next_package_id') == 'L2.5-01' or plan.get('phase') in {'L2_5_IMPLEMENTING','L2_5_COMPLETE'},
             'post-L2 plan must enter L2.5 before L3')
+    validate_current_queue(plan)
+
+
+CURRENT_PACKAGES = (
+    ('P0-01', 'P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR', list(range(1, 8))),
+    ('P1-01', 'P1-01_ASSISTANT_FIRST_SHARED_SHELL', list(range(8, 13))),
+    ('P1-02', 'P1-02_REVISION_EVIDENCE_MEMORY_LOOP', list(range(13, 17))),
+    ('P1-03', 'P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE', list(range(17, 21))),
+)
+L3_STOP = 'STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED'
+
+
+def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
+    """The only scheduling projection; legacy validation remains independent."""
+    authority = plan.get('field_authority', {})
+    require(authority.get('current_product_queue') == 'product_development', 'current queue authority')
+    require(authority.get('legacy_next_ready_is_global_product_queue') is False, 'legacy queue cannot schedule products')
+    require(authority.get('automation_support') == 'CURRENT_PRODUCT_QUEUE_AND_LEGACY_SAFETY_CHECKED', 'current queue consumer migration required')
+    require(authority.get('queue_consumer_migration_required_before_new_automated_scheduling') is False, 'unmigrated queue consumer')
+    q = plan.get('product_development', {})
+    require(q.get('schema_version') == '1.0' and q.get('authority') == 'SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE', 'current queue version/authority')
+    require(q.get('canonical_document') == 'DEVELOPMENT_PLAN.md' and q.get('product_plan_version') == '1.2/A2-Product', 'current queue canonical plan')
+    require(q.get('automatic_queue_consumers') == 'CURRENT_PRODUCT_QUEUE_VALIDATED', 'current consumer contract')
+    require(q.get('execution_scope') == 'SYNTHETIC_PROVIDER_FREE_PRODUCT_REFINEMENT_ONLY', 'refinement execution boundary')
+    require(type(q.get('max_provider_calls')) is int and q['max_provider_calls'] == 0, 'refinement provider budget must be zero')
+    for key in ('real_private_data_allowed', 'production_activation_allowed', 'judge_implementation_authorized', 'agent_execution_authorized'):
+        require(q.get(key) is False, f'forbidden refinement authority: {key}')
+    require(q.get('judge_status') == 'LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED', 'Judge is not implemented')
+    require(q.get('after_all_complete_if_l3_gates_unmet') == L3_STOP, 'refinement completion cannot open L3')
+    require(set(plan.get('l3_gates', [])) == {'I06_DISPOSITION', 'PINNED_PERMITTED_RUNTIME_ARTIFACT', 'PRODUCT_ADAPTER_SCOPE_VALIDATION', 'EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION'}, 'all four L3 gates required')
+    rows = q.get('packages', [])
+    require([r.get('id') for r in rows] == [r[0] for r in CURRENT_PACKAGES], 'canonical refinement package boundaries')
+    pending = []
+    for index, (row, expected) in enumerate(zip(rows, CURRENT_PACKAGES)):
+        require(row.get('task') == expected[1], 'refinement task identity')
+        require(row.get('depends_on') == ([] if index == 0 else [CURRENT_PACKAGES[index - 1][0]]), 'unknown/changed refinement dependency')
+        require(row.get('acceptance') == [f'R{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
+        require(row.get('state') in {'COMPLETE', 'NEXT_READY', 'WAITING_DEPENDENCY'}, 'unknown refinement state')
+        require(bool(row.get('delta')), 'refinement delta required')
+        if row['state'] == 'COMPLETE':
+            require(not pending, 'completed refinement has unsatisfied dependency')
+            require(row.get('evidence') not in (None, '', 'NOT_IMPLEMENTED'), 'completion evidence required')
+        else:
+            pending.append(row)
+    if pending:
+        require(pending[0]['state'] == 'NEXT_READY' and all(r['state'] == 'WAITING_DEPENDENCY' for r in pending[1:]), 'unique dependency-safe current NEXT_READY required')
+        require(q.get('next_package_id') == pending[0]['id'] and q.get('next_ready') == pending[0]['task'], 'current NEXT_READY mismatch')
+        require(q.get('phase') in {'ASSISTANT_FIRST_REFINEMENT_READY', 'ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING'}, 'current phase mismatch')
+    else:
+        require(q.get('next_package_id') is None and q.get('next_ready') == L3_STOP and q.get('phase') == 'ASSISTANT_FIRST_REFINEMENT_COMPLETE', 'completed refinement must stop at L3 gate')
+    return q
+
+
+def queue_summary(q):
+    current = next((r for r in q['packages'] if r['id'] == q['next_package_id']), None)
+    detail = (current['delta'] + '。验收：' + '、'.join(current['acceptance'])) if current else '四包已完成；L3四门槛未满足，停止交接，不启动provider、Judge或Act。'
+    return ('<!-- CURRENT_PRODUCT_QUEUE_START -->\n'
+            '**NEXT_READY: ' + q['next_ready'] + '**\n\n'
+            '当前产品阶段：' + q['phase'] + '。唯一当前任务：' + (q['next_package_id'] or '无，等待L3门槛') + '。\n\n'
+            + detail + '\n\n'
+            '任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。\n'
+            '<!-- CURRENT_PRODUCT_QUEUE_END -->')
+
+
+
+def validate_queue_mirrors(root: Path, q: dict[str, Any]) -> None:
+    for name in ('STATUS.md', 'DEVELOPMENT_PLAN.md', 'AGENTS.md', 'README.md'):
+        text = safe_path(root, name).read_text(encoding='utf-8')
+        summaries = re.findall(r'<!-- CURRENT_PRODUCT_QUEUE_START -->.*?<!-- CURRENT_PRODUCT_QUEUE_END -->', text, flags=re.S)
+        require(summaries == [queue_summary(q)], f'{name} current queue summary mismatch')
+        markers = re.findall(r'\*\*NEXT_READY: ([A-Z0-9_.-]+)\*\*', text)
+        require(markers == [q['next_ready']], f'{name} current NEXT_READY mirror mismatch')
+    text = safe_path(root, 'DEVELOPMENT_PLAN.md').read_text(encoding='utf-8')
+    for row in q['packages']:
+        lines = [line for line in text.splitlines() if line.startswith('| ' + row['id'] + ' |')]
+        require(len(lines) == 1 and lines[0].endswith('| ' + row['state'] + ' |'), 'development state mirror mismatch: ' + row['id'])
 
 
 def validate_catalog(catalog: dict[str, Any]) -> None:
@@ -251,9 +328,7 @@ def validate_tree(root: Path) -> dict[str, Any]:
     validate_catalog(catalog)
     validate_capabilities(load_json(root, 'contracts/capabilities.json'),
                           load_json(root, 'contracts/capability-manifest.schema.json'), catalog)
-    for name in ('STATUS.md', 'DEVELOPMENT_PLAN.md'):
-        text = safe_path(root, name).read_text(encoding='utf-8')
-        require(plan['next_ready'] in text, f'{name} NEXT_READY mismatch')
+    validate_queue_mirrors(root, plan['product_development'])
     package_text = safe_path(root, 'docs/L0_L2_WORK_PACKAGES.md').read_text(encoding='utf-8')
     for row in plan['packages']:
         require(f"## {row['id']} " in package_text, f"missing package detail: {row['id']}")
@@ -275,7 +350,10 @@ def validate_tree(root: Path) -> dict[str, Any]:
     digest = hashlib.sha256(json.dumps(fingerprints, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     return {'check': 'PRODUCT_CONTROL_CONTRACTS_ONLY', 'package_count': len(plan['packages']),
             'capability_candidates': len(load_json(root, 'contracts/capabilities.json')['capabilities']),
-            'next_ready': plan['next_ready'], 'product_content_sha256': digest,
+            'next_ready': plan['product_development']['next_ready'],
+            'current_package_count': len(plan['product_development']['packages']),
+            'queue_authority': 'product_development', 'legacy_stage_next_ready': plan['next_ready'],
+            'product_content_sha256': digest,
             'file_count': len(files), 'provider_calls': 0, 'efficacy': 'NOT_TESTED'}
 
 

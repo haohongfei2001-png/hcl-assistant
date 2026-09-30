@@ -2,26 +2,32 @@
 
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
-**NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**
+<!-- CURRENT_PRODUCT_QUEUE_START -->
+**NEXT_READY: P1-01_ASSISTANT_FIRST_SHARED_SHELL**
+
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-01。
+
+shared Assistant-first home/chat navigation composer reading and accessibility。验收：R08、R09、R10、R11、R12
+
+任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
+<!-- CURRENT_PRODUCT_QUEUE_END -->
 
 ## 1. 唯一当前任务
 
-先兑现预览中的临时、删除、不再使用、完整读取、更正与依据承诺，不先换皮、不进入L3、不实现Judge。具体scope、正负测试和完成判据见 [P0-01](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md#p0-01--truthful-preview-contract-repair)。
+以上机器投影是当前唯一任务，具体scope、正负测试和完成判据见 [当前工作包](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。依赖按顺序推进；不能把旧L3停止码当成产品全局停止，不能越过P0直接换皮。
 
-P0-01先迁移当前队列的checker/reporting/tests与产品队列消费者，再修对应surface的真实行为。自动产品调度不能继续读取legacy next字段；历史11包、生产/隐私/研究边界仍须严格验证。没有一般语义能力时明确不支持，不继续堆关键词脚本冒充理解。
-
-本次文档执行者仅采用文档与计划元数据；implementation_started=false。下一位implementation Work明确认领后才写代码，不将本次写入方案解释成启动实施。
+当前checker/reporting/advance消费product_development，严格保留历史11包与L3/研究边界。包完成须实际验收；没有一般语义能力时明确不支持，不堆关键词冒充理解。每包在独立PR中接受exact-head审查/CI与exact-main核验后才采用。
 
 ## 2. 依赖顺序
 
 | ID | Delta | Dependencies | State |
 |---|---|---|---|
-| P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | NEXT_READY |
-| P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | WAITING_DEPENDENCY |
+| P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | COMPLETE |
+| P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | NEXT_READY |
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | WAITING_DEPENDENCY |
 | P1-03 | bounded Inspect/Settings与整体synthetic验收 | P1-02 | WAITING_DEPENDENCY |
 
-工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。所有新增包NOT_IMPLEMENTED；设计采用不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
+工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
 当前全部整改仅synthetic/provider-free、max_provider_calls=0、real_private_data_allowed=false、production_activation_allowed=false。Judge与Act不在当前开发包中。
 

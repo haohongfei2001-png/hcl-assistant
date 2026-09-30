@@ -5,11 +5,18 @@
     "current_product_queue": "product_development",
     "current_product_definition": "HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md",
     "authority_document": "docs/DOCUMENT_AUTHORITY.md",
-    "legacy_stage_fields": ["phase", "next_ready", "next_package_id", "current_executor_stop_after", "future_work_allowed_through", "packages"],
+    "legacy_stage_fields": [
+      "phase",
+      "next_ready",
+      "next_package_id",
+      "current_executor_stop_after",
+      "future_work_allowed_through",
+      "packages"
+    ],
     "legacy_stage_scope": "LEGACY_L0_L2_5_STAGE_COMPLETION_AND_L3_GATE_ONLY",
     "legacy_next_ready_is_global_product_queue": false,
-    "automation_support": "LEGACY_STAGE_CHECKS_ONLY_CURRENT_QUEUE_MANUALLY_REVIEWED",
-    "queue_consumer_migration_required_before_new_automated_scheduling": true,
+    "automation_support": "CURRENT_PRODUCT_QUEUE_AND_LEGACY_SAFETY_CHECKED",
+    "queue_consumer_migration_required_before_new_automated_scheduling": false,
     "runtime_sync_scope": "EXISTING_ADOPTED_PIN_MAINTENANCE_NOT_AN_ALTERNATE_PRODUCT_QUEUE"
   },
   "phase": "L2_5_COMPLETE",
@@ -18,7 +25,13 @@
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2.5-02",
   "future_work_allowed_through": "L2.5-02",
-  "research_sequence": ["I02", "I03", "I04", "I05", "I06"],
+  "research_sequence": [
+    "I02",
+    "I03",
+    "I04",
+    "I05",
+    "I06"
+  ],
   "boundary": {
     "hosting_repository": "haohongfei2001-png/hcl-assistant",
     "path": ".",
@@ -33,7 +46,14 @@
     "synthetic_static_preview_allowed": true,
     "synthetic_static_preview_mode": "GITHUB_PAGES_BROWSER_ONLY",
     "synthetic_static_preview_url": "https://haohongfei2001-png.github.io/hcl-assistant/",
-    "synthetic_static_preview_constraints": ["NO_BACKEND", "NO_PROVIDER", "NO_REAL_HCL", "NO_RESEARCH_DATA", "NO_SERVER_PERSISTENCE", "NO_REAL_PRIVATE_DATA"],
+    "synthetic_static_preview_constraints": [
+      "NO_BACKEND",
+      "NO_PROVIDER",
+      "NO_REAL_HCL",
+      "NO_RESEARCH_DATA",
+      "NO_SERVER_PERSISTENCE",
+      "NO_REAL_PRIVATE_DATA"
+    ],
     "development_runtime_bridge_allowed": true,
     "development_runtime_source_repository": "haohongfei2001-png/human-cognition-layer",
     "development_runtime_pin_policy": "EXACT_COMMIT_SHA_AND_INTERFACE_DIGEST",
@@ -58,20 +78,126 @@
     "l2_5_provider_backed_execution_requires_explicit_authorization": true
   },
   "packages": [
-    {"id":"L0-01","stage":"L0","depends_on":[],"state":"COMPLETE","delta":"canonical contracts and setup"},
-    {"id":"L1-01","stage":"L1","depends_on":["L0-01"],"state":"COMPLETE","delta":"event source state ledger","evidence":"PROVIDER_FREE_IMPLEMENTED"},
-    {"id":"L1-02","stage":"L1","depends_on":["L1-01"],"state":"COMPLETE","delta":"revision and historical dependencies","evidence":"PROVIDER_FREE_REVISION_IMPLEMENTED"},
-    {"id":"L1-03","stage":"L1","depends_on":["L1-02"],"state":"COMPLETE","delta":"privacy expiry and correction-aware retrieval","evidence":"PROVIDER_FREE_PRIVACY_RETRIEVAL_IMPLEMENTED"},
-    {"id":"L1-04","stage":"L1","depends_on":["L1-03"],"state":"COMPLETE","delta":"always-on controller and run lifecycle","evidence":"MOCK_CONTROLLER_FUNCTIONAL"},
-    {"id":"L2-01","stage":"L2","depends_on":["L1-04"],"state":"COMPLETE","delta":"desktop chat and text file flow","evidence":"MOCK_UI_FUNCTIONAL"},
-    {"id":"L2-02","stage":"L2","depends_on":["L2-01"],"state":"COMPLETE","delta":"multi-session synthetic cognition and natural synthesis","evidence":"SYNTHETIC_REPLAY_ONLY"},
-    {"id":"L2-03","stage":"L2","depends_on":["L2-02"],"state":"COMPLETE","delta":"Explain correction and memory controls","evidence":"MOCK_EXPLAIN_MEMORY_FUNCTIONAL"},
-    {"id":"L2-04","stage":"L2","depends_on":["L2-03"],"state":"COMPLETE","delta":"Lab shell and integrated mock acceptance","evidence":"L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS"},
-    {"id":"L2.5-01","stage":"L2.5","depends_on":["L2-04"],"state":"COMPLETE","delta":"pinned development runtime bridge contract handshake and capability discovery","evidence":"EXPERIMENTAL_TRANSPORT_VERIFIED"},
-    {"id":"L2.5-02","stage":"L2.5","depends_on":["L2.5-01"],"state":"COMPLETE","delta":"real-runtime serialization lifecycle receipts and synthetic end-to-end execution","evidence":"L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS"}
+    {
+      "id": "L0-01",
+      "stage": "L0",
+      "depends_on": [],
+      "state": "COMPLETE",
+      "delta": "canonical contracts and setup"
+    },
+    {
+      "id": "L1-01",
+      "stage": "L1",
+      "depends_on": [
+        "L0-01"
+      ],
+      "state": "COMPLETE",
+      "delta": "event source state ledger",
+      "evidence": "PROVIDER_FREE_IMPLEMENTED"
+    },
+    {
+      "id": "L1-02",
+      "stage": "L1",
+      "depends_on": [
+        "L1-01"
+      ],
+      "state": "COMPLETE",
+      "delta": "revision and historical dependencies",
+      "evidence": "PROVIDER_FREE_REVISION_IMPLEMENTED"
+    },
+    {
+      "id": "L1-03",
+      "stage": "L1",
+      "depends_on": [
+        "L1-02"
+      ],
+      "state": "COMPLETE",
+      "delta": "privacy expiry and correction-aware retrieval",
+      "evidence": "PROVIDER_FREE_PRIVACY_RETRIEVAL_IMPLEMENTED"
+    },
+    {
+      "id": "L1-04",
+      "stage": "L1",
+      "depends_on": [
+        "L1-03"
+      ],
+      "state": "COMPLETE",
+      "delta": "always-on controller and run lifecycle",
+      "evidence": "MOCK_CONTROLLER_FUNCTIONAL"
+    },
+    {
+      "id": "L2-01",
+      "stage": "L2",
+      "depends_on": [
+        "L1-04"
+      ],
+      "state": "COMPLETE",
+      "delta": "desktop chat and text file flow",
+      "evidence": "MOCK_UI_FUNCTIONAL"
+    },
+    {
+      "id": "L2-02",
+      "stage": "L2",
+      "depends_on": [
+        "L2-01"
+      ],
+      "state": "COMPLETE",
+      "delta": "multi-session synthetic cognition and natural synthesis",
+      "evidence": "SYNTHETIC_REPLAY_ONLY"
+    },
+    {
+      "id": "L2-03",
+      "stage": "L2",
+      "depends_on": [
+        "L2-02"
+      ],
+      "state": "COMPLETE",
+      "delta": "Explain correction and memory controls",
+      "evidence": "MOCK_EXPLAIN_MEMORY_FUNCTIONAL"
+    },
+    {
+      "id": "L2-04",
+      "stage": "L2",
+      "depends_on": [
+        "L2-03"
+      ],
+      "state": "COMPLETE",
+      "delta": "Lab shell and integrated mock acceptance",
+      "evidence": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS"
+    },
+    {
+      "id": "L2.5-01",
+      "stage": "L2.5",
+      "depends_on": [
+        "L2-04"
+      ],
+      "state": "COMPLETE",
+      "delta": "pinned development runtime bridge contract handshake and capability discovery",
+      "evidence": "EXPERIMENTAL_TRANSPORT_VERIFIED"
+    },
+    {
+      "id": "L2.5-02",
+      "stage": "L2.5",
+      "depends_on": [
+        "L2.5-01"
+      ],
+      "state": "COMPLETE",
+      "delta": "real-runtime serialization lifecycle receipts and synthetic end-to-end execution",
+      "evidence": "L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS"
+    }
   ],
-  "satisfied_gates": ["L0_CANONICAL_SETUP", "PHYSICAL_PRODUCT_REPOSITORY_SPLIT", "L2_MOCK_PRODUCT_COMPLETE", "L2_5_DEVELOPMENT_BRIDGE_COMPLETE"],
-  "l3_gates": ["I06_DISPOSITION", "PINNED_PERMITTED_RUNTIME_ARTIFACT", "PRODUCT_ADAPTER_SCOPE_VALIDATION", "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"],
+  "satisfied_gates": [
+    "L0_CANONICAL_SETUP",
+    "PHYSICAL_PRODUCT_REPOSITORY_SPLIT",
+    "L2_MOCK_PRODUCT_COMPLETE",
+    "L2_5_DEVELOPMENT_BRIDGE_COMPLETE"
+  ],
+  "l3_gates": [
+    "I06_DISPOSITION",
+    "PINNED_PERMITTED_RUNTIME_ARTIFACT",
+    "PRODUCT_ADAPTER_SCOPE_VALIDATION",
+    "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
+  ],
   "evidence": {
     "product_implementation": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS",
     "real_runtime": "EXPERIMENTAL_PINNED_PROVIDER_FREE_SLICE_ONLY",
@@ -82,7 +208,7 @@
     "experimental_runtime_bridge": "L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS",
     "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE",
     "product_design_adoption": "CANONICAL_1_2_PRODUCT_A2_ON_MERGED_MAIN_NOT_IMPLEMENTATION",
-    "a2_product_implementation": "NOT_STARTED",
+    "a2_product_implementation": "P0_01_SYNTHETIC_CONTRACTS_VERIFIED_WITH_LIMITS",
     "judge": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED",
     "upstream_sync_maintenance": "INHERITED_FROM_MERGED_PR_6_NOT_IMPLEMENTED_BY_DOCUMENT_ADOPTION"
   },
@@ -91,35 +217,103 @@
     "authority": "SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE",
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
-    "phase": "ASSISTANT_FIRST_REFINEMENT_READY",
-    "next_ready": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
-    "next_package_id": "P0-01",
+    "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
+    "next_ready": "P1-01_ASSISTANT_FIRST_SHARED_SHELL",
+    "next_package_id": "P1-01",
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
-    "current_request_scope": "DOCUMENTS_AND_PLAN_METADATA_ONLY",
-    "current_executor_stop_after": "A2_DOCUMENT_ADOPTION_EXACT_MAIN_VERIFIED",
-    "implementation_started": false,
-    "implementation_requires_separate_work": true,
+    "current_request_scope": "AUTHORIZED_SYNTHETIC_PROVIDER_FREE_IMPLEMENTATION",
+    "current_executor_stop_after": "P1-03_OR_L3_GATE",
+    "implementation_started": true,
+    "implementation_requires_separate_work": false,
     "execution_scope": "SYNTHETIC_PROVIDER_FREE_PRODUCT_REFINEMENT_ONLY",
     "max_provider_calls": 0,
     "real_private_data_allowed": false,
     "production_activation_allowed": false,
     "judge_implementation_authorized": false,
     "agent_execution_authorized": false,
-    "automatic_queue_consumers": "REQUIRE_EXPLICIT_MIGRATION_BEFORE_NEW_SCHEDULING",
+    "automatic_queue_consumers": "CURRENT_PRODUCT_QUEUE_VALIDATED",
     "packages": [
-      {"id":"P0-01","task":"P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR","depends_on":[],"state":"NEXT_READY","delta":"truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration","acceptance":["R01","R02","R03","R04","R05","R06","R07"],"evidence":"NOT_IMPLEMENTED"},
-      {"id":"P1-01","task":"P1-01_ASSISTANT_FIRST_SHARED_SHELL","depends_on":["P0-01"],"state":"WAITING_DEPENDENCY","delta":"shared Assistant-first home/chat navigation composer reading and accessibility","acceptance":["R08","R09","R10","R11","R12"],"evidence":"NOT_IMPLEMENTED"},
-      {"id":"P1-02","task":"P1-02_REVISION_EVIDENCE_MEMORY_LOOP","depends_on":["P1-01"],"state":"WAITING_DEPENDENCY","delta":"revision/change/evidence/source/history/memory control loop","acceptance":["R13","R14","R15","R16"],"evidence":"NOT_IMPLEMENTED"},
-      {"id":"P1-03","task":"P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE","depends_on":["P1-02"],"state":"WAITING_DEPENDENCY","delta":"bounded inspect/settings and integrated original synthetic acceptance","acceptance":["R17","R18","R19","R20"],"evidence":"NOT_IMPLEMENTED"}
+      {
+        "id": "P0-01",
+        "task": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
+        "depends_on": [],
+        "state": "COMPLETE",
+        "delta": "truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration",
+        "acceptance": [
+          "R01",
+          "R02",
+          "R03",
+          "R04",
+          "R05",
+          "R06",
+          "R07"
+        ],
+        "evidence": "docs/P0_01_EVIDENCE.md"
+      },
+      {
+        "id": "P1-01",
+        "task": "P1-01_ASSISTANT_FIRST_SHARED_SHELL",
+        "depends_on": [
+          "P0-01"
+        ],
+        "state": "NEXT_READY",
+        "delta": "shared Assistant-first home/chat navigation composer reading and accessibility",
+        "acceptance": [
+          "R08",
+          "R09",
+          "R10",
+          "R11",
+          "R12"
+        ],
+        "evidence": "NOT_IMPLEMENTED"
+      },
+      {
+        "id": "P1-02",
+        "task": "P1-02_REVISION_EVIDENCE_MEMORY_LOOP",
+        "depends_on": [
+          "P1-01"
+        ],
+        "state": "WAITING_DEPENDENCY",
+        "delta": "revision/change/evidence/source/history/memory control loop",
+        "acceptance": [
+          "R13",
+          "R14",
+          "R15",
+          "R16"
+        ],
+        "evidence": "NOT_IMPLEMENTED"
+      },
+      {
+        "id": "P1-03",
+        "task": "P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE",
+        "depends_on": [
+          "P1-02"
+        ],
+        "state": "WAITING_DEPENDENCY",
+        "delta": "bounded inspect/settings and integrated original synthetic acceptance",
+        "acceptance": [
+          "R17",
+          "R18",
+          "R19",
+          "R20"
+        ],
+        "evidence": "NOT_IMPLEMENTED"
+      }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
-    "long_term_end_state": ["Understand", "Revise", "Judge", "Help", "Act"],
+    "long_term_end_state": [
+      "Understand",
+      "Revise",
+      "Judge",
+      "Help",
+      "Act"
+    ],
     "judge_status": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED"
   },
   "writer": {
-    "branch": "product/a2-assistant-first-canonical",
-    "scope": "A2_DOCUMENTS_AND_PLAN_METADATA_ONLY",
-    "status": "STOP_AFTER_DOCUMENT_ADOPTION_NO_IMPLEMENTATION"
+    "branch": "product/p0-01-truthful-preview",
+    "scope": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
+    "status": "AWAITING_FINAL_EXACT_HEAD_REVIEW_AND_MERGE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
