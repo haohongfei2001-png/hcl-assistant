@@ -6,6 +6,11 @@ on:
     paths:
       - 'pages-preview/**'
       - '.github/workflows/pages-preview.yml'
+      - 'apps/web/src/**'
+      - 'vite.pages.config.js'
+      - 'package*.json'
+      - 'tsconfig.json'
+      - 'scripts/check_preview_bundle.py'
   workflow_dispatch:
 
 permissions:
@@ -26,16 +31,13 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: Verify static synthetic boundary
+      - name: Build and verify shared browser-only synthetic preview
         shell: bash
         run: |
           set -euo pipefail
-          test -f pages-preview/index.html
-          test -f pages-preview/app.js
-          test -f pages-preview/style.css
-          grep -q '未接入真实 HCL' pages-preview/index.html
-          grep -q 'Provider calls</dt><dd>0' pages-preview/app.js
-          ! grep -R -E '(sk-[A-Za-z0-9_-]{20,}|github_pat_|BEGIN .*PRIVATE KEY)' pages-preview
+          npm ci --ignore-scripts
+          npm run build:preview
+          python3 scripts/check_preview_bundle.py
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
@@ -43,7 +45,7 @@ jobs:
       - name: Upload static preview
         uses: actions/upload-pages-artifact@v3
         with:
-          path: pages-preview
+          path: pages-dist
       - name: Deploy static preview
         id: deployment
         uses: actions/deploy-pages@v4

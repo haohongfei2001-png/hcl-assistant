@@ -8,12 +8,16 @@ ROOT = Path(__file__).resolve().parents[1]
 class PagesPreviewBoundaryTests(unittest.TestCase):
     def test_static_preview_assets_are_browser_only_and_explicit(self):
         index = (ROOT / "pages-preview/index.html").read_text(encoding="utf-8")
-        app = (ROOT / "pages-preview/app.js").read_text(encoding="utf-8")
+        app = (ROOT / "pages-preview/main.tsx").read_text(encoding="utf-8")
         self.assertIn("未接入真实 HCL", index)
         self.assertIn("localStorage", app)
+        self.assertIn("AssistantShell", app)
+        self.assertIn("preview-model.js", app)
+        self.assertIn("npm run build:preview", (ROOT/".github/workflows/pages-preview.yml").read_text())
+        self.assertIn("check_preview_bundle.py", json.loads((ROOT/"package.json").read_text())["scripts"]["build"])
         self.assertNotIn("fetch(", app)
         self.assertNotIn("/v1/", app)
-        self.assertIn("Provider calls</dt><dd>0", app)
+        self.assertIn("Provider calls:0", app)
 
     def test_pages_workflow_has_only_builtin_static_deploy_permissions(self):
         workflow = (ROOT / ".github/workflows/pages-preview.yml").read_text(encoding="utf-8")
@@ -22,7 +26,7 @@ class PagesPreviewBoundaryTests(unittest.TestCase):
         self.assertIn("id-token: write", workflow)
         self.assertIn("actions/deploy-pages@", workflow)
         self.assertNotIn("secrets.", workflow)
-        self.assertIn("path: pages-preview", workflow)
+        self.assertIn("path: pages-dist", workflow)
 
     def test_plan_keeps_l3_gate_while_authorizing_static_preview(self):
         plan = json.loads((ROOT / "control/plan.json").read_text(encoding="utf-8"))

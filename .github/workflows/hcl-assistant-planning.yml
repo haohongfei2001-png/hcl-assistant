@@ -144,3 +144,14 @@ jobs:
             test ! -f browser-tests.txt || tail -n 8 browser-tests.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain synthetic visual and failure evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: synthetic-browser-evidence
+          path: |
+            product-export/test-results
+            product-export/.tmp/screenshots
+          retention-days: 7
+          if-no-files-found: ignore
