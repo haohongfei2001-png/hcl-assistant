@@ -311,9 +311,9 @@
     "judge_status": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED"
   },
   "writer": {
-    "branch": "product/p0-01-truthful-preview",
-    "scope": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
-    "status": "AWAITING_FINAL_EXACT_HEAD_REVIEW_AND_MERGE"
+    "branch": "product/p1-01-shared-shell",
+    "scope": "P1-01_ASSISTANT_FIRST_SHARED_SHELL",
+    "status": "IMPLEMENTING_SINGLE_WRITER"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
