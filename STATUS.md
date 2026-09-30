@@ -42,3 +42,11 @@ L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、
 历史L2.5阶段交接码：`STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED`。它仅禁止历史包完成后自动进入L3，不是当前全产品NEXT_READY。control/plan.json顶层legacy字段保留这一作用域；当前checker已分别验证唯一product_development队列和旧11包/L3边界；报告明确区分两种next_ready，不放宽历史断言。
 
 既有upstream候选测试/lock-only审阅维护继续按 [原契约](docs/RUNTIME_UPSTREAM_SYNC.md) 执行；它不是另一个feature-development NEXT_READY，不覆盖当前writer或A2方案。此文档不改变其workflow设置或生产门槛。
+
+## Continuum V1 design adoption status
+
+Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 CONTINUUM-V1-20261001，目录见 [Design Adoption](docs/design/continuum-v1/README.md)。当前仓库状态为 **PENDING_BINARY_IMPORT_AND_REVIEW**：五张原PNG已在会话交付包保留并校验，但尚未在此分支完成二进制入库与回读；不能声称资产已齐、已正式采用或 V1 已实现。规格/计划草稿不覆盖 main。
+
+本次读基线 main fa2cd0bf，P0-01/P1-01 完成事实保留；未合入的 P1-02/PR10 保持原 writer 与实现归属。本次文档工作没有修改应用、测试、workflow、runtime或研究机制，没有触发生产/能力启用。唯一当前任务不变，后续 V1 工作归入既有 P1-03 的三个顺序交付切片；无第二队列。
+
+两套形象候选 M-01/M-02 同时保留，selected_companion=null，不因未选唯一形象阻塞共同界面。原图中的示例文案、数字、引用、文件/工具按钮仅是视觉示例；真实状态来自现有实现/回执。V01–V10 实際视觉对照与交互演示均 NOT_IMPLEMENTED / NOT_VERIFIED；旧包 CI 不替代这些新验收。

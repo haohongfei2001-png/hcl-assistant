@@ -25,7 +25,7 @@ revision/change/evidence/source/history/memory control loop。验收：R13、R14
 | P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | COMPLETE |
 | P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | COMPLETE |
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | NEXT_READY |
-| P1-03 | bounded Inspect/Settings与整体synthetic验收 | P1-02 | WAITING_DEPENDENCY |
+| P1-03 | bounded Inspect/Settings、Continuum V1视觉还原与整体synthetic验收 | P1-02 | WAITING_DEPENDENCY |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
@@ -50,3 +50,15 @@ PR #6在本次采用期间已由另一执行者合入 `e2a72050e184e61f45b17de3f
 执行者先读最新main/open PR/AGENTS，只有一个implementation writer。重叠控制文档须协调到Canonical1.2后再合并，不能恢复第二套队列或覆盖已采用维护。
 
 每个实施包提供实际delta、正负/修订/持久化/browser证据、exact-head CI；合并后检查exact-main，再同步Status、此文件与product_development。代码、权限或实测未支持的内容保留未实现，不用描述代替验证。本次文档执行者在合并核验后停止。
+
+## 6. Continuum V1 增量，不另建队列
+
+最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。正式采用须完整原图入库核验及原有审查/合并门槛，缺图的草稿不授权启动新视觉实施。
+
+本次读取基线 fa2cd0bf 已完成 P0-01/P1-01，P1-02 由 PR #10 的现有 implementation writer 推进。保留其代码、回执和依赖；本次不认领任何 implementation 包，不覆盖 writer 元数据。若 main 在采用前前进，重读并保留新完成状态，不把本文件的读取基线投影覆盖回去。
+
+新视觉工作归入尚未完成的 **P1-03**，按 V1-A 共享外观/首页/长对话 → V1-B 依据/来源/修订/锚点返回 → V1-C 双形象/响应式/Inspector与Settings/整体截图及交互验收推进。三切片范围、参考图和验收条件在 [P1-03包定义](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md#continuum-v1p1-03-内的三个依赖交付切片) 中；切片不是另外的 NEXT_READY、独立队列或并行 writer。
+
+P1-03 原 R17–R20 义务不减少，新增 V01–V10 从属于 R19/R20。原四包任务ID、依赖、验收数组、机器 product_plan_version 和 L3 停止条件保持不变，避免本次文档变更要求修改 checker/tests/workflow。checker 的通过不证明视觉还原：实际页面与五张原稿对照、关键操作录像、偏差登记仍须逐项审阅。
+
+两形象 M-01/M-02 均保留，未定唯一品牌不阻塞共同界面。图稿中的示例事实、引用、文件/搜索/模型/agent按钮不能增加当前能力。所有阶段维持 synthetic/provider-free/no-private-data 边界；完成视觉不自动进入 L3。

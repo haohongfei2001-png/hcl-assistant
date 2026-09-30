@@ -290,14 +290,23 @@
           "P1-02"
         ],
         "state": "WAITING_DEPENDENCY",
-        "delta": "bounded inspect/settings and integrated original synthetic acceptance",
+        "delta": "bounded inspect/settings, adopted Continuum V1 visual realization and integrated original synthetic acceptance",
         "acceptance": [
           "R17",
           "R18",
           "R19",
           "R20"
         ],
-        "evidence": "NOT_IMPLEMENTED"
+        "evidence": "NOT_IMPLEMENTED",
+        "design_id": "CONTINUUM-V1-20261001",
+        "delivery_spec": "docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md",
+        "visual_acceptance_spec": "docs/design/continuum-v1/ACCEPTANCE.md",
+        "delivery_slices_are_independent_queue": false,
+        "ordered_delivery_slices": [
+          {"id": "V1-A", "depends_on": "P1-02_AND_V1_DESIGN_ADOPTION", "scope": "shared surfaces home long conversation and composer", "design_refs": ["UI-01", "UI-02"], "verification": ["V01", "V02", "V08", "V10"]},
+          {"id": "V1-B", "depends_on": "V1-A", "scope": "evidence source revision and anchored return", "design_refs": ["UI-02", "UI-03"], "verification": ["V03", "V04", "V05", "V06", "V07", "V10"]},
+          {"id": "V1-C", "depends_on": "V1-B", "scope": "both companion candidates off state responsive motion and original P1-03 integrated acceptance", "design_refs": ["UI-01", "UI-02", "UI-03", "M-01", "M-02"], "verification": ["V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09", "V10"]}
+        ]
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -308,7 +317,22 @@
       "Help",
       "Act"
     ],
-    "judge_status": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED"
+    "judge_status": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED",
+    "design_adoption": {
+      "id": "CONTINUUM-V1-20261001",
+      "owner_decision": "APPROVED_FOR_REPOSITORY_ADOPTION",
+      "repository_status": "PENDING_BINARY_IMPORT_AND_REVIEW",
+      "document": "docs/design/continuum-v1/README.md",
+      "manifest": "docs/design/continuum-v1/asset-manifest.json",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "asset_and_merge_gate_required": true,
+      "companion_candidates": ["M-01", "M-02"],
+      "selected_companion": null,
+      "companion_selection_blocks_shared_ui": false,
+      "change_scope": "DESIGN_ASSETS_SPECIFICATIONS_AND_PLAN_METADATA_ONLY",
+      "new_top_level_queue": false,
+      "current_checker_validates_visual_items": false
+    }
   },
   "writer": {
     "branch": "product/p1-01-shared-shell",
