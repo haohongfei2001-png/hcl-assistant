@@ -36,3 +36,7 @@ Hosted L2-03 head run 36736455962 failed the cancellation assertion: Stop was cl
 ## 2026-10-01 canonical plan amendment
 
 The historical L1/L2 closure above remains unchanged. Owner superseded the old immediate `STOP_WITH_HANDOFF_L3_GATED` handoff with a new development-only `L2.5 — EXPERIMENTAL_RUNTIME_BRIDGE`. This does not upgrade any L2 evidence and does not implement the bridge. The new unique NEXT_READY is `L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE`; formal L3 remains I06-gated Production Capability Activation.
+
+## L2.5 sole writer claim
+
+Branch `product/l2-5-runtime-bridge` owns both packages. Clean local main was fast-forwarded to remote `f26e41768824fadce391a494757432d5d5eeb96e`; no open PR existed. Pin: `haohongfei2001-png/human-cognition-layer@a8229fcf22eccb851c58502a09ae7cecb346faf5`. Only three provider-free runtime modules will be acquired at this SHA; no full research tree, evaluation assets or credentials. Production remains disabled.

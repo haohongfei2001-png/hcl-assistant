@@ -5,7 +5,7 @@
   "next_ready": "L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE",
   "next_package_id": "L2.5-01",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
-  "current_executor_stop_after": "PLAN_AMENDMENT_MERGE",
+  "current_executor_stop_after": "L2.5-02",
   "future_work_allowed_through": "L2.5-02",
   "research_sequence": [
     "I02",
@@ -190,9 +190,9 @@
     "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE"
   },
   "writer": {
-    "branch": "UNCLAIMED",
+    "branch": "product/l2-5-runtime-bridge",
     "scope": "L2.5-01_THROUGH_L2.5-02",
-    "status": "NEXT_READY_UNCLAIMED"
+    "status": "SOLE_WRITER_CLAIMED"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED"
 }
