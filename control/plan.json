@@ -9,7 +9,8 @@
     "legacy_stage_scope": "LEGACY_L0_L2_5_STAGE_COMPLETION_AND_L3_GATE_ONLY",
     "legacy_next_ready_is_global_product_queue": false,
     "automation_support": "LEGACY_STAGE_CHECKS_ONLY_CURRENT_QUEUE_MANUALLY_REVIEWED",
-    "queue_consumer_migration_required_before_new_automated_scheduling": true
+    "queue_consumer_migration_required_before_new_automated_scheduling": true,
+    "runtime_sync_scope": "EXISTING_ADOPTED_PIN_MAINTENANCE_NOT_AN_ALTERNATE_PRODUCT_QUEUE"
   },
   "phase": "L2_5_COMPLETE",
   "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -80,15 +81,16 @@
     "acceptance_matrix": "docs/ACCEPTANCE_MATRIX.md",
     "experimental_runtime_bridge": "L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS",
     "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE",
-    "product_design_adoption": "CANONICAL_A2_ON_MERGED_MAIN_NOT_IMPLEMENTATION",
+    "product_design_adoption": "CANONICAL_1_2_PRODUCT_A2_ON_MERGED_MAIN_NOT_IMPLEMENTATION",
     "a2_product_implementation": "NOT_STARTED",
-    "judge": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED"
+    "judge": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED",
+    "upstream_sync_maintenance": "INHERITED_FROM_MERGED_PR_6_NOT_IMPLEMENTED_BY_DOCUMENT_ADOPTION"
   },
   "product_development": {
     "schema_version": "1.0",
     "authority": "SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE",
     "canonical_document": "DEVELOPMENT_PLAN.md",
-    "product_plan_version": "1.2/A2",
+    "product_plan_version": "1.2/A2-Product",
     "phase": "ASSISTANT_FIRST_REFINEMENT_READY",
     "next_ready": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
     "next_package_id": "P0-01",
@@ -119,5 +121,12 @@
     "scope": "A2_DOCUMENTS_AND_PLAN_METADATA_ONLY",
     "status": "STOP_AFTER_DOCUMENT_ADOPTION_NO_IMPLEMENTATION"
   },
-  "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED"
+  "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
+  "runtime_sync": {
+    "workflow": ".github/workflows/upstream-runtime-sync.yml",
+    "tracking": "PUBLIC_MAIN_SHA_METADATA_ONLY",
+    "candidate_policy": "EXACT_SHA_FULL_COMPATIBILITY_THEN_LOCK_ONLY_PR",
+    "stable_policy": "REVIEWED_LOCK_ONLY",
+    "production_activation_allowed": false
+  }
 }

@@ -1,60 +1,63 @@
-# Document Authority and Supersession — A2
+# Document Authority and Supersession — Canonical 1.2
 
-生效条件：本次文档采用合入 `haohongfei2001-png/hcl-assistant/main`。采用来源是 Owner 对已完成 Product & Interaction Design Review 的明确确认，并补充长期 `Understand → Revise → Judge → Help → Act`。本版没有第二套可选产品方案。
+生效条件：本次文档采用合入 `haohongfei2001-png/hcl-assistant/main`。采用来源为Owner明确确认的Product & Interaction Design Review及长期Understand → Revise → Judge → Help → Act。没有第二套可选产品方案。
 
 ## 1. 唯一权威方案的分工
 
 | 文件/位置 | 唯一职责 |
 |---|---|
-| [Master Plan 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md) | 最终产品定义、Assistant-first、功能分层、架构原则、MVP与长期终局 |
-| [UX Spec A2](UX_SPEC.md) | 同一方案的主流程与九个视图交互要求 |
-| [Visual System A2](VISUAL_SYSTEM.md) | 同一方案的视觉tokens和行为要求 |
-| [Development Plan](../DEVELOPMENT_PLAN.md) | 唯一当前开发任务、依赖顺序与停止条件 |
-| `control/plan.json.product_development` | 上述唯一开发队列的机器可读投影，不是另一套计划 |
-| [Status](../STATUS.md) | 当前已实现/未实现与证据事实，不能由计划倒推能力 |
-| [Product Contracts](../contracts/PRODUCT_CONTRACTS_V1.md) | 现有API、数据、修订、权限与运行回执语义；不是前台导航模板 |
-| [Acceptance Matrix](ACCEPTANCE_MATRIX.md) | 新设计待实现验收与历史证据的分离 |
-| [Review Adoption](PRODUCT_REVIEW_ADOPTION.md) | 本次采用基线、现存问题与整改归属，不是已修复报告 |
+| [Master Plan 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md) | 最终产品定义、Assistant-first、功能分层、架构、MVP与终局 |
+| [UX Spec](UX_SPEC.md) | 同一方案的主流程与九个视图 |
+| [Visual System](VISUAL_SYSTEM.md) | 同一方案的视觉tokens与行为 |
+| [Development Plan](../DEVELOPMENT_PLAN.md) | 唯一当前开发任务、依赖与停止条件 |
+| `control/plan.json.product_development` | 上述唯一当前开发队列的机器投影，不是另一套计划 |
+| [Status](../STATUS.md) | 当前实现与证据事实，不由计划倒推能力 |
+| [Product Contracts](../contracts/PRODUCT_CONTRACTS_V1.md) | API/数据/权限/运行回执语义，包括已采用C12；不是前台导航模板 |
+| [Acceptance Matrix](ACCEPTANCE_MATRIX.md) | 当前R01–R20待实现义务与历史A01–A30证据分离 |
+| [Review Adoption](PRODUCT_REVIEW_ADOPTION.md) | 本次基线、缺陷及采用历史，不是修复完成报告 |
+| [Upstream Sync](RUNTIME_UPSTREAM_SYNC.md) / [Sync Evidence](RUNTIME_SYNC_EVIDENCE.md) | 已采用固定runtime维护边界与证据；不是产品定义或另一feature队列 |
 
-Remote main代码、exact-SHA CI、固定runtime lock与原始回执是实现/证据事实。设计文件不升级这些事实。多个规范冲突时先按上表职责解决；产品/UX/视觉以A2为准，不能覆盖来源、权限、删除、研究隔离或生产激活门槛。队列镜像不一致必须停止认领并同步，不能挑对自己方便的一份继续。
+Remote main代码、exact-SHA CI、reviewed runtime lock与原始回执是实现事实。产品/UX/视觉冲突以本版为准，但不能覆盖来源、权限、删除、研究隔离、runtime维护安全或生产激活门槛。队列镜像不一致须停止认领并同步，不能挑有利文档执行。
 
-## 2. control/plan.json 的明确作用域迁移
+### Amendment标识的并发消歧
 
-当前旧checker硬编码了11个L0–L2.5包及完成后的L3停止码。本次是文档/计划元数据采用，不能修改checker/tests或让失败CI被忽略。
+PR #6曾将其维护条款命名“Canonical Amendment A2 — verified upstream pin maintenance”。本Review在并发分支也使用A2。为避免两个不同含义的A2竞争：本次产品方案完整身份为 **Canonical 1.2 / A2-Product**，本文件体系中的简写A2均指该Product Review；先前runtime条款称 **UPSTREAM_SYNC_MAINTENANCE / PR6**，其全部非冲突语义继续由C12、RUNTIME_UPSTREAM_SYNC和runtime_sync元数据承载并纳入当前权威体系。编号消歧不撤销既有维护授权，不是新的产品方案。
 
-因此同一plan文件保留顶层 `phase / packages / next_package_id / next_ready / current_executor_stop_after / future_work_allowed_through` 作为 **LEGACY_L0_L2_5_STAGE_COMPLETION_AND_L3_GATE_ONLY**。其中 `STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED` 仅表示完成这些历史包后不得自动进入L3，不再表示全部产品整改都停止。十一包的完成事实、production gates和证据原样保留，不伪造一个历史包重新NEXT_READY来迎合旧checker。
+## 2. control/plan.json作用域迁移
 
-当前唯一产品开发队列是 **`product_development`**，当前任务从 `product_development.next_ready` 读取。根Development Plan和Status只镜像这个产品任务。顶层legacy next字段不是第二个候选任务，旧CI输出中的同名字段也只具有历史阶段含义。
+旧checker硬编码11个L0–L2.5包和完成后L3停止码。本次只能改文档/计划元数据，不改checker/tests、不忽略失败CI。
 
-本版明确记录 `automation_support=LEGACY_STAGE_CHECKS_ONLY_CURRENT_QUEUE_MANUALLY_REVIEWED`。现有自动检查的通过不被称为已验证A2队列。下一项P0-01先把checker/reporting/tests和队列消费者适配到这一唯一当前队列，并继续严格验证所有旧11包/权限/生产门槛。不得只读legacy next字段作当前调度；未适配自动消费者必须停止新调度，不能忽略新writer/任务。
+顶层phase/packages/next_package_id/next_ready/current_executor_stop_after/future_work_allowed_through明确保留为 **LEGACY_L0_L2_5_STAGE_COMPLETION_AND_L3_GATE_ONLY**。其中STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED只表示历史包完成不得自动进入L3，不表示全部产品整改停止。旧包完成/证据/生产门槛不改，不伪造重开包迎合checker。
 
-这是一项显式兼容迁移，不是放宽历史断言或绕过CI。迁移属于下一项代码任务，本次没有修改代码。
+当前唯一产品开发队列是 **product_development**；Status和Development Plan只镜像其中的next_ready。顶层legacy字段及旧CI输出不是第二候选任务。runtime_sync是已采用的维护配置，不是新的产品队列。
 
-## 3. 冲突设计的处置
+本版明确标注automation_support=LEGACY_STAGE_CHECKS_ONLY_CURRENT_QUEUE_MANUALLY_REVIEWED。既有检查通过不代表自动验证A2队列。P0-01先迁移checker/reporting/tests与产品队列消费者，继续严格验证旧11包与安全边界；未适配者不得基于legacy字段自动认领/调度新的产品包。已采用runtime维护继续遵从其独立固定锁、writer/main冲突和CI检查，不由此扩大权限或替产品排第二个下一任务。
 
-| 旧要求或位置 | 处置 |
+这是显式兼容迁移，不是放宽断言或绕过CI；迁移代码属于下一项任务，本次未实现。
+
+## 3. 旧冲突设计处置
+
+| 旧要求/位置 | 处置 |
 |---|---|
-| Master Plan 1.0/1.1与UX v1中冲突的默认呈现 | 由当前Master/UX/Visual替代；旧版本只在Git历史保留 |
-| 左侧常驻Topic/范围表单、默认Advanced、标题前记忆管理 | 由A2导航/当前范围/按需项目替代 |
-| 每轮状态版本、route、MOCK、Lab主按钮 | 下沉；环境标识保留真实可见 |
-| Lab主导、Case-first、常驻图谱、前台Base/HCL或强度滑块 | 排除，不是后续可自由恢复的变体 |
-| L2-04要求显示disabled Compare按钮 | 历史验收事实保留；新主体验移除占位，Lab只说明真实门槛 |
-| 人际/概念/责任作为默认首页分类 | 改为内部验证场景；对外通用助手 |
-| 人格评分、心理诊断、全局永久第三方画像列入Later | 从产品路线排除；不与移动/语音/获准工具等可能后期功能混列 |
-| README/STATUS/AGENTS中L2.5尚在review branch或下一步开始bridge | 已合并事实以PR #5与exact-main为准；当前队列另行明确 |
-| [L0–L2.5 Packages](L0_L2_WORK_PACKAGES.md) | 历史包索引；原始全文在baseline文件保留，不是当前待开发队列 |
-| [Baseline Acceptance](ACCEPTANCE_MATRIX_BASELINE_20261001.md) | 原始A01–A29及closure保留，只证明当时指定synthetic范围，不认证Pages缺陷已修复或A2合格 |
-| [Execution](EXECUTION.md)、迁移/研究基线文档 | 历史provenance，不用其中旧NEXT_READY或NOT_IMPLEMENTED覆盖当前Status |
-| [Pages Preview](PAGES_PREVIEW.md)与当前截图/代码 | 现存受限实现及反例，不是目标IA的权威来源 |
-| 研究仓库旧products/hcl-assistant副本 | 退役，不在那里开发，不维护双队列；本次不修改研究仓库 |
-| 尚未合并PR及其分支文档 | 不覆盖current main；合并前必须保留A2定义和唯一队列 |
+| Master1.0/1.1与UX v1冲突的默认呈现 | 当前Master/UX/Visual替代，旧版本仅历史 |
+| 左栏常驻Topic/范围、Advanced、标题前记忆管理 | 按需项目、当前范围、记忆入口替代 |
+| 每轮route/version/MOCK/Lab主按钮 | 下沉；真实环境标识仍保留 |
+| Lab主导、Case-first、常驻图谱、Base/HCL或强度滑块 | 排除，不可自行恢复为并列变体 |
+| L2-04 disabled Compare按钮 | 历史事实保留，新主体验去掉占位；Lab说明真实门槛 |
+| 人际/概念/责任首页分类 | 内部验证场景，对外通用助手 |
+| 人格分/心理诊断/永久第三方画像列入Later | 排除，不与移动/语音/获准工具混列 |
+| stale review-branch/下一步L2.5文字 | 由PR5/PR6已合入事实及当前Status替代 |
+| [L0–L2.5 Packages](L0_L2_WORK_PACKAGES.md) | 历史索引，全文存档，不是当前待办 |
+| [Baseline Acceptance](ACCEPTANCE_MATRIX_BASELINE_20261001.md) | 原A01–A29保留，只证当时synthetic范围；A30另由sync evidence保留 |
+| Execution、迁移/研究基线 | 历史provenance；旧NEXT_READY/NOT_IMPLEMENTED不覆盖live文件 |
+| Pages文档/截图/当前代码 | 现存受限实现与反例，不决定目标IA |
+| 研究仓库旧products/hcl-assistant副本 | 退役，不在那里开发或维护双队列；本次不修改研究仓库 |
+| 尚未合并分支文档 | 不覆盖main，合并前协调到唯一产品方案 |
 
-## 4. 历史文件与保留原则
+## 4. 历史保留与并发合并
 
-`L0_L2_WORK_PACKAGES_BASELINE_20261001.md` 与 `ACCEPTANCE_MATRIX_BASELINE_20261001.md` 是产品main `972234e8fdb868a51a519ba7f7c98cdb5a80583b` 对应文件的byte-identical Git blob存档。存档中的“当前”“NEXT_READY”“NOT_IMPLEMENTED”或阶段PASS只按原始时间/范围阅读，不是新指令。
+L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.md使用产品972234e8对应原blob字节不变。历史“当前/next/NOT_IMPLEMENTED/PASS”按原时间范围阅读。不删失败、不改分、不升级mock。
 
-不删除失败证据、不修改分数、不升级mock，不把设计采用写成修复完成。API契约、capability manifest、runtime lock、应用、脚本、测试与workflow在本次采用中不改。
+执行期间另一写入者将PR #6合入main e2a72050。此次在最新main树上仅重新应用文档/计划差异，并把该main作为合并父提交，保留其所有应用、脚本、测试、workflow、C12、runtime维护文档/证据和runtime_sync字段。Stable lock不改。Git compare以e2a72050为新的直接基线；不得将继承的代码归为本次实现。
 
-## 5. 并发工作
-
-采用前发现open PR #6（upstream runtime sync），其产品基线也是972234e8；它不是已合入功能，也不是本次用户授权接管的工作。此次只修改文档/计划，保留该PR代码和分支。其后续合并须基于最新main协调重叠控制文档，不得把legacy全产品STOP恢复为当前任务，或把自动repin变成生产激活。
+原始head2cbfc524的通过只属于该head；协调后的新head及最终main必须分别验证。当前唯一下一项仍P0-01，不因为继承维护实现转向repin、L3或Judge。

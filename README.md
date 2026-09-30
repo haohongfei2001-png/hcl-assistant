@@ -4,17 +4,19 @@
 
 ## Canonical product entry
 
-唯一产品事实源是 `haohongfei2001-png/hcl-assistant/main`。正式采用的唯一方案为 [Product Master Plan 1.2 / A2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)；[UX Spec](docs/UX_SPEC.md) 与 [Visual System](docs/VISUAL_SYSTEM.md) 是同一方案的具体规范，不是替代方案。
+唯一产品事实源是 `haohongfei2001-png/hcl-assistant/main`。正式采用的唯一产品方案为 [Product Master Plan 1.2 / A2-Product](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)；[UX Spec](docs/UX_SPEC.md) 与 [Visual System](docs/VISUAL_SYSTEM.md) 是同一方案的具体规范，不是替代方案。
 
 开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前唯一下一项是 **P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**；本次文档采用不启动实现。
 
-当前队列机器投影为 `control/plan.json.product_development`。顶层旧phase/next_ready仅是L0–L2.5完成与L3生产门槛记录，不是第二套live队列；自动消费者迁移列入P0-01，未迁移者不得据旧字段新调度。
+当前队列机器投影为 `control/plan.json.product_development`。顶层旧phase/next_ready仅是L0–L2.5完成与L3生产门槛记录，不是第二套live队列；自动消费者迁移列入P0-01，未迁移者不得据旧字段新调度产品任务。
 
 ## Actual implementation, not the target UI
 
-L0–L2 mock产品与L2.5受限development bridge已合入main；基线PR #5和exact-main检查见 [adoption record](docs/PRODUCT_REVIEW_ADOPTION.md)。普通Web消息仍MOCK，没有通用模型回答；L2.5只在明确配置的隔离synthetic路径执行固定runtime slice。production remains disabled，efficacy remains NOT_TESTED。旧截图和现有页面不是目标信息架构。
+L0–L2 mock产品与L2.5受限development bridge已合入main；基线PR #5与并发合入的维护PR #6见 [adoption record](docs/PRODUCT_REVIEW_ADOPTION.md)。普通Web消息仍MOCK，没有通用模型回答；L2.5只在明确配置的隔离synthetic路径执行固定runtime slice。production remains disabled，efficacy remains NOT_TESTED。旧截图和现有页面不是目标信息架构。
 
-Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。没有托管provider服务或生产认证；本轮不改依赖、代码或runtime lock。完整历史证据见 [acceptance](docs/ACCEPTANCE_MATRIX.md) 与 [execution](docs/EXECUTION.md)。
+Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。没有托管provider服务或生产认证；本轮不改依赖、代码或runtime lock。历史证据见 [acceptance](docs/ACCEPTANCE_MATRIX.md) 与 [execution](docs/EXECUTION.md)。
+
+既有 [upstream runtime synchronization](docs/RUNTIME_UPSTREAM_SYNC.md) 的hourly/manual候选验证与lock-only审阅维护继续保留，正常实验执行仍只读reviewed exact lock。它不是第二套产品开发队列；当前writer与新main仍受维护publisher的冲突检查。同步代码、workflow、C12契约和 [sync evidence](docs/RUNTIME_SYNC_EVIDENCE.md) 从已合入PR #6原样继承，不由本次文档工作实现或扩权。
 
 ## GitHub Pages synthetic preview
 
