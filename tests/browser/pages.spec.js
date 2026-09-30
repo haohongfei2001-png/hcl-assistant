@@ -54,8 +54,8 @@ test('Pages storage failure keeps draft and records unchanged; legacy key remove
 
 test('Pages slow serialized save preserves a newer draft and rejects repeated send',async({page})=>{
  await open(page);
- await page.evaluate(()=>{const original=navigator.locks.request.bind(navigator.locks);let release;window.releaseSyntheticLock=()=>release();navigator.locks.request=(name,action)=>original(name,async()=>{await new Promise(resolve=>release=resolve);return action()})});
- await page.locator('#composer').fill('记录：FIRST_PENDING_SYNTHETIC');await page.locator('#send').click();await expect(page.locator('#send')).toBeDisabled();
+ await page.evaluate(()=>{const original=navigator.locks.request.bind(navigator.locks);let release;const gate=new Promise(resolve=>release=resolve);window.releaseSyntheticLock=()=>release();navigator.locks.request=(name,action)=>original(name,async()=>{window.syntheticLockEntered=true;await gate;return action()})});
+ await page.locator('#composer').fill('记录：FIRST_PENDING_SYNTHETIC');await page.locator('#send').click();await expect.poll(()=>page.evaluate(()=>window.syntheticLockEntered===true)).toBe(true);await expect(page.locator('#send')).toBeDisabled();
  await page.locator('#composer').fill('SECOND_UNSENT_SYNTHETIC_DRAFT');await expect(page.locator('#send')).toBeDisabled();
  await page.evaluate(()=>window.releaseSyntheticLock());await expect(page.locator('article')).toHaveCount(1);await expect(page.locator('#composer')).toHaveValue('SECOND_UNSENT_SYNTHETIC_DRAFT');await expect(page.locator('#send')).toBeEnabled();
  expect((await stored(page)).conversations[0].records).toHaveLength(1);
