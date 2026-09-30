@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+const stablePin=JSON.parse(readFileSync(new URL('../../contracts/runtime-bridge.lock.json',import.meta.url),'utf8'));
 import {test,expect} from '@playwright/test';
 const text='Ada said, "I believe that the workshop starts Friday."';
 async function development(page,source=text,capability='belief_interpretation',memory='TEMPORARY'){
@@ -9,7 +11,7 @@ async function development(page,source=text,capability='belief_interpretation',m
 
 test('actual pinned runtime result shares Assistant Explain Lab source and deletion policy',async({page})=>{
  const ready=await (await page.request.get('/v1/development/runtime')).json();expect(ready.handshake_status).toBe('READY');expect(ready.production_enabled).toBe(false);
- expect(ready.source_commit_sha).toBe('a8229fcf22eccb851c58502a09ae7cecb346faf5');
+ expect(ready.source_commit_sha).toBe(stablePin.source_commit_sha);expect(ready.interface_version).toBe(stablePin.interface_version);expect(ready.artifact_digest).toBe(stablePin.artifact_digest);
  const {conversation,response}=await development(page);expect(response.ok()).toBeTruthy();const accepted=await response.json();
  await expect.poll(async()=> (await (await page.request.get(`/v1/runs/${accepted.run_id}`)).json()).pending).toBe(false);
  const run=await (await page.request.get(`/v1/runs/${accepted.run_id}`)).json();expect(run.run_receipt.mode).toBe('REAL');expect(run.run_receipt.actual_treatment).toBe('EXECUTED');expect(run.operation_receipts[0].used_in_answer).toBe(true);expect(run.run_receipt.usage.provider_calls).toBe(0);

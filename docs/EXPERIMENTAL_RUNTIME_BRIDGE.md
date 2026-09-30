@@ -1,7 +1,7 @@
 # L2.5 experimental development bridge
 
-Pin: `haohongfei2001-png/human-cognition-layer@a8229fcf22eccb851c58502a09ae7cecb346faf5`.
-Bridge version / serialization / receipt: `1.0`. Interface identity: `hcl-epistemic-callables-v1` is a product-owned adapter contract over existing HCL callables, not a claimed native research version. Native version is unspecified. Exact file Git blob/SHA256, source tree, artifact and interface digests are in `contracts/runtime-bridge.lock.json`. Repin requires a reviewed lock and new bridge version; no automatic main/tag tracking.
+Initial L2.5 baseline pin: `haohongfei2001-png/human-cognition-layer@a8229fcf22eccb851c58502a09ae7cecb346faf5`.
+Bridge version / serialization / receipt: `1.0`. Interface identity: `hcl-epistemic-callables-v1` is a product-owned adapter contract over existing HCL callables, not a claimed native research version. Native version is unspecified. Exact file Git blob/SHA256, source tree, artifact and interface digests are in `contracts/runtime-bridge.lock.json`. Repin requires a fully validated reviewed lock and new bridge version. Current stable identity is always the lock. The authorized [upstream synchronization](RUNTIME_UPSTREAM_SYNC.md) observes main metadata and proposes verified exact-SHA repins; execution never follows a floating branch.
 
 Allowlist is exactly `hcl/cognition/core.py`, `hcl/cognition/semantic.py`, `hcl/cognition/epistemic.py`. Acquisition uses only the exact commit metadata and these three exact content endpoints. Source lives in an external disposable artifact directory; no research tree or package initializer is copied into product source. Each worker validates bytes again, constructs isolated package shells and loads only these modules. Controller/UI never import research classes. Provider backends are not created.
 
