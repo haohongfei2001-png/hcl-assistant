@@ -1,0 +1,15 @@
+# P1-01 shared Assistant-first shell
+
+Baseline: adopted P0 main `ca97db4884c1a09dd662dcd3c67c866942826d3b`, [P0 exact-main CI](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36782221183). Single implementation writer [PR9](https://github.com/haohongfei2001-png/hcl-assistant/pull/9).
+
+Both local and Pages import the same React AssistantShell, product-view contract, bounded safe Markdown renderer, dialog and visual stylesheet. The shell cannot select facts, mutate records or call providers. Local retains Controller/SSE/idempotency/cancel/retry and permission-filtered source/revision APIs; Pages retains the P0 browser-only Controller, Web Locks, unique storage revision, transactional rollback, migration cleanup and cross-tab panel invalidation. Pages does not advertise project reuse, which its adapter cannot perform.
+
+Home directly accepts input. Navigation offers recent conversations, title search, memory and settings. Current scope remains separate from next-conversation defaults. A single truthful environment identity remains visible; routes/versions/each-turn Lab actions move to contextual details. Adopted reading typography/spacing, autosizing composer, Chinese IME handling, attachment status, newer-draft preservation, keyboard focus and narrow drawer are shared. Markdown handles text/list/code/quote/table without HTML execution or automatic remote images.
+
+P1-01 does not claim the full P1-02 evidence/change/search loop or P1-03 integrated acceptance is complete. Existing bounded panels remain transitional views. No real private data, model/provider call, runtime repin, production activation, research write, efficacy, Judge or agent claim.
+
+## Verification in progress
+
+Local151Python, both TypeScript/Vite builds and actual static Pages bundle boundary PASS. Hosted browser suites preserve all21 P0/local/development journeys and add shared shell/IME/scope, interrupted drafts/uploads/evidence, safe Markdown/copy/scroll, responsive/zoom/reduced-motion and static request allowlist checks. Browser uses built Pages output, not legacy raw UI. Workflow publishes synthetic screenshots/failure context; screenshots certify appearance only.
+
+Independent early review identified first-message creation draft overwrite, file payload entering composer, and stale request/panel response after navigation. These were repaired before the first hosted batch, with original synthetic regression cases. Exact-head/full hosted browser and exact-main remain required before package completion.

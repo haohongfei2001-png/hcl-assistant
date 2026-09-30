@@ -1,0 +1,51 @@
+import {test,expect} from '@playwright/test';
+import {mkdirSync} from 'node:fs';
+const pages='http://127.0.0.1:4174/';
+for(const surface of ['local','pages']){
+ const url=surface==='local'?'/':pages;
+ test(`${surface} shared direct home IME and current-vs-next scope`,async({page})=>{
+  await page.goto(url);await expect(page.getByRole('heading',{name:'有什么需要帮忙的？'})).toBeVisible();await expect(page.getByRole('button',{name:'交互演示，不连接模型',exact:true})).toBeVisible();
+  const composer=page.getByLabel('消息',{exact:true});await composer.fill('中文候选');await composer.dispatchEvent('compositionstart');await composer.dispatchEvent('keydown',{key:'Enter',code:'Enter',isComposing:true});await composer.dispatchEvent('keydown',{key:'Enter',code:'Enter',keyCode:229});await expect(page.locator('article')).toHaveCount(0);await expect(composer).toHaveValue('中文候选');await composer.dispatchEvent('compositionend');await composer.press('Shift+Enter');await expect(composer).toHaveValue('中文候选\n');
+  await composer.fill('2+2');await composer.press('Enter');await expect(page.locator('article')).toHaveCount(1);await expect(page.locator('.assistant-message')).toContainText('4');
+  const current=await page.getByLabel('当前对话范围').textContent();await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('记忆范围').selectOption('TEMPORARY');await page.getByRole('button',{name:'关闭设置'}).click();await expect(page.getByLabel('当前对话范围')).toHaveText(current);
+  await expect(page.locator('.turn-actions>button').filter({hasText:'Lab'})).toHaveCount(0);await expect(page.locator('article')).not.toContainText('状态版本');
+ });
+ test(`${surface} delayed file read cannot cross conversations`,async({page})=>{
+  await page.goto(url);await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();
+  await page.evaluate(()=>{const original=File.prototype.arrayBuffer;const gate=new Promise(resolve=>window.releaseFileRead=resolve);File.prototype.arrayBuffer=async function(){await gate;return original.call(this)}});
+  await page.getByLabel('上传文本文件').setInputFiles({name:'delayed-original.md',mimeType:'text/markdown',buffer:Buffer.from('ORIGINAL_FILE_TARGET_CANARY')});await expect(page.getByRole('status').filter({hasText:'读取中'})).toBeVisible();
+  await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();await page.evaluate(()=>window.releaseFileRead());await expect(page.getByRole('alert')).toContainText('对话已切换');await expect(page.locator('.messages')).not.toContainText('ORIGINAL_FILE_TARGET_CANARY');
+ });
+ test(`${surface} narrow drawer keyboard focus and reduced motion`,async({page})=>{
+  await page.setViewportSize({width:390,height:844});await page.emulateMedia({reducedMotion:'reduce'});await page.goto(url);await expect(page.getByRole('navigation',{name:'对话历史'})).toHaveCount(0);await page.getByRole('button',{name:'切换侧栏'}).click();await expect(page.getByRole('navigation',{name:'对话历史'})).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'切换侧栏'})).toBeFocused();await expect(page.getByRole('navigation',{name:'对话历史'})).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(await page.getByLabel('消息',{exact:true}).evaluate(el=>getComputedStyle(el).resize)).toBe('none');
+  mkdirSync('.tmp/screenshots',{recursive:true});await page.screenshot({path:`.tmp/screenshots/${surface}-narrow.png`,fullPage:true});
+ });
+}
+test('local delayed acknowledgement preserves newer draft and stable input count',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();let release,entered;const wait=new Promise(r=>entered=r),gate=new Promise(r=>release=r);await page.route('**/v1/conversations/*/events',async route=>{entered();await gate;await route.continue()});
+ await page.getByLabel('消息',{exact:true}).fill('2+2');await page.getByRole('button',{name:'发送',exact:true}).click();await wait;await page.getByLabel('消息',{exact:true}).fill('NEWER_UNSENT_DRAFT');release();await expect(page.locator('article')).toHaveCount(1);await expect(page.locator('.assistant-message')).toContainText('4');await expect(page.getByLabel('消息',{exact:true})).toHaveValue('NEWER_UNSENT_DRAFT');
+});
+test('shared Markdown renders safe structures and preserves upper reading position',async({page,context})=>{
+ await context.grantPermissions(['clipboard-read','clipboard-write']);await page.goto(pages);
+ const markdown='# Original synthetic reading\n\n- first\n- second\n\n> quoted evidence\n\n```js\nconst original = 42;\n```\n\n|Item|Value|\n|---|---|\n|alpha|1|\n\n<script>window.INJECTED=true</script>\n[unsafe](javascript:alert(1))\n\n'+('Long original reading paragraph.\n\n'.repeat(80));
+ await page.evaluate(({markdown})=>{localStorage.setItem('hcl-assistant-pages-preview-v2',JSON.stringify({schemaVersion:2,storageRevision:'ui-display-fixture',currentId:'conv-fixture',conversations:[{id:'conv-fixture',title:'原创Markdown呈现fixture',memory:'CONVERSATION',version:1,records:[],runs:[{id:'run-fixture',input:'UI display-only fixture, not an actual model answer',recordId:'record-fixture',version:1,text:markdown,status:'UNSUPPORTED',route:'DISPLAY_FIXTURE',basisRefs:[],caps:[],uncertainty:'synthetic rendering fixture'}]}]}))},{markdown});await page.reload();
+ await expect(page.locator('.markdown ul li')).toHaveCount(2);await expect(page.locator('.markdown blockquote')).toContainText('quoted evidence');await expect(page.locator('.markdown table')).toContainText('alpha');await expect(page.locator('.markdown pre code')).toContainText('const original = 42');await expect(page.locator('.markdown script')).toHaveCount(0);await expect(page.locator('a[href^="javascript"]')).toHaveCount(0);expect(await page.evaluate(()=>window.INJECTED)).toBeUndefined();
+ await page.getByRole('button',{name:'复制代码',exact:true}).click();expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe('const original = 42;');
+ await page.locator('.messages').evaluate(el=>el.scrollTop=0);await page.getByLabel('消息',{exact:true}).fill('2+2');await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('article')).toHaveCount(2);expect(await page.locator('.messages').evaluate(el=>el.scrollTop)).toBeLessThan(80);
+ await page.evaluate(()=>document.documentElement.style.zoom='2');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.evaluate(()=>document.documentElement.style.zoom='1');mkdirSync('.tmp/screenshots',{recursive:true});await page.screenshot({path:'.tmp/screenshots/pages-reading.png',fullPage:true});
+});
+test('built Pages loads only static same-origin resources',async({page})=>{
+ const requests=[];page.on('request',r=>requests.push(r.url()));await page.goto(pages);await page.getByLabel('消息',{exact:true}).fill('2+2');await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('article')).toHaveCount(1);
+ for(const url of requests){const parsed=new URL(url);expect(parsed.origin).toBe('http://127.0.0.1:4174');expect(parsed.pathname==='/'||parsed.pathname.startsWith('/assets/')||parsed.pathname==='/favicon.ico').toBe(true)}
+});
+test('local first-message creation and first-upload preserve actual newer composer draft',async({page})=>{
+ await page.goto('/');let release,entered;const waiting=new Promise(r=>entered=r),gate=new Promise(r=>release=r);await page.route('**/v1/conversations',async route=>{if(route.request().method()==='POST'){entered();await gate}await route.continue()});
+ await page.getByLabel('消息',{exact:true}).fill('2+2');await page.getByRole('button',{name:'发送',exact:true}).click();await waiting;await page.getByLabel('消息',{exact:true}).fill('FIRST_CREATION_NEWER_DRAFT');release();await expect(page.locator('.assistant-message')).toContainText('4');await expect(page.getByLabel('消息',{exact:true})).toHaveValue('FIRST_CREATION_NEWER_DRAFT');
+ await page.goto('/');await page.getByLabel('消息',{exact:true}).fill('COMPOSER_NOT_FILE_BODY');await page.getByLabel('上传文本文件').setInputFiles({name:'home-original.md',mimeType:'text/markdown',buffer:Buffer.from('FILE_BODY_IS_NOT_COMPOSER')});await expect(page.locator('article')).toHaveCount(1);await expect(page.getByLabel('消息',{exact:true})).toHaveValue('COMPOSER_NOT_FILE_BODY');
+});
+test('local delayed evidence and failed request cannot reopen stale conversation state',async({page})=>{
+ await page.goto('/');await page.getByLabel('消息',{exact:true}).fill('2+2');await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('.assistant-message')).toContainText('4');
+ let sourceRelease,sourceEntered;const sourceWait=new Promise(r=>sourceEntered=r),sourceGate=new Promise(r=>sourceRelease=r);await page.route('**/v1/sources/*?*',async route=>{sourceEntered();await sourceGate;await route.continue()});await page.getByLabel('更多消息操作').last().click();await page.getByRole('button',{name:'查看输入原文 v1'}).last().click();await sourceWait;await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();await expect(page.locator('article')).toHaveCount(0);sourceRelease();await expect(page.getByRole('dialog',{name:'原文'})).toHaveCount(0);
+ let failRelease,failEntered;const failWait=new Promise(r=>failEntered=r),failGate=new Promise(r=>failRelease=r);await page.route('**/v1/conversations/*/events',async route=>{failEntered();await failGate;await route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({error:'original delayed A failure'})})});await page.getByLabel('消息',{exact:true}).fill('OLD_A_FAILURE_INPUT');await page.getByRole('button',{name:'发送',exact:true}).click();await failWait;await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();await expect(page.locator('article')).toHaveCount(0);failRelease();await expect(page.locator('.messages')).not.toContainText('OLD_A_FAILURE_INPUT');await expect(page.getByLabel('消息',{exact:true})).toHaveValue('');
+});

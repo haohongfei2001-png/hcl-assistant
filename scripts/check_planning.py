@@ -39,7 +39,7 @@ REVISION_ACTIONS = {'ADD', 'CORRECT', 'RETRACT', 'SUPERSEDE',
                     'HYPOTHETICAL_BRANCH', 'STOP_USING', 'DELETE'}
 PERMISSIONS = {'ACCOUNT_DATA_ACCESS', 'PERSON_PERSPECTIVE_ACCESS',
                'PERSISTENCE_REUSE_PERMISSION'}
-IGNORED_DIRS = {'.git', '.venv', '__pycache__', 'node_modules', 'dist', 'coverage', 'test-results', 'playwright-report', '.tmp', '.local'}
+IGNORED_DIRS = {'.git', '.venv', '__pycache__', 'node_modules', 'dist', 'pages-dist', 'coverage', 'test-results', 'playwright-report', '.tmp', '.local'}
 
 
 def require(condition: bool, message: str) -> None:
