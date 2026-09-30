@@ -1,0 +1,120 @@
+name: HCL Assistant Planning
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hcl-assistant-planning-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  planning:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      PRODUCT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      PRODUCT_REPOSITORY: ${{ github.repository }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Materialize this product repository root at exact SHA
+        env:
+          PRODUCT_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          from pathlib import Path, PurePosixPath
+          import re
+          import urllib.request
+
+          repo = os.environ['PRODUCT_REPOSITORY']
+          sha = os.environ['PRODUCT_SHA']
+          if repo != 'haohongfei2001-png/hcl-assistant':
+              raise SystemExit('Only the canonical product repository is allowed')
+          if not re.fullmatch(r'[0-9a-f]{40}', sha):
+              raise SystemExit('An exact commit SHA is required')
+          token = os.environ['PRODUCT_READ_TOKEN']
+          prefix = 'https://api.github.com/repos/' + repo + '/'
+
+          def get(relative):
+              request = urllib.request.Request(prefix + relative, headers={
+                  'Authorization': 'Bearer ' + token,
+                  'Accept': 'application/vnd.github+json',
+                  'User-Agent': 'hcl-assistant-root-planning',
+                  'X-GitHub-Api-Version': '2022-11-28',
+              })
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.load(response)
+
+          commit = get('git/commits/' + sha)
+          tree_sha = commit['tree']['sha']
+          product = get('git/trees/' + tree_sha + '?recursive=1')
+          if product.get('truncated'):
+              raise SystemExit('Incomplete product tree')
+          destination = Path('product-export')
+          destination.mkdir(exist_ok=False)
+          blob_count = 0
+          for row in product['tree']:
+              path = PurePosixPath(row['path'])
+              if path.is_absolute() or '..' in path.parts or not path.parts:
+                  raise SystemExit('Unsafe product path')
+              if row['type'] == 'tree':
+                  continue
+              if row['type'] != 'blob' or row['mode'] not in ('100644', '100755'):
+                  raise SystemExit('Symlink/submodule not allowed')
+              banned = {'hcl', 'eval', 'evaluation', 'confirmation', 'credentials', 'secrets', 'data', 'datasets'}
+              parts = {part.casefold() for part in path.parts}
+              if parts & banned or any('longmemeval' in p or p.startswith('confirmation_') for p in parts):
+                  raise SystemExit('Forbidden research/data path; blob not read')
+              if path.name.startswith('.env') and path.name != '.env.example':
+                  raise SystemExit('Credential path; blob not read')
+              blob = get('git/blobs/' + row['sha'])
+              if blob.get('encoding') != 'base64':
+                  raise SystemExit('Unexpected Git blob encoding')
+              content = base64.b64decode(blob['content'])
+              digest = hashlib.sha1(b'blob ' + str(len(content)).encode() + b'\0' + content).hexdigest()
+              if digest != row['sha']:
+                  raise SystemExit('Git blob hash mismatch')
+              target = destination.joinpath(*path.parts)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(content)
+              blob_count += 1
+          receipt = {'repository': repo, 'commit_sha': sha, 'product_tree_sha': tree_sha,
+                     'materialized_blobs': blob_count, 'research_blobs_read': 0,
+                     'provider_calls': 0, 'check_scope': 'PRODUCT_PLANNING_AND_REPOSITORY_SPLIT_ONLY'}
+          Path('product-source-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          PY
+      - name: Validate product contracts, root boundary and complete migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd product-export
+          python3 scripts/check_planning.py | tee ../planning-receipt.json
+          python3 scripts/check_repository.py | tee ../repository-receipt.json
+          python3 -m unittest discover -s tests -v 2>&1 | tee ../planning-tests.txt
+      - name: Publish exact-SHA planning and migration receipt
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## HCL Assistant planning/setup and repository split'
+            echo 'Only the independent product repository root was materialized. No L1 implementation or efficacy claim.'
+            echo '```json'
+            test ! -f product-source-receipt.json || cat product-source-receipt.json
+            test ! -f planning-receipt.json || cat planning-receipt.json
+            test ! -f repository-receipt.json || cat repository-receipt.json
+            echo '```'
+            echo '```text'
+            test ! -f planning-tests.txt || tail -n 8 planning-tests.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
