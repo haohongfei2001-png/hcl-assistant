@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 const key='hcl-assistant-pages-preview-v2';
-async function open(page){await page.goto('http://127.0.0.1:4174/');await expect(page.getByRole('button',{name:'＋ 新对话',exact:true})).toBeVisible();}
+async function open(page){await page.goto('http://127.0.0.1:4174/');await expect(page.getByRole('button',{name:'＋ 新对话',exact:true})).toBeVisible();await expect(page.getByLabel('上传文本文件')).toBeEnabled();}
 async function send(page,text,accepted=true){await page.locator('#composer').fill(text);await page.locator('#send').click();if(accepted)await expect(page.locator('#composer')).toHaveValue('');}
 async function stored(page){return page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key);}
 test('Pages temporary canary is absent from all persistent bytes and reload',async({page})=>{
@@ -50,7 +50,7 @@ test('Pages storage failure keeps draft and records unchanged; legacy key remove
  await page.evaluate(()=>{Storage.prototype.setItem=function(){throw new DOMException('synthetic quota','QuotaExceededError')}});
  await send(page,'UNSAVED_ORIGINAL_DRAFT',false);await expect(page.locator('#composer')).toHaveValue('UNSAVED_ORIGINAL_DRAFT');await expect(page.getByRole('alert')).toContainText('未保存');expect(await stored(page)).toEqual(before);
  await page.reload();await page.evaluate(()=>localStorage.setItem('hcl-assistant-pages-preview-v1','LEGACY_TEMP_ORIGINAL_CANARY'));await page.reload();
- expect(await page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('LEGACY_TEMP_ORIGINAL_CANARY');
+ await expect.poll(()=>page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('LEGACY_TEMP_ORIGINAL_CANARY');
 });
 
 test('Pages slow serialized save preserves a newer draft and rejects repeated send',async({page})=>{

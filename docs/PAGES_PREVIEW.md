@@ -2,7 +2,7 @@
 
 Public preview: `https://haohongfei2001-png.github.io/hcl-assistant/`.
 
-Browser-only static HTML/CSS/JavaScript: no Python API, SQLite service, SSE backend, provider transport, real HCL runtime, server authentication/persistence, research/confirmation/LongMemEval/protected data or credentials. **Use only synthetic information, never real private data.** Current behavior comes from the adopted product commit, not from a capability claim about arbitrary language.
+Browser-only static React bundle using the shared AssistantShell (built by Vite): no Python API, SQLite service, SSE backend, provider transport, real HCL runtime, server authentication/persistence, research/confirmation/LongMemEval/protected data or credentials. **Use only synthetic information, never real private data.** Current behavior comes from the adopted product commit, not from a capability claim about arbitrary language.
 
 ## Bounded P0 behavior
 
@@ -18,6 +18,6 @@ Supported demonstrations: exact `2+2`; explicit `记录：合成背景`; `演示
 
 Original failures at main7d36a78 were reproduced and preserved in [P0 evidence](P0_01_EVIDENCE.md). That document links actual exact-SHA hosted checks for the repaired Pages and local-product surfaces separately. Neither local SQLite tests nor screenshots certify Pages storage. Failed verification iterations remain recorded.
 
-Target interaction remains [Master1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [UX A2](UX_SPEC.md), [Visual System](VISUAL_SYSTEM.md). P0 repairs do not claim the later shared shell/revision-loop/integrated-experience packages are implemented. The sole live queue is [Development Plan](../DEVELOPMENT_PLAN.md), machine-projected in product_development.
+Target interaction remains [Master1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [UX A2](UX_SPEC.md), [Visual System](VISUAL_SYSTEM.md). P1-01 implements the shared shell/input/reading system with the isolated browser adapter; [evidence](P1_01_EVIDENCE.md) distinguishes its checks. The later revision-loop/integrated-experience packages are not yet claimed. The sole live queue is [Development Plan](../DEVELOPMENT_PLAN.md), machine-projected in product_development.
 
 L3/I06 gates remain unsatisfied. No provider calls, real data, general language understanding, efficacy, Judge or agent activation is authorized or claimed.
