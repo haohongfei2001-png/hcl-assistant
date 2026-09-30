@@ -2,7 +2,7 @@
 
 Canonical: [Master Plan](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [packages](docs/L0_L2_WORK_PACKAGES.md), [contracts](contracts/PRODUCT_CONTRACTS_V1.md).
 
-**NEXT_READY: L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE**
+**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
 
 | ID | Delta | Dependencies | State |
 |---|---|---|---|
@@ -15,9 +15,9 @@ Canonical: [Master Plan](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [packages](docs/
 | L2-02 | multi-session synthetic cognition and natural synthesis | L2-01 | COMPLETE |
 | L2-03 | Explain correction and memory controls | L2-02 | COMPLETE |
 | L2-04 | Lab shell and integrated mock acceptance | L2-03 | COMPLETE |
-| L2.5-01 | pinned development runtime bridge contract, handshake and capability discovery | L2-04 | NEXT_READY |
-| L2.5-02 | real-runtime serialization/lifecycle/receipts and synthetic end-to-end execution | L2.5-01 | WAITING_DEPENDENCY |
+| L2.5-01 | pinned development runtime bridge contract handshake and capability discovery | L2-04 | COMPLETE |
+| L2.5-02 | real-runtime serialization lifecycle receipts and synthetic end-to-end execution | L2.5-01 | COMPLETE |
 
-L2.5 is development-only. Use a fixed HCL commit SHA and allowlisted runtime/interface; no floating main, confirmation/evaluation material, LongMemEval, real private data, production activation or efficacy promotion. Provider-backed execution is not implied and requires separate explicit development authorization if needed.
+Both L2.5 packages are complete on the review branch; the sole writer stops before L3. Latest package evidence: L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS. Actual SHA validation is recorded by CI, not fabricated in live state.
 
-After L2.5 completion, stop at **L3 Production Capability Activation** unless its gates are satisfied. L3 retains I06 disposition, pinned production-permitted runtime artifact/interface, product adapter scope validation and explicit execution/data authorization; it reuses transport rather than rebuilding it.
+L2.5 is development-only. After it completes, L3 remains I06-gated Production Capability Activation and reuses the bridge transport.

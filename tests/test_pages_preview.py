@@ -30,8 +30,16 @@ class PagesPreviewBoundaryTests(unittest.TestCase):
         self.assertFalse(boundary["public_deployment_allowed"])
         self.assertTrue(boundary["synthetic_static_preview_allowed"])
         self.assertEqual(boundary["synthetic_static_preview_mode"], "GITHUB_PAGES_BROWSER_ONLY")
-        self.assertEqual(plan["next_ready"], "L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE")
-        self.assertEqual(plan["phase"], "L2_5_READY")
+        states={r['id']:r['state'] for r in plan['packages']}
+        if states['L2.5-01']!='COMPLETE':
+            self.assertEqual(plan['next_ready'],'L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE')
+            self.assertEqual(plan['phase'],'L2_5_READY')
+        elif states['L2.5-02']!='COMPLETE':
+            self.assertEqual(plan['next_ready'],'L2.5-02_EXPERIMENTAL_MECHANISM_SYNTHETIC_E2E')
+            self.assertEqual(plan['phase'],'L2_5_IMPLEMENTING')
+        else:
+            self.assertEqual(plan['next_ready'],'STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED')
+            self.assertEqual(plan['phase'],'L2_5_COMPLETE')
         self.assertIn("I06_DISPOSITION", plan["l3_gates"])
         self.assertFalse(plan["invariants"]["l2_5_production_activation_allowed"])
 

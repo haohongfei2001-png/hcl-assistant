@@ -1,6 +1,6 @@
 export type Conversation={id:string; title:string; topic_id:string|null; memory:string};
 export type Ref={source_id:string; version:number; sha256:string; span?:number[]};
-export type Run={run_id:string; input_text?:string; conversation_id:string; state_version_after:number; input_source_ref:Ref; pending:boolean; outdated:boolean; redacted?:boolean; answer:null|{answer_id:string; text:string; citation_refs:Ref[]}; stream:{seq:number; type:string; payload:{text?:string}}[]; run_receipt:{outcome:string; route:string}; errors:string[]};
+export type Run={run_id:string; input_text?:string; conversation_id:string; state_version_after:number; input_source_ref:Ref; pending:boolean; outdated:boolean; redacted?:boolean; answer:null|{answer_id:string; text:string; citation_refs:Ref[]}; stream:{seq:number; type:string; payload:{text?:string}}[]; run_receipt:{outcome:string; route:string; mode?:string; development_only?:boolean}; errors:string[]};
 export async function api<T>(path:string,body?:unknown):Promise<T>{
  const response=await fetch(path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
  const data=await response.json(); if(!response.ok)throw new Error(`${response.status}: ${data.error}`); return data;

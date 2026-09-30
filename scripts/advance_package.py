@@ -20,7 +20,7 @@ def advance(package, evidence):
         plan['phase']=following['stage'].replace('.','_')+'_IMPLEMENTING'
     else:
         plan['next_package_id']=None; plan['next_ready']='STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED'; plan['phase']='L2_5_COMPLETE'
-    plan['evidence']['product_implementation']=evidence
+    if not package.startswith('L2.5'):plan['evidence']['product_implementation']=evidence
     if package.startswith('L2.5'):
         plan['evidence']['experimental_runtime_bridge']=evidence
         plan['evidence']['experimental_runtime_results']='NOT_EFFICACY_EVIDENCE'

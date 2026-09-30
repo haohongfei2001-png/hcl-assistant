@@ -80,9 +80,13 @@ class PolicyContext(Context):
             if row['type'] in {'conversation','topic','revision'}: continue
             if row['type']=='run':
                 obj.pop('input_text',None)
+                if obj['run_receipt'].get('development_only') and obj['pending']:
+                    obj['pending']=False; obj['run_receipt'].update(outcome='REFUSED',actual_treatment='UNRESOLVED',finished_at=now())
+                obj.pop('development_request',None); obj.pop('development_result',None); obj['runtime_outputs']=[]
+                obj['run_receipt']['operations']=[]
                 obj['answer']=None; obj['answer_preparation']=None; obj['explain_projection']=None
                 obj['selected_context']={'record_ids':[],'records':[],'coverage':'UNAVAILABLE'}
-                obj['stream']=[e for e in obj.get('stream',[]) if not e['type'].startswith('answer.')]
+                obj['stream']=[e for e in obj.get('stream',[]) if not e['type'].startswith(('answer.','operation.'))]
                 obj['unresolved_updates']=[]; obj['errors']=['REDACTED']; obj['redacted']=True
                 obj['operation_receipts']=[]
                 self.store.put(tenant,'run',obj)
