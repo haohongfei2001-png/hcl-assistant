@@ -1,6 +1,6 @@
-# L0–L2 coherent work packages
+# L0–L2.5 coherent work packages
 
-总计9包：L0一包、L1四包、L2四包。ID与machine plan一致；包是行为闭环，不是PR数量指标。依赖版本与执行命令由实施包固定，普通实现决策无需再问Owner。
+总计11包：L0一包、L1四包、L2四包、L2.5两包。ID与machine plan一致；包是行为闭环，不是PR数量指标。依赖版本与执行命令由实施包固定，普通实现决策无需再问Owner。
 
 ## L0-01 — Canonical contracts and execution setup
 
@@ -91,3 +91,24 @@ Acceptance：默认无实验arm；Lab只读，Base compare入口disabled且说�
 Negative tests：Lab写生产state、mock换live标签、cache费用当总成本、研究分数当产品效力、越界访问、L2完成自动启真provider。
 Persistence/revision：run/version/usage全链回放；导出无秘密和已删正文；断线/权限变化一致。
 Evidence：NOT_IMPLEMENTED；完成为L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS；L3真实接入/中文真实泛化/efficacy仍NOT_TESTED。
+
+
+## L2.5-01 — Pinned runtime bridge contract, handshake and capability discovery
+
+Delta：产品可以对一个固定 exact SHA 的 development-only HCL runtime 建立可验证握手，发现 capability manifest，并在任何 mechanism execution 前拒绝版本/摘要/接口漂移。
+Dependencies：L2-04。
+Scope：future packages/runtime_bridge、bridge lock/config、allowlisted runtime material fetch/verification、handshake/capability discovery、contracts/tests；本次 amendment 不实现。
+Acceptance：只接受 `haohongfei2001-png/human-cognition-layer` exact 40-hex commit SHA；固定 artifact/interface/manifest digest；禁止 floating ref；只读取 allowlisted runtime/interface material；handshake 明确 READY 或失败原因；PENDING_I06 仅可 EXPERIMENTAL 且 production_enabled=false；无 confirmation/eval/LongMemEval/real-private-data。
+Negative tests：main/tag漂移、digest mismatch、interface mismatch、未知 capability、研究 eval/data path、production_enabled、case-specific evaluation tuning、把 EXPERIMENTAL 当 RETAIN。
+Persistence/revision：bridge identity 与 capability snapshot 绑定 run/config hash；后续 runtime pin 变化产生新 bridge version，不改写旧 receipt。
+Evidence：NOT_IMPLEMENTED；完成最多记 EXPERIMENTAL_TRANSPORT_VERIFIED / DEVELOPMENT_INTEGRATION_ONLY，不记 efficacy。
+
+## L2.5-02 — Experimental mechanism execution and synthetic end-to-end bridge
+
+Delta：现有 Assistant Controller 可把 permitted synthetic/non-confirmation request 经真实 development HCL runtime 执行当前可用 mechanism，并完整记录 serialization、lifecycle、operation/run receipt 与实际 treatment。
+Dependencies：L2.5-01。
+Scope：runtime bridge request/response serialization、timeout/error/cancel、operation mapping、run receipts、synthetic smoke/integration tests；不做 production activation。
+Acceptance：至少覆盖一个 direct/no-specialized path、一个 available mechanism path、一个 UNSUPPORTED/NO_TREATMENT 以及一个 FAILED/UNRESOLVED lifecycle；selected/executed/output/used 分离；cancel/timeout 不伪成功；旧 L2 mock 路径仍可回归；所有输入为原创 synthetic/non-confirmation。
+Negative tests：confirmation/gold、LongMemEval、真实用户私密数据、生产记忆污染、自动 fallback 到未固定 runtime、失败改成功、experimental receipt 冒 efficacy、正式评估 case-specific tuning。
+Persistence/revision：run/operation receipt 固定 bridge/runtime/config SHA；experimental state 不赋予 production activation；若执行结果参与 synthetic answer，仍遵守现有 context/revision/provenance contract。
+Evidence：NOT_IMPLEMENTED；完成最多记 L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS / NOT_EFFICACY_EVIDENCE。

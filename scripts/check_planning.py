@@ -30,7 +30,7 @@ REQUIRED_DOCS = (
 )
 CONTRACT_IDS = {'interaction_controller', 'context', 'revision',
                 'answer_synthesis', 'explain_projection', 'capability_manifest',
-                'run_receipt'}
+                'run_receipt', 'runtime_bridge'}
 CONTEXT_KINDS = {'USER_REPORTED_EVENT', 'USER_GUESS', 'CHARACTER_SELF_REPORT',
                  'THIRD_PARTY_REPORT', 'SYSTEM_INTERPRETATION', 'HYPOTHETICAL',
                  'CONDITIONAL_RULE', 'CORRECTION', 'RETRACTION'}
@@ -75,6 +75,12 @@ def validate_plan(plan: dict[str, Any]) -> None:
         require(inv.get(key) is False, f'forbidden invariant: {key}')
     require(type(inv.get('max_provider_calls_l0_l2')) is int and inv['max_provider_calls_l0_l2'] == 0,
             'L0-L2 provider calls must be zero')
+    for key in ('l2_5_production_activation_allowed', 'l2_5_confirmation_material_allowed',
+                'l2_5_real_private_data_allowed', 'l2_5_case_specific_eval_tuning_allowed',
+                'l2_5_efficacy_claims_allowed'):
+        require(inv.get(key) is False, f'L2.5 forbidden invariant: {key}')
+    require(inv.get('l2_5_provider_backed_execution_requires_explicit_authorization') is True,
+            'L2.5 provider-backed execution must require separate authorization')
     boundary = plan.get('boundary', {})
     require(boundary.get('research_import_allowed') is False, 'research import forbidden')
     if boundary.get('physical_repository_split') is not True:
@@ -86,21 +92,28 @@ def validate_plan(plan: dict[str, Any]) -> None:
     require(boundary.get('mode') == 'INDEPENDENT_PRODUCT_REPOSITORY', 'wrong repository mode')
     require(boundary.get('repository_isolation') == 'COMPLETE_AT_REPOSITORY_BOUNDARY', 'repository isolation status')
     require(boundary.get('canonical_product_source') == 'haohongfei2001-png/hcl-assistant/main', 'stale or dual canonical source')
+    require(boundary.get('development_runtime_bridge_allowed') is True, 'L2.5 bridge authorization missing')
+    require(boundary.get('development_runtime_source_repository') == 'haohongfei2001-png/human-cognition-layer',
+            'wrong development runtime source')
+    require(boundary.get('development_runtime_pin_policy') == 'EXACT_COMMIT_SHA_AND_INTERFACE_DIGEST',
+            'floating runtime pin forbidden')
+    require(boundary.get('development_runtime_input_policy') == 'SYNTHETIC_NON_CONFIRMATION_ONLY',
+            'L2.5 input policy must remain synthetic/non-confirmation')
     if plan.get('phase', '').startswith(('L0', 'L1', 'L2')):
         require(boundary.get('real_data_allowed') is False and boundary.get('public_deployment_allowed') is False,
                 'migration does not authorize real data or deployment')
     packages = plan.get('packages', [])
-    require(len(packages) == 9, 'nine coherent L0-L2 packages required')
+    require(len(packages) == 11, 'eleven coherent L0-L2.5 packages required')
     seen: set[str] = set()
     for row in packages:
         key = row.get('id')
         require(isinstance(key, str) and key not in seen, 'duplicate or invalid package id')
-        require(re.fullmatch(r'L[012]-\d{2}', key) is not None, 'invalid package id')
-        require(row.get('stage') == key[:2], 'package stage mismatch')
+        require(re.fullmatch(r'L(?:0|1|2|2\.5)-\d{2}', key) is not None, 'invalid package id')
+        require(row.get('stage') == key.rsplit('-', 1)[0], 'package stage mismatch')
         require(set(row.get('depends_on', [])) <= seen, 'unknown or forward/cyclic dependency')
         require(bool(row.get('delta')), 'product delta required')
         seen.add(key)
-    expected_ids=['L0-01','L1-01','L1-02','L1-03','L1-04','L2-01','L2-02','L2-03','L2-04']
+    expected_ids=['L0-01','L1-01','L1-02','L1-03','L1-04','L2-01','L2-02','L2-03','L2-04','L2.5-01','L2.5-02']
     require([r['id'] for r in packages]==expected_ids, 'canonical package boundaries changed')
     for index,row in enumerate(packages):
         require(row['depends_on']==([] if index==0 else [expected_ids[index-1]]), 'canonical dependencies changed')
@@ -115,11 +128,13 @@ def validate_plan(plan: dict[str, Any]) -> None:
         require(pending[0]['id']==next_id and pending[0]['state']=='NEXT_READY', 'unique dependency-safe NEXT_READY required')
         require(all(r['state']=='WAITING_DEPENDENCY' for r in pending[1:]), 'multiple ready packages')
     else:
-        require(next_id is None and plan.get('next_ready')=='STOP_WITH_HANDOFF_L3_GATED' and plan.get('phase')=='L2_COMPLETE', 'completed L2 must stop at L3 gate')
+        require(next_id is None and plan.get('next_ready')=='STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED' and plan.get('phase')=='L2_5_COMPLETE', 'completed L2.5 must stop at production activation gate')
     require(plan.get('adoption_gate') == 'MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS', 'adoption gate required')
     require('PHYSICAL_PRODUCT_REPOSITORY_SPLIT' in plan.get('satisfied_gates', []), 'split completion missing')
     require('PHYSICAL_PRODUCT_REPOSITORY_SPLIT' not in plan.get('l3_gates', []), 'obsolete outstanding split blocker')
     require('I06_DISPOSITION' in plan.get('l3_gates', []), 'I06 gate missing')
+    require(plan.get('next_package_id') == 'L2.5-01' or plan.get('phase') in {'L2_5_IMPLEMENTING','L2_5_COMPLETE'},
+            'post-L2 plan must enter L2.5 before L3')
 
 
 def validate_catalog(catalog: dict[str, Any]) -> None:
@@ -137,6 +152,11 @@ def validate_catalog(catalog: dict[str, Any]) -> None:
     require(catalog.get('explain_new_model_calls_default') == 0, 'Explain must not manufacture reasons')
     require(catalog.get('uncalibrated_probability_claims_allowed') is False, 'uncalibrated probabilities forbidden')
     require(catalog.get('semantics_verified_by_schema') is False, 'schema is not semantic proof')
+    bridge = next(r for r in rows if r['id'] == 'runtime_bridge')
+    require({'source_repository','source_commit_sha','artifact_digest','interface_version','implementation_id'} <= set(bridge['required']),
+            'runtime bridge pin contract incomplete')
+    require(catalog.get('experimental_activation_is_production') is False, 'experimental activation cannot be production')
+    require(catalog.get('experimental_runtime_efficacy_claim_allowed') is False, 'experimental runtime cannot claim efficacy')
     controller = next(r for r in rows if r['id'] == 'interaction_controller')
     require({'event', 'scope', 'expected_state_version', 'allowed_memory_scope', 'source_refs',
              'model_resource_policy', 'idempotency_key'} <= set(controller['required_input']),
@@ -178,8 +198,21 @@ def validate_capabilities(manifest: dict[str, Any], schema: dict[str, Any], cata
         require(type(policy.get('production_enabled')) is bool, 'boolean production policy required')
         require(policy.get('mode') in {'MOCK_ONLY', 'DISABLED', 'EXPERIMENTAL', 'SCOPE_DEFAULT'}, 'activation mode')
         if row['i06_disposition'] == 'PENDING_I06':
-            require(row['runtime_implementation'] is None and policy['production_enabled'] is False
-                    and policy['mode'] in {'MOCK_ONLY', 'DISABLED'}, 'pending I06 cannot be live')
+            require(policy['production_enabled'] is False
+                    and policy['mode'] in {'MOCK_ONLY', 'DISABLED', 'EXPERIMENTAL'},
+                    'pending I06 cannot be production active')
+            if policy['mode'] == 'EXPERIMENTAL':
+                runtime = row['runtime_implementation']
+                require(isinstance(runtime, dict), 'experimental capability requires pinned runtime')
+                require(runtime.get('source_repository') == 'haohongfei2001-png/human-cognition-layer',
+                        'experimental runtime repository must be HCL research repository')
+                require(re.fullmatch(r'[0-9a-f]{40}', runtime.get('source_commit_sha', '')) is not None,
+                        'experimental runtime requires exact commit SHA')
+                require(all(isinstance(runtime.get(k), str) and runtime.get(k)
+                            for k in ('artifact_digest','interface_version','implementation_id')),
+                        'experimental runtime identity incomplete')
+            else:
+                require(row['runtime_implementation'] is None, 'non-experimental pending capability cannot bind runtime')
         if row['i06_disposition'] == 'DISABLE':
             require(policy['mode'] == 'DISABLED' and not policy['production_enabled'], 'disabled capability is active')
         if policy['production_enabled']:

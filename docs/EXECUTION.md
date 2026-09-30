@@ -31,3 +31,8 @@ STOP_WITH_HANDOFF_L3_GATED: I06 disposition + pinned permitted artifact/interfac
 Final test discovery avoids importing a TestCase into another module namespace (which unittest counted twice). All test methods and assertions remain; final suite is 90 executed checks with no skips.
 
 Hosted L2-03 head run 36736455962 failed the cancellation assertion: Stop was clickable before the input acknowledgement, but no run ID yet existed in the UI and the cancellation was lost. Repaired with a queued cancel intent applied as soon as the governed run is acknowledged. The browser regression now deliberately holds the POST request and clicks Stop before forwarding it; it still asserts CANCELLED, explicit retry, focus and single-input persistence. No assertion was weakened and the failed hosted receipt remains visible.
+
+
+## 2026-10-01 canonical plan amendment
+
+The historical L1/L2 closure above remains unchanged. Owner superseded the old immediate `STOP_WITH_HANDOFF_L3_GATED` handoff with a new development-only `L2.5 — EXPERIMENTAL_RUNTIME_BRIDGE`. This does not upgrade any L2 evidence and does not implement the bridge. The new unique NEXT_READY is `L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE`; formal L3 remains I06-gated Production Capability Activation.

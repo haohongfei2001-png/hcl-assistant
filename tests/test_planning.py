@@ -34,7 +34,7 @@ class PlanningTests(unittest.TestCase):
 
     def test_complete_product_tree(self):
         result = planning.validate_tree(ROOT)
-        self.assertEqual(result['package_count'], 9)
+        self.assertEqual(result['package_count'], 11)
         self.assertEqual(result['provider_calls'], 0)
         self.assertEqual(result['capability_candidates'], 10)
 
@@ -111,6 +111,36 @@ class PlanningTests(unittest.TestCase):
     def test_pending_capability_cannot_be_production(self):
         self.capabilities['capabilities'][0]['product_activation_policy']['production_enabled'] = True
         self.assert_manifest_rejected()
+
+    def test_pending_i06_experimental_runtime_is_development_only(self):
+        row = self.capabilities['capabilities'][0]
+        row['evidence_status'] = 'EXPERIMENTAL_RUNTIME_DEV_ONLY'
+        row['product_activation_policy'] = {'mode': 'EXPERIMENTAL', 'production_enabled': False}
+        row['runtime_implementation'] = {
+            'artifact_digest': 'sha256:development',
+            'interface_version': 'dev-v1',
+            'implementation_id': 'hcl-development',
+            'source_repository': 'haohongfei2001-png/human-cognition-layer',
+            'source_commit_sha': 'a' * 40,
+        }
+        planning.validate_capabilities(self.capabilities, self.schema, self.catalog)
+
+    def test_experimental_runtime_requires_exact_hcl_sha(self):
+        row = self.capabilities['capabilities'][0]
+        row['evidence_status'] = 'EXPERIMENTAL_RUNTIME_DEV_ONLY'
+        row['product_activation_policy'] = {'mode': 'EXPERIMENTAL', 'production_enabled': False}
+        row['runtime_implementation'] = {
+            'artifact_digest': 'sha256:development',
+            'interface_version': 'dev-v1',
+            'implementation_id': 'hcl-development',
+            'source_repository': 'haohongfei2001-png/human-cognition-layer',
+            'source_commit_sha': 'main',
+        }
+        self.assert_manifest_rejected()
+
+    def test_l2_5_production_or_efficacy_claim_is_rejected(self):
+        self.plan['invariants']['l2_5_production_activation_allowed'] = True
+        self.assert_plan_rejected()
 
     def test_disabled_capability_cannot_be_active(self):
         row = self.capabilities['capabilities'][0]
