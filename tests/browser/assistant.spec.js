@@ -18,7 +18,7 @@ test('text upload reports limits and registered coverage, not understanding',asy
 });
 
 test('cancel stream and explicit retry preserve one input',async({page})=>{
- await conversation(page);await page.getByLabel('消息').fill('未覆盖的原创输入');await page.getByRole('button',{name:'发送',exact:true}).click();await page.getByRole('button',{name:'停止',exact:true}).click();await expect(page.getByText('CANCELLED',{exact:false})).toBeVisible();
+ await conversation(page);let release;const gate=new Promise(resolve=>release=resolve);let entered;const waiting=new Promise(resolve=>entered=resolve);await page.route('**/v1/conversations/*/events',async route=>{entered();await gate;await route.continue();});await page.getByLabel('消息').fill('未覆盖的原创输入');await page.getByRole('button',{name:'发送',exact:true}).click();await waiting;await page.getByRole('button',{name:'停止',exact:true}).click();release();await expect(page.getByText('CANCELLED',{exact:false})).toBeVisible();
  await page.getByRole('button',{name:'重试',exact:true}).last().click();await expect(page.getByText('这段输入尚未解析。可以说明具体事件、人物和时间；当前模拟不具备任意语言理解能力。',{exact:true})).toBeVisible();
  await expect(page.getByLabel('消息')).toBeFocused();
 });

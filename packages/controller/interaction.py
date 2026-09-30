@@ -125,7 +125,12 @@ class Controller:
             answer,prep=self.preparation(run,text)
             use_adapter=not self.direct(text) and run['budget'].get('max_adapter_calls',1)>0
             if use_adapter:
-                run['run_receipt']['usage']['adapter_invocations']=1
+                with self.store.transaction():
+                    current=self.store.get(tenant,'run',run_id)
+                    if not current['pending']: return
+                    run['run_receipt']['usage']['adapter_invocations']=1
+                    current['run_receipt']['usage']['adapter_invocations']=1
+                    self.store.put(tenant,'run',current)
                 answer=self.adapter.generate(self.adapter.authorize(run_id),answer,run.get('simulation'))
             elif run.get('simulation') in {'failed','unknown'}:
                 raise Fault(403,'Simulation requires a mock adapter invocation')
