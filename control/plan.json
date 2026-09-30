@@ -208,7 +208,7 @@
     "experimental_runtime_bridge": "L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS",
     "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE",
     "product_design_adoption": "CANONICAL_1_2_PRODUCT_A2_ON_MERGED_MAIN_NOT_IMPLEMENTATION",
-    "a2_product_implementation": "NOT_STARTED",
+    "a2_product_implementation": "P0_01_SYNTHETIC_CONTRACTS_VERIFIED_WITH_LIMITS",
     "judge": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED",
     "upstream_sync_maintenance": "INHERITED_FROM_MERGED_PR_6_NOT_IMPLEMENTED_BY_DOCUMENT_ADOPTION"
   },
@@ -218,8 +218,8 @@
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
     "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
-    "next_ready": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
-    "next_package_id": "P0-01",
+    "next_ready": "P1-01_ASSISTANT_FIRST_SHARED_SHELL",
+    "next_package_id": "P1-01",
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
     "current_request_scope": "AUTHORIZED_SYNTHETIC_PROVIDER_FREE_IMPLEMENTATION",
     "current_executor_stop_after": "P1-03_OR_L3_GATE",
@@ -237,7 +237,7 @@
         "id": "P0-01",
         "task": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
         "depends_on": [],
-        "state": "NEXT_READY",
+        "state": "COMPLETE",
         "delta": "truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration",
         "acceptance": [
           "R01",
@@ -248,7 +248,7 @@
           "R06",
           "R07"
         ],
-        "evidence": "NOT_IMPLEMENTED"
+        "evidence": "docs/P0_01_EVIDENCE.md"
       },
       {
         "id": "P1-01",
@@ -256,7 +256,7 @@
         "depends_on": [
           "P0-01"
         ],
-        "state": "WAITING_DEPENDENCY",
+        "state": "NEXT_READY",
         "delta": "shared Assistant-first home/chat navigation composer reading and accessibility",
         "acceptance": [
           "R08",
@@ -313,7 +313,7 @@
   "writer": {
     "branch": "product/p0-01-truthful-preview",
     "scope": "P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR",
-    "status": "IMPLEMENTING_SINGLE_WRITER"
+    "status": "AWAITING_FINAL_EXACT_HEAD_REVIEW_AND_MERGE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {

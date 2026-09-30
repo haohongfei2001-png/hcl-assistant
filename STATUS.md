@@ -2,14 +2,14 @@
 
 ## Current product direction and next task
 
-**Product design: Canonical 1.2 / A2-Product — Assistant-first**（本版合入main后生效）。正式采用既有Product & Interaction Design Review，不重新设计；本次只有文档和计划元数据。
+**Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01现有受限实现与验收证据，P1尚未实现。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**
+**NEXT_READY: P1-01_ASSISTANT_FIRST_SHARED_SHELL**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P0-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-01。
 
-truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration。验收：R01、R02、R03、R04、R05、R06、R07
+shared Assistant-first home/chat navigation composer reading and accessibility。验收：R08、R09、R10、R11、R12
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -31,9 +31,9 @@ truthful temporary/delete/stop-use/file/correction/basis contracts and current-q
 - 历史L2.5的126 Python检查、build、12 headless journeys与synthetic smoke范围见 [baseline acceptance](docs/ACCEPTANCE_MATRIX_BASELINE_20261001.md)；后续upstream维护验收A30及结果见 [sync evidence](docs/RUNTIME_SYNC_EVIDENCE.md)。本次不重写原回执，不把它们当成Pages全部行为或A2设计验收。
 - Production = NOT_ACTIVE；efficacy = NOT_TESTED；real language generalization = NOT_TESTED。
 
-## Known unresolved product findings
+## Refinement evidence and remaining work
 
-Pages历史缺陷已在原始基线复现；P0-01修复和真实浏览器验收见 [包证据](docs/P0_01_EVIDENCE.md)。详见 [Review Adoption](docs/PRODUCT_REVIEW_ADOPTION.md)。P0-01先兑现这些承诺，再做主界面重构。
+P0-01的临时/删除/多标签页/完整文件/精确更正/实际依据/唯一队列契约已完成受限synthetic验证，见 [包证据](docs/P0_01_EVIDENCE.md)。最终采用须PR8精确head及main检查。已保留原始失败与修复迭代。下一步P1-01共享Assistant-first界面；P1-02/03仍未实现。
 
 ## Production gate and compatibility record
 

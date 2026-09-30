@@ -13,7 +13,7 @@ export function saveState(state, storage) {
   const existing = storage.getItem(STORAGE_KEY);
   const actual = existing ? (JSON.parse(existing).storageRevision || 0) : 0;
   if (actual !== (state.storageRevision || 0)) throw new Error('其他页面已修改数据，请刷新后重试；未覆盖最新记录');
-  const next = {...persistentState(state), storageRevision: actual + 1};
+  const next = {...persistentState(state), storageRevision: uid('storage')};
   storage.setItem(STORAGE_KEY, JSON.stringify(next));
   state.storageRevision = next.storageRevision;
 }

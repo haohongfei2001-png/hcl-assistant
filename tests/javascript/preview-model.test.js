@@ -71,3 +71,9 @@ test('v2 reload cleans simultaneous/reintroduced legacy bodies and exposes clean
  const {state}=setup(),s=storage();saveState(state,s);s.setItem(LEGACY_KEY,'LEGACY_TEMP_CANARY');loadState(s);assert(!s.bytes().includes('LEGACY_TEMP_CANARY'));
  s.setItem(LEGACY_KEY,'legacy');assert.throws(()=>loadState({...s,removeItem(){throw new Error('cleanup denied')}}),/cleanup denied/);
 });
+
+test('reset and later writes cannot reuse a stale revision identity',()=>{
+ const {state,c}=setup(),s=storage();submit(state,c.id,'记录：PRE_RESET_CANARY');saveState(state,s);const stale=loadState(s);
+ s.removeItem(STORAGE_KEY);const fresh=emptyState();createConversation(fresh);saveState(fresh,s);
+ assert.notEqual(stale.storageRevision,fresh.storageRevision);assert.throws(()=>saveState(stale,s),/其他页面/);assert(!s.bytes().includes('PRE_RESET_CANARY'));
+});

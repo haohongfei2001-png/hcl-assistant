@@ -9,11 +9,11 @@
 开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前队列如下：
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**
+**NEXT_READY: P1-01_ASSISTANT_FIRST_SHARED_SHELL**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P0-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-01。
 
-truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration。验收：R01、R02、R03、R04、R05、R06、R07
+shared Assistant-first home/chat navigation composer reading and accessibility。验收：R08、R09、R10、R11、R12
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -34,7 +34,7 @@ Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。�
 
 `https://haohongfei2001-png.github.io/hcl-assistant/`
 
-这是browser-only静态脚本演示：无Python/SQLite backend、真实HCL、provider调用、服务器持久化或研究数据。**只使用合成信息，不输入真实私密数据。** P0-01已在审查分支兑现受限的临时、删除、文件读取及显式更正/依据契约，实际验收与限制见 [Pages boundary and limitations](docs/PAGES_PREVIEW.md)。不能从“模拟”字样推定数据控制行为已正确。
+这是browser-only静态脚本演示：无Python/SQLite backend、真实HCL、provider调用、服务器持久化或研究数据。**只使用合成信息，不输入真实私密数据。** P0-01已实现并验证受限的临时、删除、文件读取及显式更正/依据契约，实际验收与限制见 [Pages boundary and limitations](docs/PAGES_PREVIEW.md)。不能从“模拟”字样推定数据控制行为已正确。
 
 ## Run the existing local synthetic product
 

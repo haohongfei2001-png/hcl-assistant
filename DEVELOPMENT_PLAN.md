@@ -3,11 +3,11 @@
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**
+**NEXT_READY: P1-01_ASSISTANT_FIRST_SHARED_SHELL**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P0-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-01。
 
-truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration。验收：R01、R02、R03、R04、R05、R06、R07
+shared Assistant-first home/chat navigation composer reading and accessibility。验收：R08、R09、R10、R11、R12
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -22,8 +22,8 @@ truthful temporary/delete/stop-use/file/correction/basis contracts and current-q
 
 | ID | Delta | Dependencies | State |
 |---|---|---|---|
-| P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | NEXT_READY |
-| P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | WAITING_DEPENDENCY |
+| P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | COMPLETE |
+| P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | NEXT_READY |
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | WAITING_DEPENDENCY |
 | P1-03 | bounded Inspect/Settings与整体synthetic验收 | P1-02 | WAITING_DEPENDENCY |
 

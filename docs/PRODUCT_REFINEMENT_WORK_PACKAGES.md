@@ -1,8 +1,8 @@
 # Product Refinement Work Packages — A2
 
-归属：[Master Plan](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX Spec](UX_SPEC.md)、[Visual System](VISUAL_SYSTEM.md)。这是已确认Review的实施分解，不是重新设计。唯一live队列在 [Development Plan](../DEVELOPMENT_PLAN.md) 与 `control/plan.json.product_development`；本文件只定义包。当前文档执行者不得实现这些包。
+归属：[Master Plan](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX Spec](UX_SPEC.md)、[Visual System](VISUAL_SYSTEM.md)。这是已确认Review的实施分解，不是重新设计。唯一live队列在 [Development Plan](../DEVELOPMENT_PLAN.md) 与 `control/plan.json.product_development`；本文件只定义包。文档采用与后续implementation Work分开；实现必须明确认领。
 
-四包串行，只有P0-01为NEXT_READY。L0–L2.5历史完成不重开；L3生产激活门槛不变。全部当前整改只用synthetic/provider-free数据，不获得真实用户数据、provider、Judge或agent执行授权。工作包不是PR数量承诺，不扩成通用平台。
+四包串行；当前状态仅以Development Plan和product_development为准。L0–L2.5历史完成不重开；L3生产激活门槛不变。全部当前整改只用synthetic/provider-free数据，不获得真实用户数据、provider、Judge或agent执行授权。工作包不是PR数量承诺，不扩成通用平台。
 
 ## P0-01 — Truthful preview contract repair
 
@@ -28,7 +28,7 @@
 
 ## P1-01 — Shared Assistant-first shell and interaction system
 
-任务标识：P1-01_ASSISTANT_FIRST_SHARED_SHELL；依赖P0-01；当前WAITING_DEPENDENCY。
+任务标识：P1-01_ASSISTANT_FIRST_SHARED_SHELL；依赖P0-01；状态见唯一live队列。
 
 目标：把已有方案落实成一个一致主聊天界面，不在旧页面上只换配色。
 
@@ -40,7 +40,7 @@
 
 ## P1-02 — Revision, evidence and memory interaction loop
 
-任务标识：P1-02_REVISION_EVIDENCE_MEMORY_LOOP；依赖P1-01；当前WAITING_DEPENDENCY。
+任务标识：P1-02_REVISION_EVIDENCE_MEMORY_LOOP；依赖P1-01；状态见唯一live队列。
 
 目标：将真实更正、依据、重要理解变化、历史/搜索和记忆控制连成普通用户可用闭环。
 
@@ -52,7 +52,7 @@
 
 ## P1-03 — Integrated product acceptance and bounded inspection
 
-任务标识：P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE；依赖P1-02；当前WAITING_DEPENDENCY。
+任务标识：P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE；依赖P1-02；状态见唯一live队列。
 
 目标：完成A2产品体验的受限synthetic验收，保留可检查性，不扩大Lab为主产品。
 
