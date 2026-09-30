@@ -132,3 +132,6 @@ HandshakeResult 必需字段：bridge_version、source_commit_sha、artifact_dig
 L2.5 execution 只接受 synthetic / non-confirmation input，并保留 request/response schema version、timeout、cancel、error、operation/run receipt 与 actual treatment state。必须区分 selected、executed、output-produced、used-in-answer；机制没有适用 treatment 时返回 NO_TREATMENT/UNSUPPORTED，而不是伪造空成功。FAILED/UNRESOLVED 保持原状。
 
 Bridge/capability manifest 可以把 PENDING_I06 capability 标记为 development-only EXPERIMENTAL，但 production_enabled 必须 false。L2.5 结果的 evidence class 固定为 DEVELOPMENT_INTEGRATION_ONLY / NOT_EFFICACY_EVIDENCE。
+## C12 — upstream pin maintenance (existing bridge unchanged)
+
+Runtime sync states: upstream_main_sha is metadata, candidate_sha is tested only in a disposable product copy, stable_verified_sha is the reviewed lock consumed by normal experimental execution. Candidate publication requires exact repository/SHA/tree/blob/SHA256 provenance, unchanged interface/allowlist/policy, actual handshake/discovery/synthetic smoke, all Python regressions, TypeScript/Vite build and applicable headless journeys. Failure preserves stable bytes and removes publishable output. Only a validated lock-only PR may propose a repin; adoption retains exact-head/main gates. Provider calls/spend=0, efficacy=NOT_TESTED, production_enabled=false. [Detailed acceptance and publication policy](../docs/RUNTIME_UPSTREAM_SYNC.md).

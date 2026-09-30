@@ -82,7 +82,7 @@ class PinnedHandshakeSmoke(unittest.TestCase):
         self.assertTrue(directory,'Acquire the allowlisted runtime and set HCL_DEVELOPMENT_ARTIFACT; this mandatory smoke never skips.')
         bridge=RuntimeBridge(directory); result=bridge.handshake()
         self.assertEqual(result['handshake_status'],'READY',result)
-        self.assertEqual(result['source_commit_sha'],'a8229fcf22eccb851c58502a09ae7cecb346faf5')
+        self.assertEqual(result['source_commit_sha'],load_config()['source_commit_sha'])
         self.assertEqual(result['interface_version'],'hcl-epistemic-callables-v1')
         # Immutable JSON round trip is suitable for historical receipt binding.
         stored=json.loads(json.dumps(result)); second=bridge.handshake()

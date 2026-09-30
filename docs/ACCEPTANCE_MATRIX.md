@@ -99,3 +99,7 @@ L2.5-01 branch acceptance: A23/A24 PASS within the pinned three-file provider-fr
 | A29 | Controller refuses persistent/Topic/non-synthetic/unconfigured/typed-command paths; temporary body byte/restart tests; unchanged Pages tests | No production activation, efficacy or provider authorization |
 
 Open limits: no integration of the entire research runtime, no provider-backed extraction/generation, no general Chinese/pronoun understanding, no persistent HCL cognitive state, no production privacy or efficacy certification. The four L3/I06 gates remain unmet. Existing L0–L2 package evidence and historical failures remain unchanged.
+
+## Upstream synchronization maintenance acceptance
+
+A30: unchanged main exits UP_TO_DATE; exact candidate uses only the existing allowlist; incompatible provenance/interface/manifest or failed smoke/regression/build/browser preserves stable pin; full-pass candidate alone can produce lock-only PR; concurrent writer/main changes defer; auto-merge requires existing strict required CI. Evidence: [sync report](RUNTIME_SYNC_EVIDENCE.md), `tests/test_upstream_runtime_sync.py`, existing actual runtime/Python/build/browser acceptance. L3/I06 gates stay unchanged.

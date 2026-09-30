@@ -190,3 +190,7 @@ L1 默认 Python 模块化 API/Controller 与 SQLite 持久化测试实现；L2 
 完成声明范围的正向可用行为，以及人物/来源/时间/权限/版本负面测试；从普通输入到最终记录可追踪；失败、未决、未介入如实保留。Schema/test PASS 只证明被检查的条件。
 
 L0 planning/setup已完成；物理迁移执行者在新仓库exact-main核验后停止，不开始L1。下一位产品 Work 从 L1-01 接管；可按依赖连续推进 L1/L2，不每包问 Owner。遇真实外部权限/凭据/许可/异常费用门槛 defer 并推进独立任务；L2 全部完成而 L3 条件不具备时停止，不制造 filler。
+
+## Canonical Amendment A2 — verified upstream pin maintenance
+
+Owner-authorized maintenance may observe public HCL main SHA metadata hourly/manually, test each exact candidate with the existing allowlisted L2.5 bridge and full product compatibility suite, and propose a lock-only PR. Stable runtime execution always uses a reviewed exact lock; no floating-main execution or implicit untested pull. Failed candidates preserve the stable pin. Auto-merge may use existing strict required CI protections only; no protection/settings changes are authorized. Capability policy and all L3/I06 gates remain unchanged. See [synchronization contract](docs/RUNTIME_UPSTREAM_SYNC.md).

@@ -191,9 +191,16 @@
     "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE"
   },
   "writer": {
-    "branch": "product/l2-5-runtime-bridge",
-    "scope": "L2.5-01_THROUGH_L2.5-02",
+    "branch": "product/upstream-runtime-sync",
+    "scope": "VERIFIED_UPSTREAM_PIN_MAINTENANCE",
     "status": "REVIEW_READY_STOPPED_BEFORE_L3"
   },
-  "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED"
+  "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
+  "runtime_sync": {
+    "workflow": ".github/workflows/upstream-runtime-sync.yml",
+    "tracking": "PUBLIC_MAIN_SHA_METADATA_ONLY",
+    "candidate_policy": "EXACT_SHA_FULL_COMPATIBILITY_THEN_LOCK_ONLY_PR",
+    "stable_policy": "REVIEWED_LOCK_ONLY",
+    "production_activation_allowed": false
+  }
 }

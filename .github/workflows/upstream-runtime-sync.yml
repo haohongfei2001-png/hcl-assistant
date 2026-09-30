@@ -1,0 +1,77 @@
+name: Upstream HCL Runtime Sync
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+# Only one sync writer; human PR ownership is checked again before publication.
+concurrency:
+  group: upstream-hcl-runtime-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    if: github.repository == 'haohongfei2001-png/hcl-assistant' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      status: ${{ steps.validate.outputs.status }}
+      product_sha: ${{ steps.base.outputs.sha }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, product only
+        with:
+          ref: main
+          persist-credentials: false
+      - id: base
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Validate exact candidate through existing bridge and full regressions
+        id: validate
+        env:
+          PRODUCT_SHA: ${{ steps.base.outputs.sha }}
+        run: |
+          python3 scripts/upstream_runtime_sync.py "$RUNNER_TEMP/runtime-sync"
+          python3 -c 'import json,os; r=json.load(open(os.environ["RUNNER_TEMP"]+"/runtime-sync/receipt.json")); print("status="+r["status"])' >> "$GITHUB_OUTPUT"
+      - name: Retain honest success/failure receipts and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runtime-sync-validation
+          path: ${{ runner.temp }}/runtime-sync
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Summarize runtime states
+        if: always()
+        run: |
+          if test -f "$RUNNER_TEMP/runtime-sync/receipt.json"; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$RUNNER_TEMP/runtime-sync/receipt.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  publish:
+    needs: candidate
+    if: needs.candidate.outputs.status == 'VERIFIED_CANDIDATE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ needs.candidate.outputs.product_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: runtime-sync-validation
+          path: ${{ runner.temp }}/runtime-sync
+      - name: Publish lock-only PR and dispatch exact-head acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SYNC_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/publish_runtime_sync.py "$RUNNER_TEMP/runtime-sync" | tee -a "$GITHUB_STEP_SUMMARY"

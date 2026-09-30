@@ -2,7 +2,7 @@
 
 Assistant → 按需 Explain → 高级只读 HCL Lab。所有模拟输入、修订和回答都经过 Interaction Controller。
 
-**L1/L2 = provider-free implemented and verified; L2.5 experimental bridge and synthetic real-runtime execution are implemented with limits on this review branch; production remains disabled.** 唯一 canonical 产品事实源仍是 `haohongfei2001-png/hcl-assistant/main`；采用以 exact-head CI、合并和 exact-main CI 为准。见 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Master Plan](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[contracts](contracts/PRODUCT_CONTRACTS_V1.md)、[工作包](docs/L0_L2_WORK_PACKAGES.md)、[验收矩阵](docs/ACCEPTANCE_MATRIX.md) 和 [执行证据](docs/EXECUTION.md)。
+**L1/L2 = provider-free implemented and verified; L2.5 experimental bridge and synthetic real-runtime execution are implemented with limits; production remains disabled.** 唯一 canonical 产品事实源仍是 `haohongfei2001-png/hcl-assistant/main`；采用以 exact-head CI、合并和 exact-main CI 为准。见 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Master Plan](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[contracts](contracts/PRODUCT_CONTRACTS_V1.md)、[工作包](docs/L0_L2_WORK_PACKAGES.md)、[验收矩阵](docs/ACCEPTANCE_MATRIX.md) 和 [执行证据](docs/EXECUTION.md)。
 
 Python >=3.11 标准库 / SQLite；React/TypeScript/Vite 与 headless Playwright 精确版本在 npm lock。无托管服务、provider transport 或部署依赖。L2.5 仅在显式启用的开发进程中消费外部固定 SHA 的三文件 runtime slice。SQLite 与临时测试输出不入 Git。
 
@@ -44,6 +44,8 @@ python3 scripts/smoke_development_bridge.py "$HCL_DEVELOPMENT_ARTIFACT"
 
 Hosted `HCL Assistant Planning` materializes this public product repository at exact SHA, separately acquires only the three locked development runtime modules, runs root/Python/build/browser checks and the original synthetic real-runtime smoke, and publishes exact SHA/digests/results in its job summary. These checks certify bounded implementation/integration, not production privacy, general language semantics or efficacy.
 
-L2 is complete. **L2.5 Experimental Runtime Bridge is complete on this review branch**: fixed-SHA development-only HCL transport/handshake/manifest discovery and permitted synthetic real-runtime execution, with no production activation or efficacy claim. L3 remains I06-gated **Production Capability Activation** and reuses the bridge rather than building transport from zero. No confirmation/evaluation material, LongMemEval, real/private data or case-specific formal-eval tuning is authorized. The browser-only synthetic GitHub Pages preview remains a separate mock surface.
+L2 is complete. **L2.5 Experimental Runtime Bridge is complete**: fixed-SHA development-only HCL transport/handshake/manifest discovery and permitted synthetic real-runtime execution, with no production activation or efficacy claim. L3 remains I06-gated **Production Capability Activation** and reuses the bridge rather than building transport from zero. No confirmation/evaluation material, LongMemEval, real/private data or case-specific formal-eval tuning is authorized. The browser-only synthetic GitHub Pages preview remains a separate mock surface.
 
 Bridge pin, interface and exact scope: [development bridge](docs/EXPERIMENTAL_RUNTIME_BRIDGE.md). Missing runtime is an explicit failed handshake; mandatory development smoke never silently skips.
+
+Automatic [upstream runtime synchronization](docs/RUNTIME_UPSTREAM_SYNC.md) validates exact candidates and opens lock-only review PRs; normal execution stays on the stable lock until adoption. L3 remains gated.
