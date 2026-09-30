@@ -1,192 +1,156 @@
 # HCL Assistant Product Master Plan
 
-版本：Canonical 1.1 / 2026-10-01（A1：新增 L2.5 Experimental Runtime Bridge；产品定义与 L0–L2 既定原则不变）。唯一产品事实源：`haohongfei2001-png/hcl-assistant/main`。性质：Owner 已决产品方向的正式采用；合入 main 生效。当前实时状态只在 STATUS.md，执行队列只在 DEVELOPMENT_PLAN.md；字段契约在 contracts/PRODUCT_CONTRACTS_V1.md。不得以聊天旧建议覆盖 GitHub current main。
+版本：**Canonical 1.2 / 2026-10-01 / Amendment A2**。唯一产品事实源：`haohongfei2001-png/hcl-assistant/main`。
 
-## 1. Product North Star
+本版正式采用 Owner 已确认的《HCL Product & Interaction Design Review》，不重新开放产品定位或并列方案。新增长期终局 `Understand → Revise → Judge → Help → Act`；Judge 仅是长期目标，不是当前实现、验证结果或生产能力。本次采用仅修改产品文档与开发计划元数据，不修改应用、测试、工作流、研究代码、runtime lock 或 capability manifest。
 
-> 用户首先感受到的是一个能持续理解背景、区分事实与解释、并在新信息出现后正确修订判断的 AI，而不是一个需要用户操作认知模块的分析工具。
+采用以本版合入 main 为准；实现与测试事实以 exact-SHA 代码、CI 和原始回执为准。设计采用不等于实现完成。权威分工与旧设计处置见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)；唯一执行队列见 [Development Plan](DEVELOPMENT_PLAN.md)，其机器投影为 `control/plan.json.product_development`。
 
-产品定义：HCL Assistant 是一个能够持续理解上下文、区分信息与解释、随新信息修订判断的 AI 助手。用户自然地与它交流，HCL 在每次交互中管理相关上下文、认知状态与回答生成；Explain 和 Lab 提供按需的解释与检查能力。
+## 1. 最终产品定义：Assistant-first
 
-这是产品目标，不是当前已验证效力。优先级：真实帮助与边界可靠性 > 正确持续上下文 > 自然可用体验 > 调试可观察性 > 展示复杂度。不会为维持 HCL 名称硬留无增益机制。
+HCL 是一个可以持续交流的 AI 助手。它帮助用户处理问题、完成任务，并在新信息出现时更新对事情的理解，而不是反复沿用已经过时的判断。
 
-## 2. 固定产品原则
+默认体验只有三个中心任务：**开始聊天、继续事情、得到帮助**。用户不需要首先理解 HCL、state、dependency graph、source version、snapshot 或研究包。HCL 的严谨性首先体现为回答质量、连续理解、可纠正性和稳定的边界，而不是前台复杂度。
 
-### P01 Assistant-first
+最终方案固定为：**聊天是唯一默认工作中心；可修订背景是基础能力；回答级依据是信任入口；Inspector 是按需可检查能力；Research Lab 是独立高级环境。** Home 与 Conversation 是同一界面的空状态和使用状态，不是两个产品。Lab 不是主产品的上层导航或信息架构模板。
 
-Assistant 是第一层；Explain 是回答级按需依据；Lab 是高级研究/调试环境。三层共享同一 run 的真实记录。普通用户不创建 Case、不选择研究包、不配置 evaluation arm。默认正常聊天，无常驻右侧图谱，无前台 Base/HCL 开关。
+对普通用户的价值是少重复、能更正、不混淆信息与解释、可控制数据。内部节点数量、漂亮图谱、schema 通过或 Explain 展开率都不能替代这些结果。
 
-### P02 HCL owns the answer flow
+### 1.1 为什么值得使用
 
-所有正式输入和生产回答都经过 Interaction Controller。Direct 也是 `input → HCL control → Direct decision → adapter/model or deterministic result → HCL-governed answer`。禁止从 UI/API 直达 provider 的隐藏生产旁路。Lab Base-only 是明确隔离的实验路径，不免除真实权限与费用控制，不自动回写生产记忆。
+记忆、搜索、聊天外壳或可编辑背景本身不被声明为独特竞争优势。待验证的价值假设是：在信息持续变化、来源冲突、人物知情范围不同、旧解释需要修订时，HCL 能否比强基础模型加良好通用记忆更可靠，同时不损害普通任务质量。
 
-### P03 Always-on, not always-complex
+对外是通用助手，对内可以优先验证复杂连续理解。人际合作、长期目标、小说人物、概念与价值等是可用的验证场景，不是强迫用户选择的首页分类，也不把产品限定为心理案例分析。不能要求用户牺牲普通聊天、写作、解释、总结体验来欣赏认知结构。
 
-每条用户消息、文件、引入的历史、来源、更正、假设都进入控制流程。每个相关变更被处理或明确标记未解析/未完成；不得声称未知输入已经全部语义理解。简单问题可 Direct，专门操作可为零。generic-only、unresolved、failed、cost-without-known-gain 均合法。始终在线不等于后台监视或无用户事件的持续付费分析。
+目前没有由本计划确立的广泛认知优势、一般中文理解或日常助手可用性证明。
 
-输入变化与回答任务分开：`更正，昨天是 B 不是 A；2+2 等于几？` 必须先处理更正，再直接答算术。不能按最后一句绕开前面的状态变化。
+## 2. 长期终局：Understand → Revise → Judge → Help → Act
 
-### P04 Revisable persistent cognition
+这是一条长期用户价值链，不是每轮强制执行的五阶段流水线，不是新增五个 runtime 模块，也不是前台步骤动画。
 
-原始记录、当前背景、系统解释、假设、更正、撤回、历史状态、摘要/索引分别建模。模型过去生成的解释不能因为被保存、复述或摘要就升级成新的独立证据。重复、引用和衍生摘要保留共同来源根。
+| 环节 | 长期产品含义 | 当前边界 |
+|---|---|---|
+| Understand | 在获准范围内理解问题、背景、人物表达、目标、信息来源与不确定性 | 当前只有受限 mock/工程基础和部分 development runtime 接入；不能声称任意输入已理解 |
+| Revise | 新信息、更正或撤回出现时更新相关理解，保留无关内容和历史 | 已有范围受限的基础设施与 synthetic 验证，不等于一般自然语言持续认知已实现 |
+| Judge | 在证据、条件、目标和不确定性约束下形成可说明、可修订、对用户有用的判断 | **LONG_TERM_GOAL_ONLY / NOT_IMPLEMENTED_AS_GENERAL_CAPABILITY / NOT_VALIDATED / NOT_PRODUCTION_ENABLED** |
+| Help | 把理解与判断转成有用回答、写作、澄清、计划和任务支持 | 当前 mock 输出不等于真实通用助手能力 |
+| Act | 在用户明确授权、工具权限与风险控制内执行任务，并保留结果与撤销边界 | 后期 permission-gated 方向；本版不增加 agent、外部执行或后台调用授权 |
 
-### P05 Internal rigor, natural output
+Judge 不是人格/信任/道德评分，不是心理真相 oracle，也不替用户作最终价值选择。现有 `main_judgment` 字段、条件检查器或脚本句子不能被重命名为 Judge 已实现。不得在 capability manifest 中仅为这个终局新增已启用能力，不得在首页宣传已经具备 Judge。未来 Act 不能因为系统推测了某人的意图而获得发送消息、修改日程或其他外部行动权限。
 
-内部维护证据、人物、时间、作用域、竞争解释及依赖；外部自然、简洁、有判断力。清晰主判断不等于强选真实动机；关键不确定性进入正文，技术细节进 Explain/Lab。不得因缺少直接自述一律禁止有据推断，也不得把可能解释说成心理事实。无校准不使用伪精确概率。
+## 3. 不可退让的产品原则
 
-### P06 Honest activation and evidence
+**P01 Assistant-first。** 普通用户直接聊天，不创建 Case、不选择实验臂、不配置认知模块。没有常驻右侧图谱，没有前台 Base/HCL 开关。
 
-Selected、executed、result-produced、used-in-answer、cache-reused 分开记录。mock 不升级 live，接口通过不升级语言理解，代码正确性不升级 efficacy。产品控制层在线不代表所有研究机制已默认启用。
+**P02 Controller owns the flow。** 所有生产及生产模拟输入、变更与回答经 Interaction Controller；Direct 也是受控决策，不是 UI/API 直连 provider 的隐藏旁路。Lab Base-only 是隔离实验，不回写真实背景，也不绕过权限与费用限制。
 
-## 2A. Canonical Amendment A1 — L2.5 Experimental Runtime Bridge
+**P03 Always-on, not always-complex。** 每个相关输入变化被处理或明确保留为未解析/未完成；最小充分操作可以为零。generic-only、no treatment、failed、unresolved、cost-without-known-gain 都合法。没有用户事件时不因此获得持续后台付费分析授权。
 
-Owner 进一步降低产品与研究线耦合：**L2 完成后不再等待 I06 才开始 runtime transport。** 在 L2 与正式 L3 之间新增 development-only 的 **L2.5 — EXPERIMENTAL_RUNTIME_BRIDGE**。这不改变 P01–P06，也不改变研究序列 `I02 → I03 → I04 → I05 → I06`。
+**P04 修订优先于惯性。** 原始记录、可复用背景、系统解释、假设、更正、撤回与派生摘要分开。重复、保存、复述和摘要不把推断升级为独立证据。
 
-L2.5 只面向 synthetic / non-confirmation integration development。它允许从 `haohongfei2001-png/human-cognition-layer` 的**固定 exact commit SHA**和明确 allowlist 的 runtime/interface material 建立版本化桥接，执行目前可用的 HCL mechanism，并如实记录 `UNSUPPORTED / NO_TREATMENT / FAILED / UNRESOLVED`。它不授予 production activation，也不产生 efficacy evidence。
+**P05 内部严谨，外部自然。** 先帮助解决问题。重要不确定性进入正文，内部结构按需展开。不因没有直接自述一律拒绝有据推断，也不把可能解释说成心理事实；没有校准不用伪精确概率。
 
-L2.5 严禁：production-retained 标签；修改 I02–I06；confirmation source/gold；protected evaluation artifacts；LongMemEval；真实用户私密数据；按正式评估结果做 case-specific tuning；把 experimental 结果升级为 HCL efficacy / independent-generalization / production-readiness 证据。provider-backed execution 默认不授权，若某 runtime path 需要 provider，必须另有明确 development execution authorization。
+**P06 执行不等于效力。** selected、executed、result-produced、used-in-answer、cache-reused 分开。定位准确不等于语义支持，运行成功不等于判断正确。mock、实验执行、生产启用与独立增益不得混同。
 
-正式 L3 的职责收窄为 **Production Capability Activation**：复用已经建立并验证过的 transport/serialization/receipt 基础，根据 I06 的 `RETAIN / SIMPLIFY / GENERICIZE / DISABLE / REPLACE / INCONCLUSIVE` 及产品安全/范围验证决定 production activation；不再从零建设 runtime transport。
+**P07 用户控制必须真实。** 临时、不再使用、删除、完整读取和是否发送到外部必须与行为一致。不能把这些控制 mock 成成功；未实现时删除动作或明确不可用。
 
-## 3. 用户价值与范围
+## 4. 完整功能架构
 
-优先任务：持续的人际/合作问题理解；长期目标、角色和价值讨论。支持逐步扩展至关系冲突、承诺误解、自我反思、小说人物、多方事件回顾、条件责任与概念分析。用户的感受应被尊重，但用户对他人动机的猜测不是客观事实。
+| 层级 | 保留范围 | 默认呈现 |
+|---|---|---|
+| 核心默认能力 | 普通任务处理、上下文选择、来源归属、相关状态更新、更正/撤回、范围控制、必要时使用获准操作、回答与发布检查 | 不要求用户操作模块 |
+| 用户可见功能 | 聊天、历史/搜索、附件、复制/编辑/停止/重试、继续已有事项、管理记忆、查看依据、重要理解变化、临时对话、删除/导出、基础个性化 | 随任务出现 |
+| 高级 HCL | Inspector、支持与挑战、局部时间线、人物视角、判断变化、精确来源纠正、假设分支 | 从具体回答或背景进入 |
+| Research / Lab | 运行记录、回放、Base/HCL/通用基线比较、消融、公平条件与成本/覆盖分析、实验导出 | 独立高级工作区 |
+| 暂不做或删除 | 强制心理标签、全局人物图谱、统一信任/人格分、认知仪表盘、HCL intensity 滑块、复杂模型市场、无请求后台付费认知、自治 agent 平台 | 不进入普通产品 |
 
-有用结果可能是推断、重构问题、草拟沟通、确认关键缺口或选择不依赖读心的稳健行动。不是诊断别人、人格评分、统一信任值、永久人物画像或制造 AI 亲密依赖。
+搜索、计算和工具是通用助手能力，不全部包装为 HCL 专门创新。首发一个推荐模型即可；未来真实需求和授权成立后再开放有限模型选择。删除“越高越聪明”的 HCL 强度调节；预算与技术参数只进入后期高级设置。
 
-## 4. 产品分层与对象
+人格评分、心理诊断、统一信任分、永久第三方画像不再归类为普通 Later backlog；它们是本产品方向的排除项。移动端、语音与获准工具执行才是可能的后期扩展。
 
-前台：Conversation；一个可选的 Topic 容器（UI 可标为项目，不同时引入两套容器）；Files；相关时才出现的 People；可管理的 remembered context。
+## 5. Memory、cognition 与数据对象
 
-内部：Event、SourceVersion、ContextState、Interpretation、Snapshot、Run、OperationReceipt、Intervention、Revision、CapabilityManifest。Case 仅为 Lab 中可派生的分析对象，不是生产根对象。
+| 对象 | 职责 | 禁止混同 |
+|---|---|---|
+| 原始对话/资料 | 保存当时说了什么、上传了什么 | 问句不是事实；引用/小说第一人称不等于用户本人立场 |
+| 可复用背景 | 用户允许后续使用的信息，带来源、范围、期限 | 保存不等于全账户复用或永久人格 |
+| 当前理解/解释 | 在现有条件下暂时成立的判断、前提、反证与替代 | 系统解释不是新独立来源，不自动是世界或私人心理真相 |
+| 摘要/索引/缓存 | 高效组织与检索，可重建 | 派生物不能反向升级为来源；删除/更正需传播 |
 
-同名人物默认作用域内身份；跨 topic 合并必须有显式依据/确认，并可拆分。小说第一人称、引用、假设不能写成用户本人背景。
+前台只有 Conversation、可选项目、附件、可管理背景；People 仅相关时出现，不作为必须建立的 profile。后台继续使用版本化事件、来源、状态、解释、依赖、运行和回执对象，字段语义由 [稳定契约](contracts/PRODUCT_CONTRACTS_V1.md)约束。
 
-## 5. Product architecture
+同一对话自然延续。跨对话复用须明确建立范围；前台只保留一个可选容器“项目”，不是 Topic/Project/Workspace/Case 并行。当前 `topic_id` 可以保留为内部契约字段，不因中文命名立即做存储迁移。跨项目默认不自动串联；同名人物不自动合并。稳定表达偏好可单独授权全局使用，不等于全部私人经历全局可用。
 
-```text
-Assistant Web UI
-  ↓
-Conversation API
-  ↓
-HCL Interaction Controller
-  ↓
-Scoped Context Builder
-  ↓
-Capability Scheduler
-  ├ Direct
-  ├ Generic
-  └ Approved cognition operations
-  ↓
-Answer Synthesis / Explain Projection
-  ↓
-Model Adapter
-  ↓
-Provider
-```
+目标可以更新、暂停、结束；短期情绪不变永久偏好。关系是有方向、来源、情境的证据，不是单一分数。未决与冲突信息保留；用户自己的感受按体验尊重，对他人的动机猜测保持解释身份。
 
-这是逻辑边界，不要求微服务。执行顺序细化：接受事件 → 识别/提交相关变更与失效 → 构造范围内上下文 → 按预算调度 → 准备有依据的回答 → 必要模型生成 → 有界检查与发布 → 保存同版本回答/Explain/receipt。Explain 是该 run 已记录依据的投影，不是预先知道模型结果或事后编造理由。
+## 6. 内部功能链路与修订
 
-持久化贯穿：原始消息/文件；版本化事件账本；当前状态投影；解释支持/挑战关系；检索/摘要；不可静默覆盖的运行回执。删除政策优先于永久留存，不能用审计要求阻止用户删除。
+接受输入/资料 → 权限与范围检查 → 处理相关变更 → 构建有效上下文 → 选择必要操作 → 生成回答 → 有界检查与发布 → 保存回答及可检查记录。
 
-Controller 负责秩序、权限、版本、选择和资源；不自称万能语义 oracle。研究 Python runtime 保持可替换，通过版本化薄接口接入，不在产品仓库复刻研究机制。
+采用模块化产品，不为展示架构引入微服务。研究 runtime 通过固定版本薄接口接入，Controller/UI 不复制研究机制。产品视图投影与 runtime 对象分离；Assistant、Explain、Inspector 可以共享真实记录，但不共享同一信息密度。
 
-## 6. Routing 与状态责任
+状态责任与回答任务分开：“更正，会议改到周五；2+2？”不能只回答算术而漏掉变更。记录成功、语义解析成功和回答成功分别处理。事件已提交而生成失败，不回滚已确认更正；发布前重新检查权限与版本；重连只重放，未知结果不盲重试。
 
-路由：DIRECT、CONTEXT_ASSISTED、SELECTED_COGNITION、BOUNDED_RESPONSE、CLARIFY、BLOCKED。blocked 只在无法安全完成时使用；可答部分尽量保留。状态、路由、运行结果独立字段。未选择操作不表示相应世界事实不存在。
+更正旧错误、从现在起情况变化、将事实化内容降回猜测、假设另一个世界，是四种不同意图。目标含糊先澄清，不按最近记录猜更正对象。假设分支不写回实际背景。旧回答不静默重写；按新信息分析创建新 run。
 
-不按关键词强制心理分析。判断当前任务、相关上下文、现有证据、能力适用范围、语言覆盖及资源。最小充分操作集合；多解释有限、证据无增量即停止。所有中间模型调用经过计量 adapter。
+检索旧判断必须同时考虑更正、撤回、反证、身份修订和来源失效；不能只找支持旧结论的资料。保留独立支持及共同来源根；失效范围可以保守，不宣称最优细粒度。事件时间、人物获知时间、披露/记录时间和来源次序分开，未知保留未知。
 
-权限/范围不能确认时不 fallback 到失控 Base。专门操作失败时可基于有效来源生成有界回答，但必须记录失败和未覆盖范围。重试是新 attempt，不改写旧失败。
+## 7. 信息架构与主交互
 
-## 7. 长期对话是一等能力
+侧栏：新对话、搜索、最近对话；项目仅在需要/已存在时出现；底部记忆与设置。顶栏只承担对话身份、当前范围和少量操作。当前范围与“下一次新建对话”的配置不能混淆。
 
-同一 conversation 延续；用户指定 Topic 内跨对话延续；跨 topic 默认关闭，后续仅显式选择内容。当前背景与历史观点分开，短期情绪/期限目标可过期，未决承诺和问题可继续。
+回答 → 查看依据 → 具体依据/变化 → 详细检查。Research Lab 从高级设置或详细检查进入，不是每轮主 CTA。Explain、状态变化与 Inspector 是上下文视图，不是新增三个一级入口。
 
-检索不只找支持旧结论的记忆：旧判断连同更正、挑战、撤回、身份更正和关键反证进入候选闭包。摘要是可重建派生物，不是新来源；原文变更使相关摘要和缓存失效。未检索/未解析不等于不存在。
+首次打开直接输入；没有 Case wizard、Topic 必填或强制心理分类。普通知识问题先回答，不把用户问题当成保存事实的请求，不为无专门操作每轮播报诊断。普通任务同样必须遵从数据与权限政策。
 
-时间至少区分 event/story time、person receipt/learned-at、disclosure、recorded-at；没有依据保留未知/偏序，不按上传时间制造人物获知时间。
+后台索引或无实质影响的变化不提示；影响任务时自然确认；改变旧建议时说明“之前依据什么—新信息是什么—哪部分改变”。含糊更正先澄清；相关更新失败时不得继续装作旧背景有效。没有新增价值不制造 insight。
 
-新证据可以修正现在对过去的重建；不能把今天获知的信息塞回当事人过去的视角，也不能改写旧回答当时的输入记录。相同事实的多个独立支持可保留，撤回一条不自动全删；新增信息也可能影响原先基于缺失证据的判断。
+九个视图的用户目标、布局、主操作、隐藏/展开、空状态与失败规则见 [UX Spec](docs/UX_SPEC.md)。视觉 tokens 与行为见 [Visual System](docs/VISUAL_SYSTEM.md)。
 
-## 8. Answer 与 Explain
+## 8. Explain、Inspector 与 Compare
 
-正文优先实际问题；若有依据给主判断和关键条件，可用一个有用行动收束。不得每次机械列状态表，不隐藏改变建议的实质不确定性。
+Explain 前台叫“查看依据”，默认零新模型调用。只投影当时记录的依据、条件、缺口与来源；没有记录就省略或说明未记录，不能事后编造理由，不展示或存储私有 chain-of-thought。主要不确定性仍在回答正文，不能全藏进面板。
 
-合成只使用当前有效 context、明确 operation outputs 及其允许的一般表达。不得新增未记录的人物心理/动机/价值事实；新假设要先登记为系统解释并保持可检查身份。Direct 一般知识/算术不是人物事实写入，也不是必须先存所有世界知识。
+Inspector 默认可读列表与局部依赖，不默认全图/JSON。来源报告、人物表达、系统推断、条件结果、实际执行与未覆盖分别呈现；漂亮结构不是正确性证书。
 
-Explain 默认不触发模型调用；展示当时记录的依据、关键条件、其他解释、缺口及会改变判断的信息。旧回答用当时记录；按新信息重新分析是新 run。不得展示或保存私有 chain-of-thought 为产品 Inspector 内容。
+Compare 只在 Research Lab 中存在。共享问题、模型、允许来源/上下文、资源条件与实际 treatment 差异先核对；必要时盲评。无处理差异不声称检验了专门增益，一侧失败不自动是另一侧胜利。普通产品不显示灰色 Base Compare 占位按钮；未开放能力只在 Lab 的能力说明中解释门槛。
 
-## 9. UX 与 MVP
+旧答案使用当时依据，但仍遵从当前删除与访问权限。按当前信息重算是新运行，不用今天的材料替旧答案补理由。
 
-默认：左侧新对话/历史/Topic，中间聊天，右侧不存在。回答级引用、Explain、更多。Explain 轻量抽屉；Lab 经 Advanced 或回答更多进入。用户随口更正即可，不要求表单标注心理真相。
+## 9. Privacy、权限与研究隔离
 
-Must Have：normal chat；streaming/stop/retry；always-on Controller；conversation persistence；Topic scope；text/file context；信息与解释区分；correction/retraction；state invalidation；natural synthesis；Explain；memory/privacy；delete/stop using；minimal receipt；failed/unresolved handling。
+account data permission、人物/故事 perspective access、persistence/reuse permission 是三个边界。临时对话正文不进入持久检索/日志/备份；存储、浏览器与未来 provider 保留不能被一个“隐私模式”笼统担保。
 
-L1/L2 仅文本/Markdown/TXT 与 synthetic 数据；可靠解析前不承诺 PDF/DOCX 全格式。来源范围可见，上传成功不等于已完整理解。进入真实用户阶段前需实际认证、备份/删除政策与数据安全验收；L1/L2 使用隔离测试身份，不宣传生产认证。
+STOP_USING 阻止未来上下文与派生复活；DELETE 清理受影响的原文、索引、缓存、分支与可恢复派生物。其他独立来源仍存在时准确说明范围，不把删除一条记录说成所有副本已消失。仅保留必要无正文删除回执，恢复备份时仍执行删除。远端 provider 删除与保留按实际政策披露，不承诺做不到的事情。
 
-Lab shell：run、context/state、实际 capability execution、Base comparison 入口。比较入口 L2 明确 disabled/no-provider；不建完整 dashboard。P/G/ablation、真实公平比较和成本效力分析均属后期 Lab。
+文件和工具输出只有数据权力，不能扩权、写记忆政策或替用户授权。真实用户阶段须实际认证、数据隔离、备份/删除及安全验收。
 
-Later：native mobile、macOS native、voice、social、avatars、agent marketplace、心理诊断、人格评分、3D graph、全局永久第三方画像、无请求后台付费认知。
+不读取/复制 confirmation source/gold、protected evaluation artifacts、sealed LongMemEval 或私人研究概念；不把正式研究结果用于 case-specific product tuning。产品反馈使用新原创非确认材料复现。研究 I02–I06 顺序与处置不由本版更改。既有 [Boundary](docs/BOUNDARY_AND_ISOLATION.md) 和 [Experimental Bridge](docs/EXPERIMENTAL_RUNTIME_BRIDGE.md) 安全约束继续生效。
 
-## 10. Privacy 与隔离
+## 10. 当前能力与 MVP
 
-三个独立边界：account data permission、人物/故事 perspective access、persistence/reuse permission。临时对话不进持久检索/日志正文；conversation-only 与 Topic scoped 可控；跨 Topic 不自动扩大。
+采用基线为产品 `972234e8fdb868a51a519ba7f7c98cdb5a80583b`，已合并 PR #5。Pages 是独立 browser-only scripted preview；本地 React/Python/SQLite 是 mock 产品基础；L2.5 是固定 `a8229fcf22eccb851c58502a09ae7cecb346faf5` 的三文件 development slice，仅两个实验能力。普通 UI 消息仍 MOCK，不是通用模型聊天；详细当前事实见 [STATUS](STATUS.md)。
 
-外部材料没有 memory-write、permission-expansion 或 system-policy 权限。stop using 立即阻止未来使用且传播到摘要/缓存；delete 清理来源和派生数据，允许保留无正文的删除回执，不能遗留可恢复人格印象。
+现阶段交付名称是交互与基础设施原型，不冒充日常可用 MVP。现在完成：一致的主聊天界面、基础输入/阅读/恢复、历史与范围、真实临时/删除/上传行为、受限但诚实的修订、来源绑定 Explain、异常状态和基本导出。
 
-采用 docs/BOUNDARY_AND_ISOLATION.md。产品不读取 confirmation source/gold/artifact/credential，不按确认失败调 prompt，不把确认材料改名 Demo，不读取或复制 sealed LongMemEval。产品反馈不得修改 frozen evaluation。必要问题在新的原创非确认材料复现。
+可以 mock：明确原创场景的答案与能力输出、延迟/故障、标注为样例的研究展示。不能 mock 成成功：保存、删除、外部发送、完整读取、实际使用了哪些依据。任意语义不支持时保留未覆盖，不继续堆关键词冒充理解。
 
-## 11. L0–L5
+真实日常 MVP 的最小闭环：普通聊天 → 本对话持续理解 → 用户自然更正 → 后续回答不沿用被更正前提 → 查看依据与控制数据。首发不需要完整关系模型、全局长期画像、图谱编辑或实时 Compare。
 
-L0：Master Plan、稳定契约、控制面、工作包与 provider-free setup 检查。**COMPLETE**。
+真实 MVP 必须有受 Controller 管理的真实模型适配、普通中文/多轮/修订/合成忠实性验证、来源绑定、身份与数据隔离、明确存储/备份/删除政策。当前授权不包含这些生产执行。
 
-L1：持久化、修订、权限、检索边界与 Controller lifecycle。**COMPLETE**。
+生产 HCL 能力仍受 L3 门槛：I06 disposition、固定获准 production artifact/interface、产品 adapter scope 验证、明确执行/数据授权。L2.5 成功不满足生产门槛，I06 完成也不替代产品验证。RETAIN 限定范围；SIMPLIFY/GENERICIZE 使用更简单或通用路径；DISABLE 停用；REPLACE 换版本；INCONCLUSIVE 不冒充已验证能力。
 
-L2：完整 synthetic/mock Assistant、Explain、纠错、文件、Lab shell 与 browser acceptance。**COMPLETE / L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS**。
+## 11. 开发与演进顺序
 
-### L2.5 — Experimental Runtime Bridge
+已经完成的 L0–L2.5 包与历史回执不重开、不改分。新增产品整改按唯一队列：先兑现预览承诺，再 Assistant-first 主界面，再修订/依据/记忆闭环与整体 synthetic 验收。具体包和依赖见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。
 
-目的：在不等待 I06、也不污染研究评估的前提下，把产品接到一个**固定 SHA、development-only 的真实 HCL runtime**，提前完成 transport 与 integration engineering。L2.5 不是正式能力激活阶段。
+之后在门槛满足时进入真实受限使用；先同一对话可靠，再明确授权的项目内跨对话；最后才是获准工具与行动能力。先可控再自动，先局部可靠再扩大范围。没有收益的复杂度允许简化、通用化或删除，不为 HCL 名称或 Judge 终局保留无用机制。
 
-允许建设：versioned runtime bridge；exact HCL SHA / artifact digest verification；runtime handshake；capability manifest discovery；request/response serialization；timeout/error/cancel；operation/run receipts；synthetic end-to-end smoke；在 permitted synthetic inputs 上实际执行当前可用 HCL mechanism；如实保留 UNSUPPORTED / NO_TREATMENT / FAILED / UNRESOLVED。
+禁止现在建设完整图谱编辑器、通用心理本体、强制项目层级、模型市场、HCL 强度调参或另一份研究机制。Pages 与本地产品不继续维护不同含义的记忆系统；在保留 browser-only 安全边界前提下，逐步共享 UI、产品视图与明确 mock adapter。
 
-禁止：production-retained 或 scope-default production activation；confirmation/evaluation material；LongMemEval；真实用户私密数据；case-specific evaluation tuning；效力主张。运行时只可从 allowlisted repository/path/interface 获取，禁止把研究仓库整体变为产品依赖或把研究测试/数据打包进产品。
+## 12. 验收与权威边界
 
-L2.5 共两个 coherent packages：L2.5-01 固定 runtime contract/handshake/capability discovery；L2.5-02 完成 serialization、lifecycle/receipts 与 synthetic real-runtime end-to-end execution。详见工作包文档。两包不为 PR 数量服务。
+验收分三条互不替代的线：产品可用性；理解/修订/数据控制正确性；相对强模型与良好通用上下文的 HCL 增量价值。节点数、拒答数、答案长度或偏好单项不是效力证据。
 
-### L3 — Production Capability Activation
-
-I06 后进入。L3 **不从零建设 runtime transport**；它以 L2.5 已验证的 bridge/serialization/receipt 基础为起点，重新固定 production-permitted runtime artifact/interface，并依据 I06 disposition：
-- RETAIN：限定范围生产激活；
-- SIMPLIFY：以更简单实现激活；
-- GENERICIZE：保留通用路径，不冒称专门机制增益；
-- DISABLE：不得 production active；
-- REPLACE：切换到替代实现/版本；
-- INCONCLUSIVE：默认不作为已验证 production capability 激活。
-
-L3 仍需 I06 disposition、固定获准 production runtime artifact/interface、产品 adapter scope 验证与明确执行/数据授权。L2.5 的成功不能自动满足这些 production gates。
-
-L4：新的非 confirmation 材料上的多轮、中文、更正、迟到证据、合成/Explain 忠实性、普通任务非干扰、延迟、成本与 memory contamination 验证。
-
-L5：Evidence-driven optimization；保留真实有用路径，简化/删除无收益复杂度，不为排行榜维护机制。
-
-## 12. 激活与处置
-
-产品 capability identity 不绑定 B03/E05/H04。Manifest 分别记录 input/language/scope/output/limitations/runtime/disposition/activation。
-
-RETAIN：限定范围启用；SIMPLIFY：替换简实现；GENERICIZE：保留实用通用路径、不冒称专门增益；DISABLE：新运行停用；REPLACE：新实现/版本接管；INCONCLUSIVE：不强行正面或负面归因，默认不作为生产已验证能力；PENDING_I06：仅候选。
-
-旧回执保留原版本身份；迁移不得把历史 mock 变成 live。无专门操作仍可有产品价值，但不能由 always-on 包装推出更强认知。
-
-## 13. 命名与开发默认
-
-产品文档名 HCL Assistant，前台短名 HCL；高级环境 HCL Lab；示例体验 Cognitive Playground。未完成商标/域名审查，不为命名停工。
-
-L1 默认 Python 模块化 API/Controller 与 SQLite 持久化测试实现；L2 TypeScript/React Web 客户端，通过 HTTP/SSE 接口，不从 UI 直接调用模型。版本、lockfile 和具体工具在各实施包中选定并记录；不引入托管数据库、部署平台、云凭据或付费依赖以解锁 mock。可替换 store/model 接口为后续部署留余地，不造通用平台。
-
-## 14. 成功与停止标准
-
-完成声明范围的正向可用行为，以及人物/来源/时间/权限/版本负面测试；从普通输入到最终记录可追踪；失败、未决、未介入如实保留。Schema/test PASS 只证明被检查的条件。
-
-L0 planning/setup已完成；物理迁移执行者在新仓库exact-main核验后停止，不开始L1。下一位产品 Work 从 L1-01 接管；可按依赖连续推进 L1/L2，不每包问 Owner。遇真实外部权限/凭据/许可/异常费用门槛 defer 并推进独立任务；L2 全部完成而 L3 条件不具备时停止，不制造 filler。
+[Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md) 区分原始已执行证据与本次新增待实现义务；[Review Adoption](docs/PRODUCT_REVIEW_ADOPTION.md) 记录基线缺陷和整改，不声称本次已修代码。后续 Work 只执行当前唯一 NEXT_READY，不从历史包、旧研究产品目录、截图或尚未合并 PR 恢复第二套产品方案。

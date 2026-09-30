@@ -1,34 +1,42 @@
-# HCL Assistant — synthetic/mock product
+# HCL Assistant
 
-Assistant → 按需 Explain → 高级只读 HCL Lab。所有模拟输入、修订和回答都经过 Interaction Controller。
+**Assistant-first：一个能够持续交流、允许更正、在新信息出现后修订理解并帮助用户完成任务的AI助手。** 这是产品目标，不是当前已验证能力。长期终局：`Understand → Revise → Judge → Help → Act`；**Judge仅是长期目标，未实现为通用能力、未验证、未生产启用。**
 
-**L1/L2 = provider-free implemented and verified; L2.5 experimental bridge and synthetic real-runtime execution are implemented with limits on this review branch; production remains disabled.** 唯一 canonical 产品事实源仍是 `haohongfei2001-png/hcl-assistant/main`；采用以 exact-head CI、合并和 exact-main CI 为准。见 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Master Plan](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[contracts](contracts/PRODUCT_CONTRACTS_V1.md)、[工作包](docs/L0_L2_WORK_PACKAGES.md)、[验收矩阵](docs/ACCEPTANCE_MATRIX.md) 和 [执行证据](docs/EXECUTION.md)。
+## Canonical product entry
 
-Python >=3.11 标准库 / SQLite；React/TypeScript/Vite 与 headless Playwright 精确版本在 npm lock。无托管服务、provider transport 或部署依赖。L2.5 仅在显式启用的开发进程中消费外部固定 SHA 的三文件 runtime slice。SQLite 与临时测试输出不入 Git。
+唯一产品事实源是 `haohongfei2001-png/hcl-assistant/main`。正式采用的唯一方案为 [Product Master Plan 1.2 / A2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)；[UX Spec](docs/UX_SPEC.md) 与 [Visual System](docs/VISUAL_SYSTEM.md) 是同一方案的具体规范，不是替代方案。
+
+开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前唯一下一项是 **P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**；本次文档采用不启动实现。
+
+当前队列机器投影为 `control/plan.json.product_development`。顶层旧phase/next_ready仅是L0–L2.5完成与L3生产门槛记录，不是第二套live队列；自动消费者迁移列入P0-01，未迁移者不得据旧字段新调度。
+
+## Actual implementation, not the target UI
+
+L0–L2 mock产品与L2.5受限development bridge已合入main；基线PR #5和exact-main检查见 [adoption record](docs/PRODUCT_REVIEW_ADOPTION.md)。普通Web消息仍MOCK，没有通用模型回答；L2.5只在明确配置的隔离synthetic路径执行固定runtime slice。production remains disabled，efficacy remains NOT_TESTED。旧截图和现有页面不是目标信息架构。
+
+Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。没有托管provider服务或生产认证；本轮不改依赖、代码或runtime lock。完整历史证据见 [acceptance](docs/ACCEPTANCE_MATRIX.md) 与 [execution](docs/EXECUTION.md)。
 
 ## GitHub Pages synthetic preview
 
-A browser-only synthetic preview is published at:
+`https://haohongfei2001-png.github.io/hcl-assistant/`
 
-https://haohongfei2001-png.github.io/hcl-assistant/
+这是browser-only静态脚本演示：无Python/SQLite backend、真实HCL、provider调用、服务器持久化或研究数据。**只使用合成信息，不输入真实私密数据。** 当前已定位临时持久化、删除标签、文件截断与更正/依据问题；尚未修复，见 [Pages boundary and limitations](docs/PAGES_PREVIEW.md)。不能从“模拟”字样推定数据控制行为已正确。
 
-It is intentionally narrower than the local L2 product: no Python/SQLite backend, no real HCL runtime, no provider calls, no server-side persistence, and no research/evaluation data. Preview state stays in the visitor's browser localStorage. **Do not enter real private data.** See [Pages preview boundary](docs/PAGES_PREVIEW.md).
+## Run the existing local synthetic product
 
-## Run the synthetic desktop locally
-
-仅使用合成数据。HTTP 服务固定 loopback，身份为隔离测试身份，不是生产认证。临时会话正文只留进程内存，重启丢失。持久会话可重启恢复；中断 run 标 UNKNOWN，不自动重调 adapter。
+身份为隔离测试身份，不是生产认证。HTTP固定loopback。仅合成输入；TXT/Markdown/UTF-8，64KiB；注册不证明完整理解。当前local临时会话正文在进程内存，重启丢失；持久会话可恢复，未知中断不自动重调adapter。不要把该后端行为等同于独立Pages实现。
 
 ```sh
 npm ci --ignore-scripts
 mkdir -p .local
 python3 -m apps.api.server --database .local/mock.sqlite
-# In a second shell, from this repository root:
+# Second shell
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. Text/Markdown/UTF-8 only, 64 KiB; registration does not certify understanding. Optional [authored mock grammar and original trajectories](docs/SYNTHETIC_SCENARIOS.md) demonstrate scoped background/revision. Arbitrary text remains unresolved; no general semantic/Chinese efficacy claim.
+原始synthetic用法与限制见 [scenarios](docs/SYNTHETIC_SCENARIOS.md)。任意未支持输入保留未解析，不宣称一般中文/语义能力。
 
-## Verify
+## Existing verification
 
 ```sh
 python3 scripts/fetch_development_runtime.py /tmp/hcl-assistant-development-runtime
@@ -42,8 +50,6 @@ npm run test:browser
 python3 scripts/smoke_development_bridge.py "$HCL_DEVELOPMENT_ARTIFACT"
 ```
 
-Hosted `HCL Assistant Planning` materializes this public product repository at exact SHA, separately acquires only the three locked development runtime modules, runs root/Python/build/browser checks and the original synthetic real-runtime smoke, and publishes exact SHA/digests/results in its job summary. These checks certify bounded implementation/integration, not production privacy, general language semantics or efficacy.
+现有root checker仍只自动验证旧L0–L2.5阶段/边界，新队列本次人工核对，不声称A2已被这些代码验收。P0-01先迁移checker/报告/队列消费者，保留旧安全断言。Hosted exact-head/main CI记录实际SHA与结果；通过不等于生产隐私、语义泛化、Judge或效力证明。
 
-L2 is complete. **L2.5 Experimental Runtime Bridge is complete on this review branch**: fixed-SHA development-only HCL transport/handshake/manifest discovery and permitted synthetic real-runtime execution, with no production activation or efficacy claim. L3 remains I06-gated **Production Capability Activation** and reuses the bridge rather than building transport from zero. No confirmation/evaluation material, LongMemEval, real/private data or case-specific formal-eval tuning is authorized. The browser-only synthetic GitHub Pages preview remains a separate mock surface.
-
-Bridge pin, interface and exact scope: [development bridge](docs/EXPERIMENTAL_RUNTIME_BRIDGE.md). Missing runtime is an explicit failed handshake; mandatory development smoke never silently skips.
+L3仍需I06处置、固定获准production artifact/interface、产品adapter scope验证、明确执行/数据授权。受限development接口与版本见 [Experimental Runtime Bridge](docs/EXPERIMENTAL_RUNTIME_BRIDGE.md)。不得为终局目标自动开放provider、研究数据或agent。

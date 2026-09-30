@@ -1,101 +1,40 @@
-# Product acceptance matrix
+# Product Acceptance Matrix — A2
 
-以下是待实现义务，不是已跑PASS。L0只检查规划、枚举、链接与边界。实施closure必须给command、SHA、fixture lineage、实际结果和限制。
+归属：[Master Plan](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](UX_SPEC.md)、[Work Packages](PRODUCT_REFINEMENT_WORK_PACKAGES.md)。本次只采用设计与计划，**下列R01–R20全部NOT_IMPLEMENTED / NOT_TESTED_IN_A2**，不因旧CI通过改填PASS。
 
-| ID | 正向义务 | 负向义务 | 首包 |
+## Historical evidence, unchanged
+
+原A01–A29义务、L2的90检查/10browser以及L2.5的126检查/12browser等closure完整保存在 [byte-identical baseline](ACCEPTANCE_MATRIX_BASELINE_20261001.md)，来源为main972234e8的原Git blob。原执行范围、失败与限制不改；[Execution](EXECUTION.md)仍是历史证据，不是当前队列。
+
+原L2本地SQLite/Controller验收不自动认证独立Pages实现；原A20的disabled Compare展示不再是新主体验要求。原A09/A10等安全义务继续适用，不能为了新UI删除。A2规范通过须有新的对应行为证据。
+
+## Current product obligations
+
+| ID | Positive obligation | Negative / boundary | First package |
 |---|---|---|---|
-| A01 | raw/source版本重启往返 | 错hash或截断仍标完整 | L1-01 |
-| A02 | 幂等event/run | 同key异payload与半提交 | L1-01 |
-| A03 | 有序state version | 旧标签页覆盖新更正 | L1-01 |
-| A04 | 人物归属局部更正 | 全局同名合并 | L1-02 |
-| A05 | 独立支持保留 | 撤回即否定/重复算独立 | L1-02 |
-| A06 | absence依赖被新证据失效 | 只追正向引用 | L1-02 |
-| A07 | event/record/receipt分开 | 迟到信息倒灌过去 | L1-02 |
-| A08 | 假设分支 | 污染实际背景 | L1-02 |
-| A09 | 临时正文不持久 | 日志/摘要/备份留副本 | L1-03 |
-| A10 | stop/delete传播 | cache/Explain恢复删除内容 | L1-03 |
-| A11 | 三套权限 | 文件扩权/cross-topic偷带 | L1-03 |
-| A12 | 检索更正/挑战/反证 | 只支持旧结论 | L1-03 |
-| A13 | 更正+2+2先更正 | Direct忽略前半条输入 | L1-04 |
-| A14 | 每回答有controller receipt | 隐藏Base bypass | L1-04 |
-| A15 | stream恢复/cancel/retry | 重复调用/过期覆盖 | L1-04 |
-| A16 | clean chat/file/keyboard | 常驻Inspector/上传即理解 | L2-01 |
-| A17 | 多轮自然修订 | 猜测固化为人格事实 | L2-02 |
-| A18 | 未支持中文/指代unresolved | fixture冒泛化 | L2-02 |
-| A19 | Explain当次依据可纠正 | 事后造理由/CoT泄漏 | L2-03 |
-| A20 | Lab只读且Compare禁用 | 实验写生产/mock升级 | L2-04 |
-| A21 | failure/unknown/cost记录 | 删除失败/未知成本填0 | L2-04 |
-| A22 | 产品独立导出/运行 | research/确认/secrets导入 | L0-01及全部 |
+| R01 | 当前product_development唯一队列被checker/报告/消费者准确读取 | 多ready/依赖/镜像漂移拒绝；旧11包与L3门槛不削弱 | P0-01 |
+| R02 | TEMPORARY无持久正文，刷新/重开行为如实 | localStorage/run/摘要副本不泄漏临时正文 | P0-01 |
+| R03 | DELETE清理实际副本；STOP_USING阻止未来使用 | 仅改标签不算成功；独立来源范围说明；历史不复活 | P0-01 |
+| R04 | 文件支持范围内完整读取/保存/定位 | 不silent slice1800；超限/不支持明确，不把注册当理解 | P0-01 |
+| R05 | 明确更正只作用于正确目标 | 否定不等于更正；含糊/未支持不改最近记录 | P0-01 |
+| R06 | 回答与Explain依据绑定实际读取记录 | 无历史不模板声称已用；开放输入不假装语义理解 | P0-01 |
+| R07 | 对应Pages与local surface分别实测并回归 | 不把本地后端PASS套用Pages；保留原失败和实验边界 | P0-01 |
+| R08 | Home/Conversation同一直接聊天入口 | 无Case wizard/强制Topic/心理分类/常驻Inspector | P1-01 |
+| R09 | Sidebar/标题/当前范围与按需项目清楚 | 不混同新建默认与当前范围；无每轮route/version/Lab主CTA | P1-01 |
+| R10 | Composer草稿/停止/发送/附件/IME正确 | 中文候选Enter不发送；失败不丢草稿；无假完成 | P1-01 |
+| R11 | Markdown/代码/引用/表格与流式阅读可用 | 向上阅读不拉底；键盘/焦点/缩放/窄窗通过 | P1-01 |
+| R12 | UI/产品视图复用且mock身份清晰 | Pages无backend/provider/真实HCL；不复制不同记忆语义 | P1-01 |
+| R13 | 回答→依据→原文→更正可返回同上下文 | 不叠多重modal/丢焦点；来源与当次版本对应 | P1-02 |
+| R14 | 重要变化说明旧依据/新信息/影响 | 无影响不造insight；未重算不标不变；解释弱化不证替代动机 | P1-02 |
+| R15 | 更正/现在变化/猜测/假设分开，旧回答保留当时记录 | 假设不回写；今天信息不倒填人物过去；无事后理由 | P1-02 |
+| R16 | 历史搜索、记忆范围、停止/删除与导出一致 | 检索带更正/撤回/反证；缓存/导出不复活删除 | P1-02 |
+| R17 | Inspector/Lab按需可读，同run真实操作状态 | 选中/执行/输出/使用分开，无处理/不支持/失败/未知不混同 | P1-03 |
+| R18 | Settings只显示真实可用行为与数据边界 | 无HCL强度/未接入模型能力；没有agent或Judge激活 | P1-03 |
+| R19 | 普通/更正/迟到信息/假设/冲突/恢复原创synthetic闭环 | 普通任务不强制认知展示；重要不确定性不全藏Explain | P1-03 |
+| R20 | 产品可用性、数据/理解正确性、增益证据分开报告 | 不以节点数/偏好/拒答/结构美观推效力；无provider不报真实模型性能 | P1-03 |
 
-## 原创轨迹规范
+## Evidence requirements
 
-只用原创synthetic；记录source family、用途、预先固定的变化/不变义务。不得把研究失败题改名，不找外部题源。typed mock事件可在测试expected端存在，不能给未来真实模型充hidden gold。
+每行完成需命令、exact SHA、fixture lineage、实际结果、surface/浏览器/存储范围及限制。仅用新原创非确认材料，不使用研究失败题改名、confirmation/gold或私人数据。公开模板结果只标synthetic，不变成外部泛化。
 
-轨迹一：合作不顺→主动联系→更正对方何时知情→撤回猜测。检查局部变化、旧视角、重复证据和无关目标。
-轨迹二：临时安排变化→角色压力→较晚自述价值→撤回自述。检查context不变人格、expiry和目标。
-轨迹三：同词不同reading→假设换判据→回实际讨论。检查fact/concept/value分离、假设不污染。
-
-L4另用新的非确认材料测真实中文、多轮、合成/Explain忠实性、必要推断、反向伤害、普通任务非干扰与完整费用；不以偏好/长度/节点数/多拒答单独认定增益。
-
-## L2 closure — actual synthetic results
-
-Commands: both root checkers; `python3 -m unittest discover -s tests -v` (90 checks PASS); `npm run build` (typecheck/build PASS); `npm run test:browser` (10 headless Chromium journeys PASS). No tests skipped or removed. Package checkpoint counts and repaired failures are recorded in [execution](EXECUTION.md). Exact tested HEAD and adopted main SHAs are published by hosted CI's materialization/check summaries; branch-local completion is conditional on those checks and merge. No self-SHA is fabricated in this document.
-
-All rows below are PASS **within authored/synthetic/mock coverage**. These are implementation obligations, not arbitrary-language or efficacy results. Test paths name the actual positive, negative and persistence/history evidence.
-
-| ID | Actual evidence | Limit |
-|---|---|---|
-| A01 | `test_ledger`: restart raw/hash/parse and corrupt/truncated source refusal | UTF-8 TXT/Markdown; 64 KiB |
-| A02 | `test_ledger`, `test_controller`, `test_integrated`; browser lost acknowledgement | Scoped keys; retry is a new attempt, not repeated input |
-| A03 | `test_ledger`, `test_controller`, `test_integrated` | Conservative account-wide state version |
-| A04 | `test_revision` and browser person/time correction | Explicit scoped identities; no general identity resolution |
-| A05 | `test_revision`, `test_scenarios`, `test_privacy` | OR-of-AND, deduplicated guess roots and independent-source survival |
-| A06 | `test_revision`, `test_integrated` | Conservative absence invalidation within allowed scope |
-| A07 | `test_revision`, `test_scenarios`, `test_integrated` | Authored learned/event time; unknown stays unknown |
-| A08 | `test_revision`, `test_scenarios`, `test_integrated` | Authored hypothetical snapshot; actual background unchanged |
-| A09 | `test_privacy` volatile store/restart and persistent byte inspection | Process-local temporary state; no provider logging path exists |
-| A10 | `test_privacy`, `test_explain`, `test_lab`, browser stop/delete/file purge | Simulated local restore deletion replay; no production backup certification |
-| A11 | `test_privacy`, `test_integrated`, `test_transport` | Synthetic account identity, explicit perspective access, separate memory scope |
-| A12 | `test_privacy`, `test_revision`, `test_integrated` | Whole eligible small-corpus closure, bounded refusal above 100 records |
-| A13 | `test_controller`, `test_scenarios` | Scripted correction first; unsupported changes remain unresolved even with arithmetic |
-| A14 | `test_controller`, `test_transport` | One governed mock entry; server permit; no provider transport |
-| A15 | `test_controller`, `test_transport`, `test_recovery`, browser cancel/retry/lost ack | SSE replay only; interrupted restart UNKNOWN; no blind regeneration |
-| A16 | Browser desktop/upload/keyboard/focus/refresh/error/narrow flows | Desktop/headless Chromium; mobile and other browsers untested |
-| A17 | Three original trajectories in `test_scenarios` | Source-bound natural mock synthesis, not persistent real cognition |
-| A18 | `test_scenarios`, `test_integrated` | Prefix grammar only; arbitrary Chinese/anaphora unresolved |
-| A19 | `test_explain` and browser Explain/correction | Recorded binding fidelity; no semantic judge or hidden reasoning |
-| A20 | `test_lab` and browser Lab | Read-only MOCK; Compare disabled with L3 gate |
-| A21 | `test_controller`, `test_lab`, `test_recovery`, `test_integrated` | Failure/UNKNOWN retained; mock provider cost 0 with explicit source, unknown tokens null |
-| A22 | Root repository/planning checks, `test_repository_split`, exact-SHA hosted product-only export | Bounded source/import/credential scan; not universal or cryptographic isolation proof |
-
-Open limits: synthetic identity only; no production authentication, remote retention/deletion guarantees, real user data, real HCL runtime, general language extraction, calibrated cognition or efficacy. Future L4 needs new authorized non-confirmation material. L3 gate is unchanged and unsatisfied.
-
-
-## L2.5 amendment — experimental runtime bridge obligations
-
-以下均为待实现的 development integration 义务，不是本次 plan amendment 的 PASS：
-- A23：exact HCL SHA + artifact/interface digest handshake；floating main/tag、digest/interface mismatch 必须 fail closed。
-- A24：capability manifest discovery 保留 PENDING_I06 / EXPERIMENTAL / production_enabled=false；不得把发现即视为 RETAIN。
-- A25：request/response serialization 有版本且拒绝未知/越界 payload；confirmation/eval/sealed material 不可进入。
-- A26：timeout/error/cancel/unknown transport 保留真实 outcome，不盲重试、不改写旧 receipt。
-- A27：selected / executed / output-produced / used-in-answer 分离；支持 UNSUPPORTED / NO_TREATMENT / FAILED / UNRESOLVED。
-- A28：至少一条原创 synthetic real-runtime end-to-end smoke；不得使用真实用户私密数据或正式评估 case。
-- A29：L2.5 execution 永远不能设置 production activation 或生成 efficacy evidence；L3 仍必须等待 I06 disposition。
-
-L2.5-01 branch acceptance: A23/A24 PASS within the pinned three-file provider-free slice (`test_runtime_handshake`, `test_runtime_acquisition`); actual subprocess handshake READY. A29 policy projection PASS, production_enabled=false / PENDING_I06. Other mechanism execution and A25–A28 remain pending L2.5-02. 104 Python checks, build and all 10 historical browser journeys PASS; external exact-head CI governs adoption.
-
-## L2.5 closure — actual development integration results
-
-126 Python tests, root checkers, typecheck/build, 12 headless browser journeys and the four-path original synthetic real-runtime Controller smoke PASS locally. GitHub exact-head CI repeats these checks; source checkpoints do not self-certify main adoption. Inputs originate in the authored `original_workshop_20261001` family in runtime tests/smoke and its browser sibling; no reused research/evaluation cases. The external artifact is exactly the three allowlisted files at `a8229fcf22eccb851c58502a09ae7cecb346faf5`, with file/Git/tree/artifact/interface/manifest digests in the lock. These are DEVELOPMENT_INTEGRATION_ONLY / NOT_EFFICACY_EVIDENCE.
-
-| ID | Actual evidence | Limit |
-|---|---|---|
-| A23 | `test_runtime_handshake`, `test_runtime_acquisition`, `test_runtime_execution`: actual process READY, wrong SHA/interface/digest/path and manifest drift refused | Product-owned callable interface; explicit reviewed repin required |
-| A24 | Separate discovered manifest snapshot, EXPERIMENTAL/PENDING_I06, production_enabled=false; retention/unknown-capability negatives | Two projected capabilities only; other eight unbridged |
-| A25 | Strict versioned request/response tests, source hash/span/quote validation, unknown/duplicate/nonfinite/bound refusal | Original synthetic sources only; metadata is not a private-data detector |
-| A26 | Real process timeout, active cancellation/reaping, exit/garbage/oversize response; Controller cancel/retry/concurrent revision | Execution uncertainty remains null + UNKNOWN, no automatic retry |
-| A27 | Operation flags/output refs, same-run Explain/Lab and deletion tests | Public expression syntax only; no private truth or broad semantics |
-| A28 | Mandatory actual-runtime Python E2E, four-path CLI smoke, two new headless browser journeys | Original named English modal source; Chinese/prose no-treatment preserved |
-| A29 | Controller refuses persistent/Topic/non-synthetic/unconfigured/typed-command paths; temporary body byte/restart tests; unchanged Pages tests | No production activation, efficacy or provider authorization |
-
-Open limits: no integration of the entire research runtime, no provider-backed extraction/generation, no general Chinese/pronoun understanding, no persistent HCL cognitive state, no production privacy or efficacy certification. The four L3/I06 gates remain unmet. Existing L0–L2 package evidence and historical failures remain unchanged.
+失败、未知、无专门处理、来源删除、权限变化与不支持输入均需验收；截图只是视觉证据。P0/P1 completion不能打开L3，也不能把Judge从长期目标改为已实现。真实日常MVP、中文多轮效力、真实provider延迟/成本、跨模型增益和生产隐私须后续单独授权与验证。
