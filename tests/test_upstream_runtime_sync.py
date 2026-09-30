@@ -37,6 +37,17 @@ class SyncTests(unittest.TestCase):
         self.calls.append(endpoint)
         if endpoint == 'commits/main': return {'sha': SHA}
         if endpoint == 'git/commits/' + SHA: return {'sha': SHA, 'tree': {'sha': '3' * 40}}
+        if endpoint == 'git/trees/' + '3' * 40:
+            return {'sha': '3' * 40, 'tree': [{'path': 'hcl', 'type': 'tree', 'mode': '040000', 'sha': '4' * 40}]}
+        if endpoint == 'git/trees/' + '4' * 40:
+            return {'sha': '4' * 40, 'tree': [{'path': 'cognition', 'type': 'tree', 'mode': '040000', 'sha': '5' * 40}]}
+        if endpoint == 'git/trees/' + '5' * 40:
+            rows = []
+            for name in contract.PATHS:
+                data = ('# original synthetic module ' + name).encode()
+                blob = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
+                rows.append({'path': Path(name).name, 'type': 'blob', 'mode': '100644', 'sha': blob})
+            return {'sha': '5' * 40, 'tree': rows}
         allowed = {'contents/' + p + '?ref=' + SHA: p for p in contract.PATHS}
         self.assertIn(endpoint, allowed)
         name = allowed[endpoint]; data = ('# original synthetic module ' + name).encode()
@@ -76,7 +87,7 @@ class SyncTests(unittest.TestCase):
     def test_compatible_new_sha_promotable_only_after_every_check(self):
         report = self.run_sync()
         self.assertEqual(report['status'], 'VERIFIED_CANDIDATE')
-        self.assertEqual(self.stages, list(CHECKS)); self.assertEqual(len(self.calls), 5)
+        self.assertEqual(self.stages, list(CHECKS)); self.assertEqual(len(self.calls), 8)
         self.assertEqual(report['stable_verified_sha'], self.stable['source_commit_sha'])
         self.assertEqual((self.root / LOCK).read_bytes(), self.original)
         candidate = json.loads((self.output / 'candidate.lock.json').read_text())
@@ -121,6 +132,25 @@ class SyncTests(unittest.TestCase):
         wrong = copy.deepcopy(self.stable); wrong['source_repository'] = 'other/runtime'
         with self.assertRaises(ValueError): build_candidate(wrong, SHA, self.get)
         with self.assertRaises(ValueError): build_candidate(self.stable, 'main', self.get)
+
+    def test_symlink_submodule_or_missing_tree_file_never_reads_contents(self):
+        for mode in ('120000', '160000', 'MISSING', 'ANCESTOR', 'TREE_DIGEST'):
+            self.calls = []; self.stages = []
+            def get(endpoint):
+                row = self.get(endpoint)
+                if endpoint == 'git/trees/' + '5' * 40:
+                    if mode == 'MISSING': row['tree'].pop()
+                    elif mode == 'TREE_DIGEST': row['sha'] = '0' * 40
+                    elif mode != 'ANCESTOR': row['tree'][0]['mode'] = mode
+                if mode == 'ANCESTOR' and endpoint == 'git/trees/' + '3' * 40:
+                    row['tree'][0].update(mode='120000', type='blob')
+                return row
+            with self.subTest(mode=mode):
+                report = sync(self.root, self.output, get, self.runner)
+                self.assertEqual(report['status'], 'FAILED')
+                self.assertFalse(any(p.startswith('contents/') for p in self.calls))
+                self.assertEqual(self.stages, [])
+                self.assertEqual((self.root / LOCK).read_bytes(), self.original)
 
     def test_verified_candidate_digest_or_blob_tampering_cannot_publish(self):
         self.run_sync()

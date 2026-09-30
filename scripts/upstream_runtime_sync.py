@@ -38,6 +38,30 @@ def public_get(relative):
         return json.load(response)
 
 
+def allowed_blobs(tree_sha, get):
+    """Prove ordinary file modes BEFORE Contents API can dereference a symlink.
+
+    Read only ancestor directory metadata (root -> hcl -> cognition), never a
+    recursive tree, another subtree or a non-allowlisted blob.
+    """
+    for directory in ('hcl', 'cognition', None):
+        tree = get('git/trees/' + tree_sha)
+        if tree.get('sha') != tree_sha or tree.get('truncated'):
+            raise ValueError('Incomplete/mismatched ancestor tree provenance')
+        if directory is None:
+            blobs = {}
+            for path in PATHS:
+                found = [r for r in tree['tree'] if r['path'] == Path(path).name]
+                if len(found) != 1 or found[0]['type'] != 'blob' or found[0]['mode'] not in ('100644', '100755'):
+                    raise ValueError('Missing/non-regular allowlisted runtime file: ' + path)
+                blobs[path] = exact_sha(found[0]['sha'])
+            return blobs
+        found = [r for r in tree['tree'] if r['path'] == directory]
+        if len(found) != 1 or found[0]['type'] != 'tree' or found[0]['mode'] != '040000':
+            raise ValueError('Non-directory allowlisted ancestor: ' + directory)
+        tree_sha = exact_sha(found[0]['sha'])
+
+
 def build_candidate(stable, sha, get=public_get):
     exact_sha(sha)
     if stable['source_repository'] != REPOSITORY or stable['allowed_runtime_paths'] != list(PATHS):
@@ -50,6 +74,7 @@ def build_candidate(stable, sha, get=public_get):
     candidate['source_tree_sha'] = exact_sha(commit['tree']['sha'])
     major, minor = stable['bridge_version'].split('.')
     candidate['bridge_version'] = f'{int(major)}.{int(minor) + 1}'
+    expected_blobs = allowed_blobs(candidate['source_tree_sha'], get)
     files = {}
     for path in PATHS:
         row = get('contents/' + path + '?ref=' + sha)
@@ -57,7 +82,7 @@ def build_candidate(stable, sha, get=public_get):
             raise ValueError('Missing/invalid allowlisted file: ' + path)
         data = base64.b64decode(''.join(row['content'].split()), validate=True)
         blob = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
-        if blob != row.get('sha'):
+        if blob != row.get('sha') or blob != expected_blobs[path]:
             raise ValueError('Git blob provenance mismatch: ' + path)
         files[path] = {'git_blob_sha': blob, 'sha256': hashlib.sha256(data).hexdigest()}
     candidate['files'] = files
