@@ -1,0 +1,58 @@
+{
+  "bridge_version": "1.0",
+  "source_repository": "haohongfei2001-png/human-cognition-layer",
+  "source_commit_sha": "a8229fcf22eccb851c58502a09ae7cecb346faf5",
+  "source_tree_sha": "1a016e0a232647f6d682f1b7c6c2586c27df2905",
+  "artifact_digest": "sha256:ced40fea69e33b4a817a288cb2eb6e59a12915039ad08699923474902c8956d0",
+  "interface_version": "hcl-epistemic-callables-v1",
+  "interface_digest": "sha256:a9525023e7307ad6b1f90ba14f8ae14aad4d7401c7f2b2c4833c465953dd8119",
+  "implementation_id": "hcl-provider-free-epistemic-slice",
+  "allowed_runtime_paths": [
+    "hcl/cognition/core.py",
+    "hcl/cognition/semantic.py",
+    "hcl/cognition/epistemic.py"
+  ],
+  "files": {
+    "hcl/cognition/core.py": {
+      "git_blob_sha": "21a35b6f399f0be53279e63ece89d996170ae4c7",
+      "sha256": "9f6fcf7127a9c38c3e63c74dedae7c13d03727f8cb0a2cd4006deb2002ae0265"
+    },
+    "hcl/cognition/semantic.py": {
+      "git_blob_sha": "5b1854d8b31afbe2804bd1e610a28d2596391709",
+      "sha256": "f4fe72ecdc8054d5fa34b79a62915ab91d4dede00ab1cafe7e6cfb99c45ce2f8"
+    },
+    "hcl/cognition/epistemic.py": {
+      "git_blob_sha": "16e7ba591e7bc2d01a28e405f85bea309dff96ab",
+      "sha256": "a9a38bec7be4997f2573e801fc0d1dc700c05682228bfa495c6f9b8b131a698d"
+    }
+  },
+  "interface": {
+    "identity": "hcl-epistemic-callables-v1",
+    "serialization_version": "1.0",
+    "functions": [
+      "core.EvidenceCore",
+      "semantic.AuthorizedText",
+      "semantic.prepare_semantics",
+      "epistemic.check_epistemic_candidates"
+    ],
+    "capabilities": [
+      "belief_interpretation",
+      "information_access"
+    ],
+    "adapter_owned": true,
+    "native_runtime_interface_version": null
+  },
+  "input_policy": "SYNTHETIC_NON_CONFIRMATION_ONLY",
+  "execution_policy": {
+    "provider_calls": 0,
+    "production_enabled": false,
+    "mode": "EXPERIMENTAL",
+    "formal_eval_tuning": false
+  },
+  "timeout_policy": {
+    "default_ms": 3000,
+    "maximum_ms": 10000,
+    "max_response_bytes": 262144
+  },
+  "receipt_version": "1.0"
+}

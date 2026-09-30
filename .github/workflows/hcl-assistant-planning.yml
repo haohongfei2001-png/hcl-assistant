@@ -94,6 +94,14 @@ jobs:
           Path('product-source-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt, indent=2))
           PY
+      - name: Acquire exact allowlisted development runtime (public, provider-free)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd product-export
+          runtime_dir="$RUNNER_TEMP/hcl-assistant-development-runtime"
+          python3 scripts/fetch_development_runtime.py "$runtime_dir" | tee ../development-runtime-source.json
+          echo "HCL_DEVELOPMENT_ARTIFACT=$runtime_dir" >> "$GITHUB_ENV"
       - name: Validate product contracts, root boundary and complete migration
         shell: bash
         run: |
@@ -120,11 +128,12 @@ jobs:
         run: |
           {
             echo '## HCL Assistant planning/setup and repository split'
-            echo 'Only the independent product repository root was materialized. Synthetic/mock acceptance only; no real HCL or efficacy claim.'
+            echo 'Only the independent product repository root was materialized. Synthetic/mock regressions and pinned development runtime integration only; no production activation or efficacy claim.'
             echo '```json'
             test ! -f product-source-receipt.json || cat product-source-receipt.json
             test ! -f planning-receipt.json || cat planning-receipt.json
             test ! -f repository-receipt.json || cat repository-receipt.json
+            test ! -f development-runtime-source.json || cat development-runtime-source.json
             echo '```'
             echo '```text'
             test ! -f planning-tests.txt || tail -n 8 planning-tests.txt

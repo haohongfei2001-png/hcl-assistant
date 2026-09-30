@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "product": "HCL Assistant",
-  "phase": "L2_5_READY",
-  "next_ready": "L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE",
-  "next_package_id": "L2.5-01",
+  "phase": "L2_5_IMPLEMENTING",
+  "next_ready": "L2.5-02_EXPERIMENTAL_MECHANISM_SYNTHETIC_E2E",
+  "next_package_id": "L2.5-02",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2.5-02",
   "future_work_allowed_through": "L2.5-02",
@@ -153,9 +153,9 @@
       "depends_on": [
         "L2-04"
       ],
-      "state": "NEXT_READY",
+      "state": "COMPLETE",
       "delta": "pinned development runtime bridge contract handshake and capability discovery",
-      "evidence": "NOT_IMPLEMENTED"
+      "evidence": "EXPERIMENTAL_TRANSPORT_VERIFIED"
     },
     {
       "id": "L2.5-02",
@@ -163,7 +163,7 @@
       "depends_on": [
         "L2.5-01"
       ],
-      "state": "WAITING_DEPENDENCY",
+      "state": "NEXT_READY",
       "delta": "real-runtime serialization lifecycle receipts and synthetic end-to-end execution",
       "evidence": "NOT_IMPLEMENTED"
     }
@@ -180,13 +180,13 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS",
+    "product_implementation": "EXPERIMENTAL_TRANSPORT_VERIFIED",
     "real_runtime": "NOT_INTEGRATED",
     "efficacy": "NOT_TESTED",
     "real_language_generalization": "NOT_TESTED",
     "browser": "HEADLESS_CHROMIUM_MOCK_JOURNEYS",
     "acceptance_matrix": "docs/ACCEPTANCE_MATRIX.md",
-    "experimental_runtime_bridge": "NOT_IMPLEMENTED",
+    "experimental_runtime_bridge": "EXPERIMENTAL_TRANSPORT_VERIFIED",
     "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE"
   },
   "writer": {

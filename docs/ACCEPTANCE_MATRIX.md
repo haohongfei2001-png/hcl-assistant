@@ -81,3 +81,5 @@ Open limits: synthetic identity only; no production authentication, remote reten
 - A27：selected / executed / output-produced / used-in-answer 分离；支持 UNSUPPORTED / NO_TREATMENT / FAILED / UNRESOLVED。
 - A28：至少一条原创 synthetic real-runtime end-to-end smoke；不得使用真实用户私密数据或正式评估 case。
 - A29：L2.5 execution 永远不能设置 production activation 或生成 efficacy evidence；L3 仍必须等待 I06 disposition。
+
+L2.5-01 branch acceptance: A23/A24 PASS within the pinned three-file provider-free slice (`test_runtime_handshake`, `test_runtime_acquisition`); actual subprocess handshake READY. A29 policy projection PASS, production_enabled=false / PENDING_I06. Other mechanism execution and A25–A28 remain pending L2.5-02. 104 Python checks, build and all 10 historical browser journeys PASS; external exact-head CI governs adoption.
