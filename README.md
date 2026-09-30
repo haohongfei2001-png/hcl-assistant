@@ -34,7 +34,7 @@ Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。�
 
 `https://haohongfei2001-png.github.io/hcl-assistant/`
 
-这是browser-only静态脚本演示：无Python/SQLite backend、真实HCL、provider调用、服务器持久化或研究数据。**只使用合成信息，不输入真实私密数据。** P0-01正在修复临时持久化、删除、文件截断与更正/依据问题，实际验收与限制见 [Pages boundary and limitations](docs/PAGES_PREVIEW.md)。不能从“模拟”字样推定数据控制行为已正确。
+这是browser-only静态脚本演示：无Python/SQLite backend、真实HCL、provider调用、服务器持久化或研究数据。**只使用合成信息，不输入真实私密数据。** P0-01已在审查分支兑现受限的临时、删除、文件读取及显式更正/依据契约，实际验收与限制见 [Pages boundary and limitations](docs/PAGES_PREVIEW.md)。不能从“模拟”字样推定数据控制行为已正确。
 
 ## Run the existing local synthetic product
 

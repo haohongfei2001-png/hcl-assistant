@@ -40,8 +40,9 @@ test('Pages two tabs cannot resurrect deletion or stop-use after unrelated write
  await page.locator('#openMemory').click();await page.locator('.memory-row').filter({hasText:'ORIGINAL_TWO_TAB_CANARY'}).first().getByRole('button',{name:'停止使用',exact:true}).click();await page.locator('#closePanel').click();
  await expect.poll(async()=> (await stored(other)).conversations[0].records[0].status).toBe('STOPPED');
  await send(other,'演示：查看当前背景');await expect(other.locator('article').last()).not.toContainText('ORIGINAL_TWO_TAB_CANARY');
+ await other.locator('#openMemory').click();await expect(other.locator('#panelContent')).toContainText('ORIGINAL_TWO_TAB_CANARY');
  await page.locator('#openMemory').click();await page.locator('.memory-row').filter({hasText:'ORIGINAL_TWO_TAB_CANARY'}).first().getByRole('button',{name:'删除',exact:true}).click();await page.locator('#closePanel').click();
- await expect(other.locator('body')).not.toContainText('ORIGINAL_TWO_TAB_CANARY');await send(other,'记录：INDEPENDENT_AFTER_DELETE');
+ await expect(other.locator('body')).not.toContainText('ORIGINAL_TWO_TAB_CANARY');await expect.poll(()=>other.evaluate(()=>document.body.textContent)).not.toContain('ORIGINAL_TWO_TAB_CANARY');await send(other,'记录：INDEPENDENT_AFTER_DELETE');
  expect(await other.evaluate(()=>JSON.stringify(localStorage))).not.toContain('ORIGINAL_TWO_TAB_CANARY');await page.reload();await other.reload();await expect(page.locator('body')).not.toContainText('ORIGINAL_TWO_TAB_CANARY');await expect(other.locator('body')).not.toContainText('ORIGINAL_TWO_TAB_CANARY');await other.close();
 });
 test('Pages storage failure keeps draft and records unchanged; legacy key removed beside v2',async({page})=>{

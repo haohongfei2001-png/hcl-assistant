@@ -1,19 +1,23 @@
-# GitHub Pages synthetic preview — existing surface, not canonical UX
+# GitHub Pages synthetic preview
 
 Public preview: `https://haohongfei2001-png.github.io/hcl-assistant/`.
 
-The existing surface is browser-only static HTML/CSS/JavaScript: no Python API, SQLite service, SSE backend, provider transport, real HCL runtime, server-side authentication/persistence, research/confirmation/LongMemEval/protected data or credentials. Scripted output is not general semantic understanding. **Do not enter real private data.**
+Browser-only static HTML/CSS/JavaScript: no Python API, SQLite service, SSE backend, provider transport, real HCL runtime, server authentication/persistence, research/confirmation/LongMemEval/protected data or credentials. **Use only synthetic information, never real private data.** Current behavior comes from the adopted product commit, not from a capability claim about arbitrary language.
 
-## Known implementation limits, not fixed by A2 documentation
+## Bounded P0 behavior
 
-At baseline `972234e8`, `save()` persists the entire conversation collection in localStorage, including the currently labelled TEMPORARY path. DELETE changes a record status without clearing all body/run copies. File upload uses only the first 1800 characters. Correction detection may treat a negation as a correction and replace the latest active record. `synthesize(text)` can claim background basis without actually reading persistent context.
+- Temporary conversations stay in memory and disappear on refresh/reopen. Persistent conversations use this browser's localStorage. Storage does not imply general understanding
+- Stop-use blocks future background selection. Delete removes the targeted body and dependent input/answer/revision copies, plus derived titles. Other independently authored sources remain; this is not a promise to erase external copies
+- Writes use Web Locks and persisted revision checks; stale tabs cannot silently overwrite newer deletion/stop-use. Other tabs refresh records and dismiss cached panels. A failed save keeps original records and the draft, with an explicit error. Browsers without Web Locks cannot write this preview safely and are refused
+- The v1 migration removes wrongly persisted temporary/deleted copies. Unparsed legacy records do not become reusable facts; old unsupported generated templates are explicitly marked historical/unverified
+- UTF-8 TXT/Markdown up to64KiB is fully retained. Unsupported formats, invalid UTF-8, NUL binary and oversize files are refused. File registration never means complete semantic understanding; file commands cannot change memory policy
 
-These findings are static-code observations, not new browser-test claims. They are tracked in [Review Adoption](PRODUCT_REVIEW_ADOPTION.md) and assigned to P0-01. Do not infer that the local Controller/SQLite tests certify these independent Pages behaviors; do not promise temporary/deletion/complete-reading semantics until they are implemented or the misleading control is explicitly removed.
+Supported demonstrations: exact `2+2`; explicit `记录：合成背景`; `演示：查看当前背景` (exact read/quoted source records); and `更正 record-ID：新内容` for a specific active record in the current conversation. Find record IDs in memory controls. Ordinary negation is not a correction; ambiguous targets prompt for precision without changing the latest record. Open questions remain unsupported rather than producing relationship/motive templates with invented historical basis.
 
-## Target and development boundary
+## Evidence and limits
 
-Target interaction is solely [Master 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [UX A2](UX_SPEC.md) and [Visual System](VISUAL_SYSTEM.md). This current page and screenshot are not authority for navigation or information architecture. Keep one honest environment notice, but move technical metadata and Lab out of ordinary conversation focus.
+Original failures at main7d36a78 were reproduced and preserved in [P0 evidence](P0_01_EVIDENCE.md). That document links actual exact-SHA hosted checks for the repaired Pages and local-product surfaces separately. Neither local SQLite tests nor screenshots certify Pages storage. Failed verification iterations remain recorded.
 
-Next task is `P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR`; only then proceed to the shared Assistant-first shell. Sharing UI/contracts must not add backend/provider/real HCL to this browser-only surface or create a second inconsistent memory implementation.
+Target interaction remains [Master1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [UX A2](UX_SPEC.md), [Visual System](VISUAL_SYSTEM.md). P0 repairs do not claim the later shared shell/revision-loop/integrated-experience packages are implemented. The sole live queue is [Development Plan](../DEVELOPMENT_PLAN.md), machine-projected in product_development.
 
-Legacy `STOP_WITH_HANDOFF_L3_GATED` and `STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED` references describe production gates, not the current product refinement queue. L3/I06 gates remain unsatisfied; no real data, provider calls, efficacy claims, Judge or agent activation is authorized.
+L3/I06 gates remain unsatisfied. No provider calls, real data, general language understanding, efficacy, Judge or agent activation is authorized or claimed.
