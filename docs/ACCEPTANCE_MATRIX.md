@@ -1,6 +1,6 @@
 # Product Acceptance Matrix — Canonical 1.2
 
-归属：[Master](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](UX_SPEC.md)、[Work Packages](PRODUCT_REFINEMENT_WORK_PACKAGES.md)。P0-01的R01–R07已有受限synthetic实现与exact-head验收，见 [P0 evidence](P0_01_EVIDENCE.md)；最终采用仍以PR8的head/main核验为准。R08–R12已有共享界面与受限synthetic验收，见 [P1-01 evidence](P1_01_EVIDENCE.md)，最终采用仍以PR9的head/main核验为准。**R13–R20仍NOT_IMPLEMENTED / NOT_TESTED_IN_A2**，不因既有CI通过改填PASS。
+归属：[Master](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](UX_SPEC.md)、[Work Packages](PRODUCT_REFINEMENT_WORK_PACKAGES.md)。P0-01的R01–R07已有受限synthetic实现与exact-head验收，见 [P0 evidence](P0_01_EVIDENCE.md)；最终采用仍以PR8的head/main核验为准。R08–R12已有共享界面与受限synthetic验收，见 [P1-01 evidence](P1_01_EVIDENCE.md)，最终采用仍以PR9的head/main核验为准。R13–R16已实现并有受限synthetic验收，见 [P1-02 evidence](P1_02_EVIDENCE.md)，最终采用以PR10的head/main核验为准。**R17–R20仍NOT_IMPLEMENTED / NOT_TESTED_IN_A2**，不因既有CI通过改填PASS。
 
 ## Historical evidence, unchanged
 

@@ -2,14 +2,14 @@
 
 ## Current product direction and next task
 
-**Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02/03尚未实现。
+**Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03尚未实现。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-02_REVISION_EVIDENCE_MEMORY_LOOP**
+**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-02。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
 
-revision/change/evidence/source/history/memory control loop。验收：R13、R14、R15、R16
+bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -33,7 +33,7 @@ revision/change/evidence/source/history/memory control loop。验收：R13、R14
 
 ## Refinement evidence and remaining work
 
-P0-01的临时/删除/多标签页/完整文件/精确更正/实际依据/唯一队列契约已完成受限synthetic验证，见 [包证据](docs/P0_01_EVIDENCE.md)。最终采用须PR8精确head及main检查。已保留原始失败与修复迭代。P1-01共享Assistant-first界面、输入/阅读/恢复及Pages静态bundle见 [包证据](docs/P1_01_EVIDENCE.md)，最终采用以PR9的head/main检查为准。下一步P1-02修订/依据/记忆闭环；P1-03仍未实现。
+P0-01的临时/删除/多标签页/完整文件/精确更正/实际依据/唯一队列契约已完成受限synthetic验证，见 [包证据](docs/P0_01_EVIDENCE.md)。最终采用须PR8精确head及main检查。已保留原始失败与修复迭代。P1-01共享Assistant-first界面、输入/阅读/恢复及Pages静态bundle见 [包证据](docs/P1_01_EVIDENCE.md)，最终采用以PR9的head/main检查为准。P1-02受限修订/依据/历史/导出闭环见 [包证据](docs/P1_02_EVIDENCE.md)，最终采用以PR10的head/main检查为准。下一步P1-03整体synthetic验收与只读检查。
 
 ## Production gate and compatibility record
 

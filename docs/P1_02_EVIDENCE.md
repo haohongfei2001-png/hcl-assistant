@@ -13,3 +13,11 @@ Actual local verification before first hosted batch:166Python tests PASS after n
 Initial hosted headdec0fdf CI36788331968 failed5/39 journeys (34passed). Four failures exposed clipped More-menu actions when short/direct replies had no evidence CTA; disclosure actions now stay in normal flow inside the scroll container. One Pages historical check selected the registration acknowledgement rather than the actual background-answer run; it now binds to that original run ID and retains the original-source assertion.
 
 Independent review found a delayed local export could deliver a pre-revocation response after another tab deleted its source; export-generation/scope guards now cancel it, with a two-tab browser regression. Identical Pages corrections now preserve original records and explicitly report NO_CHANGE without a material-change CTA; an additional Node/browser regression checks that behavior. All previous assertions remain.
+
+## Verified checkpoint
+
+Exact09c1ffb6973231c871bbb2a249d246b697d4d8bd: [CI36791363067](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36791363067) PASS with41 browser journeys,166Python (including35Node preview contracts), both builds, static bundle boundary and original pinned-development smoke. Independent scoped review cleared claim/evidence, export-generation and no-op semantics.
+
+Final consolidation also ties attachment filename badges to their accepted source identity and purges them on deletion/cross-tab invalidation; unrelated unsent/reading files are not assigned that origin. Two targeted browser regressions retain the filename/body removal assertions. Final43-browser exact-head plus exact-main acceptance remains required.
+
+R13–R16 checkpoint complete: answer/evidence/exact-source/return/correction; genuine revision-receipt changes without version-only insights; immutable correction/from-now/guess/hypothesis; current-permission search/export and deletion propagation. Unsupported/free-language semantics and missing historical classification stay explicit. R17–R20 remain pending.
