@@ -57,5 +57,17 @@ test('v1 migration removes temporary and deleted copies without losing independe
  const state=loadState(s);assert.equal(s.getItem(LEGACY_KEY),null);assert(!s.bytes().includes('TEMP_OLD'));assert(!s.bytes().includes('DELETE_OLD'));assert(s.bytes().includes('KEEP_OLD'));assert.equal(selectedBackground(state.conversations[0]).length,0);
 });
 test('storage failure is thrown, never silent successful persistence',()=>{
- const {state}=setup();assert.throws(()=>saveState(state,{setItem(){throw new Error('quota')}}),/quota/);
+ const {state}=setup();assert.throws(()=>saveState(state,{getItem(){return null},setItem(){throw new Error('quota')}}),/quota/);
+});
+
+test('stale tab cannot resurrect deletion or stop-use persisted by another tab',()=>{
+ const {state,c}=setup(),s=storage();const first=submit(state,c.id,'记录：STALE_TAB_CANARY');saveState(state,s);
+ const tabA=loadState(s),tabB=loadState(s);changeRecord(tabA,c.id,first.recordId,'STOPPED');saveState(tabA,s);
+ submit(tabB,c.id,'记录：unrelated');assert.throws(()=>saveState(tabB,s),/其他页面/);
+ const tabC=loadState(s);changeRecord(tabC,c.id,first.recordId,'DELETED');saveState(tabC,s);
+ assert.throws(()=>saveState(tabA,s),/其他页面/);assert(!s.bytes().includes('STALE_TAB_CANARY'));
+});
+test('v2 reload cleans simultaneous/reintroduced legacy bodies and exposes cleanup failure',()=>{
+ const {state}=setup(),s=storage();saveState(state,s);s.setItem(LEGACY_KEY,'LEGACY_TEMP_CANARY');loadState(s);assert(!s.bytes().includes('LEGACY_TEMP_CANARY'));
+ s.setItem(LEGACY_KEY,'legacy');assert.throws(()=>loadState({...s,removeItem(){throw new Error('cleanup denied')}}),/cleanup denied/);
 });

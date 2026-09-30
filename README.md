@@ -6,7 +6,19 @@
 
 唯一产品事实源是 `haohongfei2001-png/hcl-assistant/main`。正式采用的唯一产品方案为 [Product Master Plan 1.2 / A2-Product](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)；[UX Spec](docs/UX_SPEC.md) 与 [Visual System](docs/VISUAL_SYSTEM.md) 是同一方案的具体规范，不是替代方案。
 
-开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前唯一下一项是 **NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**；已由独立 implementation Work 认领 P0-01；验收未完成前不推进下一包。
+开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前队列如下：
+
+<!-- CURRENT_PRODUCT_QUEUE_START -->
+**NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**
+
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P0-01。
+
+truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration。验收：R01、R02、R03、R04、R05、R06、R07
+
+任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
+<!-- CURRENT_PRODUCT_QUEUE_END -->
+
+验收未完成前不推进下一包。
 
 当前队列机器投影为 `control/plan.json.product_development`。顶层旧phase/next_ready仅是L0–L2.5完成与L3生产门槛记录，不是第二套live队列；自动消费者迁移列入P0-01，未迁移者不得据旧字段新调度产品任务。
 

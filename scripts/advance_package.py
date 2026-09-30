@@ -14,6 +14,24 @@ from scripts.check_planning import L3_STOP, PlanningError, require, validate_pla
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def queue_summary(q):
+    current = next((r for r in q['packages'] if r['id'] == q['next_package_id']), None)
+    detail = (current['delta'] + '。验收：' + '、'.join(current['acceptance'])) if current else '四包已完成；L3四门槛未满足，停止交接，不启动provider、Judge或Act。'
+    return ('<!-- CURRENT_PRODUCT_QUEUE_START -->\n'
+            '**NEXT_READY: ' + q['next_ready'] + '**\n\n'
+            '当前产品阶段：' + q['phase'] + '。唯一当前任务：' + (q['next_package_id'] or '无，等待L3门槛') + '。\n\n'
+            + detail + '\n\n'
+            '任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。\n'
+            '<!-- CURRENT_PRODUCT_QUEUE_END -->')
+
+
+def refresh_queue_summary(text, q):
+    result, count = re.subn(r'<!-- CURRENT_PRODUCT_QUEUE_START -->.*?<!-- CURRENT_PRODUCT_QUEUE_END -->',
+                            lambda _: queue_summary(q), text, flags=re.S)
+    require(count == 1, 'unique generated current-queue summary required')
+    return result
+
+
 def advance(package: str, evidence: str, root: Path = ROOT) -> None:
     path = root / 'control/plan.json'
     plan = json.loads(path.read_text())
@@ -38,7 +56,7 @@ def advance(package: str, evidence: str, root: Path = ROOT) -> None:
     documents = {}
     for name in ('STATUS.md', 'DEVELOPMENT_PLAN.md', 'AGENTS.md', 'README.md'):
         text = (root / name).read_text()
-        text = text.replace('**NEXT_READY: ' + old_next + '**', '**NEXT_READY: ' + q['next_ready'] + '**')
+        text = refresh_queue_summary(text, q)
         if name == 'DEVELOPMENT_PLAN.md':
             for row in rows:
                 pattern = r'(?m)^(\| ' + re.escape(row['id']) + r' \|.*\| )[^|]+( \|)$'

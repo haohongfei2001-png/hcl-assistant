@@ -4,9 +4,17 @@
 
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（本版合入main后生效）。正式采用既有Product & Interaction Design Review，不重新设计；本次只有文档和计划元数据。
 
+<!-- CURRENT_PRODUCT_QUEUE_START -->
 **NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_READY。P0-01由独立implementation Work实施中；后续P1包未开始。当前机器队列是 `control/plan.json.product_development`；细节见 [Development Plan](DEVELOPMENT_PLAN.md) 与 [Authority](docs/DOCUMENT_AUTHORITY.md)。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P0-01。
+
+truthful temporary/delete/stop-use/file/correction/basis contracts and current-queue checker migration。验收：R01、R02、R03、R04、R05、R06、R07
+
+任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
+<!-- CURRENT_PRODUCT_QUEUE_END -->
+
+当前实施状态由以上队列与各包证据共同界定。当前机器队列是 `control/plan.json.product_development`；细节见 [Development Plan](DEVELOPMENT_PLAN.md) 与 [Authority](docs/DOCUMENT_AUTHORITY.md)。
 
 长期终局：Understand → Revise → Judge → Help → Act。**Judge = LONG_TERM_GOAL_ONLY / NOT_IMPLEMENTED_AS_GENERAL_CAPABILITY / NOT_VALIDATED / NOT_PRODUCTION_ENABLED**。未新增Judge运行时能力、已启用manifest项或agent权限。
 
@@ -25,7 +33,7 @@
 
 ## Known unresolved product findings
 
-Pages历史缺陷已在原始基线复现；P0-01修复和真实浏览器验收进行中，尚不宣称闭包。详见 [Review Adoption](docs/PRODUCT_REVIEW_ADOPTION.md)。P0-01先兑现这些承诺，再做主界面重构。
+Pages历史缺陷已在原始基线复现；P0-01修复和真实浏览器验收见 [包证据](docs/P0_01_EVIDENCE.md)。详见 [Review Adoption](docs/PRODUCT_REVIEW_ADOPTION.md)。P0-01先兑现这些承诺，再做主界面重构。
 
 ## Production gate and compatibility record
 

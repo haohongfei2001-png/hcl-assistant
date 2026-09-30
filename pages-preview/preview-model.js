@@ -1,16 +1,21 @@
 /** Browser-only synthetic Controller. No provider, backend or HCL execution. */
 export const STORAGE_KEY = 'hcl-assistant-pages-preview-v2';
 export const LEGACY_KEY = 'hcl-assistant-pages-preview-v1';
-export const emptyState = () => ({schemaVersion: 2, conversations: [], currentId: null});
+export const emptyState = () => ({schemaVersion: 2, storageRevision: 0, conversations: [], currentId: null});
 export const uid = prefix => prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 const clone = value => JSON.parse(JSON.stringify(value));
 
 export function persistentState(state) {
   const conversations = state.conversations.filter(c => c.memory !== 'TEMPORARY');
-  return {schemaVersion: 2, conversations, currentId: conversations.some(c => c.id === state.currentId) ? state.currentId : null};
+  return {schemaVersion: 2, storageRevision: state.storageRevision || 0, conversations, currentId: conversations.some(c => c.id === state.currentId) ? state.currentId : null};
 }
 export function saveState(state, storage) {
-  storage.setItem(STORAGE_KEY, JSON.stringify(persistentState(state)));
+  const existing = storage.getItem(STORAGE_KEY);
+  const actual = existing ? (JSON.parse(existing).storageRevision || 0) : 0;
+  if (actual !== (state.storageRevision || 0)) throw new Error('其他页面已修改数据，请刷新后重试；未覆盖最新记录');
+  const next = {...persistentState(state), storageRevision: actual + 1};
+  storage.setItem(STORAGE_KEY, JSON.stringify(next));
+  state.storageRevision = next.storageRevision;
 }
 export function loadState(storage) {
   const stored = storage.getItem(STORAGE_KEY);
@@ -19,7 +24,9 @@ export function loadState(storage) {
     if (value.schemaVersion !== 2 || !Array.isArray(value.conversations)) throw new Error('不支持的存储版本');
     // Defensive removal of temporary copies from older or externally changed data.
     const clean = persistentState(value);
-    saveState(clean, storage);
+    if (JSON.stringify(clean) !== JSON.stringify(value)) saveState(clean, storage);
+    // A still-open v1 tab or interrupted prior cleanup must not retain old bodies.
+    storage.removeItem(LEGACY_KEY);
     return clean;
   }
   const legacy = storage.getItem(LEGACY_KEY);

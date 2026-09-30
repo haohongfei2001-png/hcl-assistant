@@ -10,13 +10,16 @@ from scripts.advance_package import advance
 ROOT = Path(__file__).resolve().parents[1]
 
 class CurrentQueueTests(unittest.TestCase):
-    def setUp(self): self.plan = json.loads((ROOT / 'control/plan.json').read_text())
+    def setUp(self):
+        self.plan = json.loads((ROOT / 'control/plan.json').read_text())
+        q=self.plan['product_development']; q.update(next_package_id='P0-01',next_ready='P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR',phase='ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING')
+        for i,r in enumerate(q['packages']): r.update(state='NEXT_READY' if i==0 else 'WAITING_DEPENDENCY',evidence='NOT_IMPLEMENTED')
     def reject(self):
         with self.assertRaises(PlanningError): validate_plan(self.plan)
     def test_current_not_legacy_is_reported(self):
         result = validate_tree(ROOT)
         self.assertEqual(result['queue_authority'], 'product_development')
-        self.assertEqual(result['next_ready'], self.plan['product_development']['next_ready'])
+        self.assertEqual(result['next_ready'], json.loads((ROOT/'control/plan.json').read_text())['product_development']['next_ready'])
         self.assertEqual(result['legacy_stage_next_ready'], L3_STOP)
         self.assertEqual(result['package_count'], 11)
         self.assertEqual(result['current_package_count'], 4)
@@ -53,7 +56,8 @@ class CurrentQueueTests(unittest.TestCase):
             after=json.loads((root/'control/plan.json').read_text())
             for k in before.keys()-{'product_development'}: self.assertEqual(before[k],after[k],k)
             self.assertIn('## Production gate and compatibility record',(root/'STATUS.md').read_text())
-            self.assertEqual(old_status.replace(q['next_ready'],after['product_development']['next_ready']), (root/'STATUS.md').read_text())
+            from scripts.advance_package import refresh_queue_summary
+            self.assertEqual(refresh_queue_summary(old_status, after['product_development']), (root/'STATUS.md').read_text())
             validate_tree(root)
     def test_duplicate_header_or_state_mirror_drift_rejected(self):
         with tempfile.TemporaryDirectory() as d:

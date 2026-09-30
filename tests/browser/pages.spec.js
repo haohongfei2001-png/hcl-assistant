@@ -34,3 +34,20 @@ test('Pages open relationship question has no fabricated historical basis',async
 test('Pages IME confirmation does not send and has no backend requests',async({page})=>{
  const forbidden=[];page.on('request',req=>{if(req.url().includes('/v1/'))forbidden.push(req.url())});await open(page);await page.locator('#composer').fill('中文合成草稿');await page.locator('#composer').dispatchEvent('keydown',{key:'Enter',code:'Enter',isComposing:true});await expect(page.locator('#composer')).toHaveValue('中文合成草稿');await expect(page.locator('article')).toHaveCount(0);expect(forbidden).toEqual([]);
 });
+test('Pages two tabs cannot resurrect deletion or stop-use after unrelated writes',async({page,context})=>{
+ await open(page);await send(page,'记录：ORIGINAL_TWO_TAB_CANARY');await send(page,'演示：查看当前背景');
+ const other=await context.newPage();await open(other);await expect(other.locator('article').last()).toContainText('ORIGINAL_TWO_TAB_CANARY');
+ await page.locator('#openMemory').click();await page.locator('.memory-row').filter({hasText:'ORIGINAL_TWO_TAB_CANARY'}).first().getByRole('button',{name:'停止使用',exact:true}).click();await page.locator('#closePanel').click();
+ await expect.poll(async()=> (await stored(other)).conversations[0].records[0].status).toBe('STOPPED');
+ await send(other,'演示：查看当前背景');await expect(other.locator('article').last()).not.toContainText('ORIGINAL_TWO_TAB_CANARY');
+ await page.locator('#openMemory').click();await page.locator('.memory-row').filter({hasText:'ORIGINAL_TWO_TAB_CANARY'}).first().getByRole('button',{name:'删除',exact:true}).click();await page.locator('#closePanel').click();
+ await expect(other.locator('body')).not.toContainText('ORIGINAL_TWO_TAB_CANARY');await send(other,'记录：INDEPENDENT_AFTER_DELETE');
+ expect(await other.evaluate(()=>JSON.stringify(localStorage))).not.toContain('ORIGINAL_TWO_TAB_CANARY');await page.reload();await other.reload();await expect(page.locator('body')).not.toContainText('ORIGINAL_TWO_TAB_CANARY');await expect(other.locator('body')).not.toContainText('ORIGINAL_TWO_TAB_CANARY');await other.close();
+});
+test('Pages storage failure keeps draft and records unchanged; legacy key removed beside v2',async({page})=>{
+ await open(page);await send(page,'记录：ORIGINAL_QUOTA_BASE');const before=await stored(page);
+ await page.evaluate(()=>{Storage.prototype.setItem=function(){throw new DOMException('synthetic quota','QuotaExceededError')}});
+ await send(page,'UNSAVED_ORIGINAL_DRAFT');await expect(page.locator('#composer')).toHaveValue('UNSAVED_ORIGINAL_DRAFT');await expect(page.locator('#error')).toContainText('未保存');expect(await stored(page)).toEqual(before);
+ await page.reload();await page.evaluate(()=>localStorage.setItem('hcl-assistant-pages-preview-v1','LEGACY_TEMP_ORIGINAL_CANARY'));await page.reload();
+ expect(await page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('LEGACY_TEMP_ORIGINAL_CANARY');
+});
