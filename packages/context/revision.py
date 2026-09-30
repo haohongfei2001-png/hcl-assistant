@@ -1,5 +1,6 @@
 """Authored context/revision algorithms, not automatic language understanding."""
 import json
+from datetime import datetime
 from packages.store.ledger import Fault, canonical, now, uid
 
 KINDS = {'USER_REPORTED_EVENT','USER_GUESS','CHARACTER_SELF_REPORT','THIRD_PARTY_REPORT','SYSTEM_INTERPRETATION','HYPOTHETICAL','CONDITIONAL_RULE','CORRECTION','RETRACTION'}
@@ -67,9 +68,10 @@ class Context:
         for r in self.records(tenant,version).values():
             try: self.check_scope(r,conversation,topic,branch)
             except Fault: continue
-            if r['lifecycle_status']!='ACTIVE': continue
+            if r['lifecycle_status']!='ACTIVE':
+                if not (r['lifecycle_status']=='SUPERSEDED' and r.get('revision_action')=='SUPERSEDE' and r.get('effective_time') and at_time and datetime.fromisoformat(at_time)<datetime.fromisoformat(r['effective_time'])): continue
             if perspective:
-                access=[e for e in r['person_access_events'] if e.get('person_id')==perspective and e.get('learned_at') and (at_time is None or e['learned_at']<=at_time)]
+                access=[e for e in r['person_access_events'] if e.get('person_id')==perspective and e.get('learned_at') and (at_time is None or datetime.fromisoformat(e['learned_at'])<=datetime.fromisoformat(at_time))]
                 if not access: continue
             result.append(r)
         return result
@@ -86,7 +88,7 @@ class Context:
             if action=='HYPOTHETICAL_BRANCH': continue
             status={'CORRECT':'SUPERSEDED','SUPERSEDE':'SUPERSEDED','RETRACT':'RETRACTED'}.get(action)
             if status:
-                self.save(tenant,{**record,'lifecycle_status':status,'effective_time':command.get('effective_time')},version); changed.append(identity)
+                self.save(tenant,{**record,'lifecycle_status':status,'effective_time':command.get('effective_time'),'revision_action':action},version); changed.append(identity)
         if action in {'ADD','CORRECT','SUPERSEDE','HYPOTHETICAL_BRANCH'}:
             data=command.get('new_record')
             if not data: raise Fault(400,'new_record required')

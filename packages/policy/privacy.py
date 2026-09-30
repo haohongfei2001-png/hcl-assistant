@@ -8,7 +8,7 @@ from packages.store.ledger import Fault, canonical, digest, now, uid
 class PolicyContext(Context):
     def allowed(self, tenant, record, at=None):
         current=self.records(tenant).get(record['record_id'])
-        if not current or current['lifecycle_status'] in {'DELETED','STOPPED','RETRACTED','SUPERSEDED'}:
+        if not current or current['lifecycle_status'] in {'DELETED','STOPPED'}:
             return False
         expiry=record['retention_policy'].get('expires_at')
         if expiry and datetime.fromisoformat(expiry)<=datetime.fromisoformat(at or now()): return False

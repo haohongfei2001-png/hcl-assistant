@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "product": "HCL Assistant",
-  "phase": "L1_IMPLEMENTING",
-  "next_ready": "L1-04_CONTROLLER_RUN_LIFECYCLE",
-  "next_package_id": "L1-04",
+  "phase": "L2_IMPLEMENTING",
+  "next_ready": "L2-01_DESKTOP_CHAT_FILE_FLOW",
+  "next_package_id": "L2-01",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2-04_OR_L3_GATE",
   "future_work_allowed_through": "L2-04",
@@ -82,8 +82,9 @@
       "depends_on": [
         "L1-03"
       ],
-      "state": "NEXT_READY",
-      "delta": "always-on controller and run lifecycle"
+      "state": "COMPLETE",
+      "delta": "always-on controller and run lifecycle",
+      "evidence": "MOCK_CONTROLLER_FUNCTIONAL"
     },
     {
       "id": "L2-01",
@@ -91,7 +92,7 @@
       "depends_on": [
         "L1-04"
       ],
-      "state": "WAITING_DEPENDENCY",
+      "state": "NEXT_READY",
       "delta": "desktop chat and text file flow"
     },
     {
@@ -133,7 +134,7 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "PROVIDER_FREE_PRIVACY_RETRIEVAL_IMPLEMENTED",
+    "product_implementation": "MOCK_CONTROLLER_FUNCTIONAL",
     "real_runtime": "NOT_INTEGRATED",
     "efficacy": "UNTESTED"
   },
