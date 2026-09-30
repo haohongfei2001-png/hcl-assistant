@@ -66,6 +66,7 @@ class PolicyContext(Context):
             if not any(identity in row['body'] for identity in identities): continue
             if row['type'] in {'conversation','topic','revision'}: continue
             if row['type']=='run':
+                obj.pop('input_text',None)
                 obj['answer']=None; obj['answer_preparation']=None; obj['explain_projection']=None
                 obj['selected_context']={'record_ids':[],'records':[],'coverage':'UNAVAILABLE'}
                 obj['stream']=[e for e in obj.get('stream',[]) if not e['type'].startswith('answer.')]

@@ -1,8 +1,8 @@
 # HCL Assistant Product Status
 
-**L2_IMPLEMENTING / MOCK_CONTROLLER_FUNCTIONAL**
+**L2_IMPLEMENTING / MOCK_UI_FUNCTIONAL**
 
-**NEXT_READY: L2-01_DESKTOP_CHAT_FILE_FLOW**
+**NEXT_READY: L2-02_SYNTHETIC_COGNITION_SYNTHESIS**
 
 - physical split = COMPLETE
 - repository isolation = COMPLETE at repository boundary
