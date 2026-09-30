@@ -299,3 +299,7 @@ test('temporary revision and branch bodies never enter persistent storage', () =
   assert(!s.bytes().includes('P1_TEMP_BRANCH'));
   assert.equal(loadState(s).conversations.length, 0);
 });
+test('identical correction is an honest no-op without successor or important change',()=>{
+ const {state,c}=setup(),original=authored(state,c,'P1_SAME_CONTENT');const old=background(state,c),before=JSON.stringify(c.records);const run=reviseRecord(state,c.id,original.recordId,'CORRECT','P1_SAME_CONTENT');
+ assert.equal(JSON.stringify(c.records),before);assert.equal(run.status,'NO_CHANGE');assert.equal(run.revision.materialChanged,false);assert.deepEqual(run.revision.notReevaluatedRunIds,[]);assert.equal(old.text.includes('P1_SAME_CONTENT'),true);
+});

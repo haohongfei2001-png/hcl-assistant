@@ -92,6 +92,15 @@ export function reviseRecord(state, conversationId, recordId, intent, newContent
     if (run) return run;
   }
   const createdAt = new Date().toISOString(), version = c.version + 1;
+  if ((intent === 'CORRECT' || intent === 'GUESS' && prior.kind === 'USER_GUESS') && content === prior.content) {
+    const run = {id: uid('run'), conversationId: c.id, recordId: prior.id, version, createdAt,
+      input: `未改变的${intent} ${prior.id}：${content}`, text: '内容和分类没有变化；仅保留本次操作记录，未替代背景或标记理解改变。',
+      route: 'RECORDED_REVISION', status: 'NO_CHANGE', caps: [], basisRefs: [basisRef(prior)], basisKinds: freezeKinds([prior]),
+      uncertainty: '逐字相同的受限检查，不是一般语义等价判断。', change: '',
+      revision: {type: intent, materialChanged: false, oldRecordId: prior.id, newRecordId: prior.id,
+        oldRef: frozenRef(prior), newRef: frozenRef(prior), notReevaluatedRunIds: [], recomputedRunIds: []}};
+    c.version=version; c.runs.push(run); return run;
+  }
   const record = {
     id: uid('record'), kind: intent === 'GUESS' ? 'USER_GUESS' : intent === 'HYPOTHETICAL_BRANCH' ? 'HYPOTHETICAL' : intent === 'CORRECT' ? 'CORRECTION' : prior.kind,
     content, status: 'ACTIVE', version, recordedAt: createdAt,
