@@ -115,11 +115,12 @@ class Ledger:
         return obj
 
     def source(self, tenant, ref, conversation=None, topic_id=None):
+        if type(ref.get('version')) is not int or ref['version']<1: raise Fault(400,'Integer source version required')
         row = self.db.execute('SELECT body FROM sources WHERE id=? AND tenant=? AND version=?', (ref['source_id'], tenant, ref['version'])).fetchone()
         if not row:
             raise Fault(403, 'Source unavailable')
         obj = json.loads(row['body'])
-        if obj.get('deleted') or obj['sha256'] != ref.get('sha256', ref.get('content_sha256')):
+        if obj.get('deleted') or digest(obj['text'])!=obj['sha256'] or obj['parse_source_version']!=obj['version'] or obj['sha256'] != ref.get('sha256', ref.get('content_sha256')):
             raise Fault(409, 'Source hash/version mismatch')
         if conversation and obj['conversation_id'] != conversation and not (obj['memory'] == 'TOPIC' and topic_id and obj['topic_id'] == topic_id):
             raise Fault(403, 'Source outside allowed scope')

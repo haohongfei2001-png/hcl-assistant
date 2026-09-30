@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from packages.store.ledger import Ledger, Fault
 from packages.store.registry import Stores
 from packages.controller.interaction import Controller
+from packages.explain.projection import project
 
 
 class Application:
@@ -99,12 +100,21 @@ def handler(application):
                     for store in [application.stores.persistent,application.stores.temporary]:
                         ctrl=application.controller(store)
                         for r in store.list(tenant,'run'):
-                            if r.get('answer',{} ) and r['answer']['answer_id']==parts[2]:
-                                result=ctrl.read(tenant,r['id']).get('explain_projection')
+                            identity=r.get('answer_identity') or r.get('answer') or {}
+                            if identity.get('answer_id')==parts[2]:
+                                result=project(ctrl.read(tenant,r['id']))
                     if result is None: result={'redactions':['UNAVAILABLE'],'judgment_basis':[],'source_links':[]}
                 elif path=='/v1/context':
                     conversation=query['conversation_id'][0]; store=application.stores.for_conversation(tenant,conversation); c=store.get(tenant,'conversation',conversation)
-                    result=application.controller(store).context.selection(tenant,conversation,c['topic_id'])
+                    context=application.controller(store).context
+                    result=context.selection(tenant,conversation,c['topic_id'])
+                    if query.get('manage')==['1']:
+                        managed=[]
+                        for record in context.records(tenant).values():
+                            try: context.check_scope(record,conversation,c['topic_id'])
+                            except Fault: continue
+                            if record['lifecycle_status']!='DELETED': managed.append(record)
+                        result['managed_records']=managed
                 elif len(parts)==3 and parts[:2]==['v1','sources']:
                     conversation=query['conversation_id'][0]; store=application.stores.for_conversation(tenant,conversation); c=store.get(tenant,'conversation',conversation)
                     ref={'source_id':parts[2],'version':int(query['version'][0]),'sha256':query['sha256'][0]}; result=store.source(tenant,ref,conversation,c['topic_id'])

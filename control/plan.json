@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "product": "HCL Assistant",
   "phase": "L2_IMPLEMENTING",
-  "next_ready": "L2-03_EXPLAIN_MEMORY_CONTROLS",
-  "next_package_id": "L2-03",
+  "next_ready": "L2-04_LAB_INTEGRATED_HANDOFF",
+  "next_package_id": "L2-04",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2-04_OR_L3_GATE",
   "future_work_allowed_through": "L2-04",
@@ -112,8 +112,9 @@
       "depends_on": [
         "L2-02"
       ],
-      "state": "NEXT_READY",
-      "delta": "Explain correction and memory controls"
+      "state": "COMPLETE",
+      "delta": "Explain correction and memory controls",
+      "evidence": "MOCK_EXPLAIN_MEMORY_FUNCTIONAL"
     },
     {
       "id": "L2-04",
@@ -121,7 +122,7 @@
       "depends_on": [
         "L2-03"
       ],
-      "state": "WAITING_DEPENDENCY",
+      "state": "NEXT_READY",
       "delta": "Lab shell and integrated mock acceptance"
     }
   ],
@@ -136,7 +137,7 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "SYNTHETIC_REPLAY_ONLY",
+    "product_implementation": "MOCK_EXPLAIN_MEMORY_FUNCTIONAL",
     "real_runtime": "NOT_INTEGRATED",
     "efficacy": "UNTESTED"
   },

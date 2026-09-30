@@ -139,6 +139,7 @@ class Controller:
                 answer_id=uid()
                 current['answer']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'text':answer,'claim_bindings':prep['claim_bindings'],'citation_refs':run['selected_context']['source_versions'],'material_uncertainties':prep['material_uncertainties'],'coverage':prep['coverage'],'published_at':now(),'status':'PUBLISHED'}
                 current['scripted_extraction']='EXPLICIT_PREFIX_GRAMMAR_ONLY'
+                current['answer_identity']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id']}
                 current['explain_projection']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'judgment_basis':prep['claim_bindings'],'source_links':run['selected_context']['source_versions'],'redactions':[],'recorded_at':now()}
                 current['pending']=False; current['run_receipt']['route']=current['route']; current['run_receipt']['outcome']='UNRESOLVED' if current['unresolved_updates'] else 'COMPLETED'; current['run_receipt']['finished_at']=now(); current['run_receipt']['usage']['latency_ms']=round((time.monotonic()-start)*1000)
                 self.emit(current,'answer.completed',current['answer']); self.store.put(tenant,'run',current)

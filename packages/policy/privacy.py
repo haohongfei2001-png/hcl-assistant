@@ -41,9 +41,10 @@ class PolicyContext(Context):
         source_ids={ref['source_id'] for identity in targets for ref in records[identity]['source_refs']}
         # Derived content and copied references are conservatively withheld/purged.
         while True:
-            new={r['record_id'] for r in records.values() if any(ref['source_id'] in source_ids for ref in r['source_refs']) or set(r['read_dependencies'].get('records',[])) & affected or any(set(g)&affected for g in r['support_groups']) or set(r['challenges'])&affected}
+            new={r['record_id'] for r in records.values() if any(ref['source_id'] in source_ids for ref in r['source_refs']) or set(r['read_dependencies'].get('records',[])) & affected or any(set(g)&affected for g in r['support_groups']) or set(r['challenges'])&affected or set(r.get('predecessor_ids',[]))&affected}
             if new<=affected: break
             affected|=new
+            source_ids|={ref['source_id'] for i in affected for ref in records[i]['source_refs']}
         for identity in affected:
             record=records[identity]
             if action=='STOP_USING':

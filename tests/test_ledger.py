@@ -56,3 +56,12 @@ class LedgerTests(unittest.TestCase):
             new=self.store.write_source('a',self.c,self.topic,'new',source_id=r['source']['id'])
         self.assertEqual(new['version'],2)
         self.assertEqual(self.store.source('a',r['event']['source_refs'][0])['text'],'原创 synthetic 内容')
+
+    def test_corrupt_source_or_parse_version_is_rejected(self):
+        import json
+        from packages.store.ledger import canonical
+        run=self.add(); source=run['source']; ref=run['event']['source_refs'][0]
+        with self.store.transaction(): self.store.db.execute('UPDATE sources SET body=?',(canonical({**source,'text':'truncated'}),))
+        with self.assertRaises(Fault): self.store.source('a',ref)
+        with self.store.transaction(): self.store.db.execute('UPDATE sources SET body=?',(canonical({**source,'parse_source_version':2}),))
+        with self.assertRaises(Fault): self.store.source('a',ref)

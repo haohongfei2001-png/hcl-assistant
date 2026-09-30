@@ -34,6 +34,14 @@ class Context:
         self.store.scope(tenant,conversation,topic)
         if data.get('kind') not in KINDS or not isinstance(data.get('content'),str):
             raise Fault(400,'Typed kind and content required')
+        times=[data.get('disclosure_time'),data.get('retention_policy',{}).get('expires_at')]
+        times += [data.get('valid_time',{}).get(k) for k in ('start','end')]
+        times += [e.get('learned_at') for e in data.get('person_access_events',[])]
+        for stamp in times:
+            if stamp is not None:
+                try: parsed=datetime.fromisoformat(stamp)
+                except (TypeError,ValueError): raise Fault(400,'ISO8601 time required')
+                if parsed.tzinfo is None: raise Fault(400,'Timezone required')
         refs=data.get('source_refs',[])
         roots=set()
         for ref in refs:
@@ -102,7 +110,10 @@ class Context:
             data=command.get('new_record')
             if not data: raise Fault(400,'new_record required')
             if action=='HYPOTHETICAL_BRANCH': branch=uid(); data={**data,'kind':'HYPOTHETICAL'}
-            new=self.add(tenant,conversation,topic,data,version,branch); additions.append(new['record_id']); changed.append(new['record_id'])
+            new=self.add(tenant,conversation,topic,data,version,branch)
+            if action in {'CORRECT','SUPERSEDE'}:
+                new['predecessor_ids']=targets; self.save(tenant,new,version)
+            additions.append(new['record_id']); changed.append(new['record_id'])
         if action in {'CORRECT','RETRACT','SUPERSEDE'}:
             for target in targets:
                 original=self.get(tenant,target)
