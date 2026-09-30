@@ -1,0 +1,49 @@
+name: HCL Assistant Pages Preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pages-preview/**'
+      - '.github/workflows/pages-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: hcl-assistant-pages-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify static synthetic boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f pages-preview/index.html
+          test -f pages-preview/app.js
+          test -f pages-preview/style.css
+          grep -q '未接入真实 HCL' pages-preview/index.html
+          grep -q 'Provider calls</dt><dd>0' pages-preview/app.js
+          ! grep -R -E '(sk-[A-Za-z0-9_-]{20,}|github_pat_|BEGIN .*PRIVATE KEY)' pages-preview
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload static preview
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-preview
+      - name: Deploy static preview
+        id: deployment
+        uses: actions/deploy-pages@v4
