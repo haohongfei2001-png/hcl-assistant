@@ -86,7 +86,7 @@ def validate_plan(plan: dict[str, Any]) -> None:
     require(boundary.get('mode') == 'INDEPENDENT_PRODUCT_REPOSITORY', 'wrong repository mode')
     require(boundary.get('repository_isolation') == 'COMPLETE_AT_REPOSITORY_BOUNDARY', 'repository isolation status')
     require(boundary.get('canonical_product_source') == 'haohongfei2001-png/hcl-assistant/main', 'stale or dual canonical source')
-    if plan.get('phase') == 'L0_COMPLETE':
+    if plan.get('phase', '').startswith(('L0', 'L1', 'L2')):
         require(boundary.get('real_data_allowed') is False and boundary.get('public_deployment_allowed') is False,
                 'migration does not authorize real data or deployment')
     packages = plan.get('packages', [])

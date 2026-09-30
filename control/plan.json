@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "product": "HCL Assistant",
   "phase": "L1_IMPLEMENTING",
-  "next_ready": "L1-01_EVENT_SOURCE_STATE_LEDGER",
-  "next_package_id": "L1-01",
+  "next_ready": "L1-02_REVISION_HISTORICAL_DEPENDENCIES",
+  "next_package_id": "L1-02",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2-04_OR_L3_GATE",
   "future_work_allowed_through": "L2-04",
@@ -52,8 +52,9 @@
       "depends_on": [
         "L0-01"
       ],
-      "state": "NEXT_READY",
-      "delta": "event source state ledger"
+      "state": "COMPLETE",
+      "delta": "event source state ledger",
+      "evidence": "PROVIDER_FREE_IMPLEMENTED"
     },
     {
       "id": "L1-02",
@@ -61,7 +62,7 @@
       "depends_on": [
         "L1-01"
       ],
-      "state": "WAITING_DEPENDENCY",
+      "state": "NEXT_READY",
       "delta": "revision and historical dependencies"
     },
     {
@@ -130,7 +131,7 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "NOT_IMPLEMENTED",
+    "product_implementation": "PROVIDER_FREE_IMPLEMENTED",
     "real_runtime": "NOT_INTEGRATED",
     "efficacy": "UNTESTED"
   },
