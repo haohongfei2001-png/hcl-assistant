@@ -69,3 +69,15 @@ All rows below are PASS **within authored/synthetic/mock coverage**. These are i
 | A22 | Root repository/planning checks, `test_repository_split`, exact-SHA hosted product-only export | Bounded source/import/credential scan; not universal or cryptographic isolation proof |
 
 Open limits: synthetic identity only; no production authentication, remote retention/deletion guarantees, real user data, real HCL runtime, general language extraction, calibrated cognition or efficacy. Future L4 needs new authorized non-confirmation material. L3 gate is unchanged and unsatisfied.
+
+
+## L2.5 amendment — experimental runtime bridge obligations
+
+以下均为待实现的 development integration 义务，不是本次 plan amendment 的 PASS：
+- A23：exact HCL SHA + artifact/interface digest handshake；floating main/tag、digest/interface mismatch 必须 fail closed。
+- A24：capability manifest discovery 保留 PENDING_I06 / EXPERIMENTAL / production_enabled=false；不得把发现即视为 RETAIN。
+- A25：request/response serialization 有版本且拒绝未知/越界 payload；confirmation/eval/sealed material 不可进入。
+- A26：timeout/error/cancel/unknown transport 保留真实 outcome，不盲重试、不改写旧 receipt。
+- A27：selected / executed / output-produced / used-in-answer 分离；支持 UNSUPPORTED / NO_TREATMENT / FAILED / UNRESOLVED。
+- A28：至少一条原创 synthetic real-runtime end-to-end smoke；不得使用真实用户私密数据或正式评估 case。
+- A29：L2.5 execution 永远不能设置 production activation 或生成 efficacy evidence；L3 仍必须等待 I06 disposition。

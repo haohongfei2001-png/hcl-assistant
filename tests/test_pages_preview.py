@@ -30,8 +30,10 @@ class PagesPreviewBoundaryTests(unittest.TestCase):
         self.assertFalse(boundary["public_deployment_allowed"])
         self.assertTrue(boundary["synthetic_static_preview_allowed"])
         self.assertEqual(boundary["synthetic_static_preview_mode"], "GITHUB_PAGES_BROWSER_ONLY")
-        self.assertEqual(plan["next_ready"], "STOP_WITH_HANDOFF_L3_GATED")
-        self.assertEqual(plan["phase"], "L2_COMPLETE")
+        self.assertEqual(plan["next_ready"], "L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE")
+        self.assertEqual(plan["phase"], "L2_5_READY")
+        self.assertIn("I06_DISPOSITION", plan["l3_gates"])
+        self.assertFalse(plan["invariants"]["l2_5_production_activation_allowed"])
 
 
 if __name__ == "__main__":

@@ -16,15 +16,19 @@ Canonical产品仓库：`haohongfei2001-png/hcl-assistant`，public，仓库根�
 
 分仓不使public研究内容对有网络权限的人不可见，不撤销Owner在其他工具中的跨仓权限，也不等于生产身份/存储隔离。runtime/network sandbox及tenant/privacy控制仍属产品实施和验收；不要夸大ACL隔离。
 
-## Unchanged restrictions
+## Runtime bridge amendment
 
-L1/L2仍是synthetic/mock、零provider transport、无real-user data、无deployment credentials或public launch。完成分仓不自动授权这些事项。L3仍需I06 disposition、固定获准artifact/interface、adapter scope验证以及执行/数据授权。physical split已满足，不再列作未完成L3 blocker。
+L1/L2 仍是 synthetic/mock、零 provider transport。L2.5 新增一个严格 development-only 例外：产品可从 `haohongfei2001-png/human-cognition-layer` 的 exact commit SHA 读取 allowlisted runtime/interface material，并在 synthetic/non-confirmation 输入上执行当前可用 HCL mechanism。不得使用浮动 main/tag、confirmation/evaluation/sealed material、真实私密数据或正式评估 outcome 做 case-specific tuning。
+
+L2.5 bridge 不改变仓库职责：研究仓库仍独立推进 I02–I06，产品仓库不修改研究 runtime/evaluation。Bridge 只消费版本化接口/工件，不把研究仓库整体变成产品 source tree。若某 mechanism 需要 provider-backed execution，默认未授权，必须另有明确 development execution authorization。
+
+正式 L3 仍需 I06 disposition、production-permitted runtime artifact/interface、adapter scope 验证以及执行/数据授权；其职责为 Production Capability Activation，而非首次 transport 建设。physical split 已满足。
 
 禁止读取/复制confirmation source/gold、受保护artifact、evaluation credentials、provider secrets和sealed LongMemEval。禁止依I03–I06 outcome调产品prompt、把confirmation case当demo、从产品feedback改frozen evaluation。必要通用问题用新原创非确认材料复现。
 
 ## Allowed share and engineering boundaries
 
-共享只限runtime version、stable interface、capability disposition、limitations与已批准的通用改进。L0–L2不导入研究Python。不得clone/archive/mount研究仓库，不添加研究submodule/dependency，不调用研究workflow/runner/credential store。
+共享只限 runtime version、stable interface、capability disposition、limitations 与已批准的通用改进。L0–L2 不导入研究 Python。L2.5 只可按 exact SHA + allowlisted paths/material 建立 development bridge；不得 clone/archive/mount 整个研究仓库为产品依赖，不添加研究 submodule，不读取 eval/data/reports 中受保护材料，不调用研究 workflow/runner/credential store。
 
 产品workflow permissions为contents:read，无pull_request_target、无研究secrets、无隐藏provider调用。只获取本仓库根并校验blob hash；读取token只在物化步骤提供，测试步骤没有凭据。不以研究CI替代产品CI。
 

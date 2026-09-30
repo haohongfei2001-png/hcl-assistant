@@ -7,3 +7,6 @@
 在本独立仓库根运行planning checker、repository checker及unittest。迁移清单检查源文件完整性、未修改内容及public文件中的常见凭据模式；它不是任意秘密不存在或生产安全已经实现的证明。
 
 L1/L2 adds actual SQLite/restart, revision, policy, Controller, loopback HTTP/SSE, authored scenario, Explain, Lab, recovery and integrated boundary/race tests. `tests/browser/assistant.spec.js` drives the HTTP-backed React UI in headless Chromium, including correction during streaming, stop/delete after refresh, raw-file deletion, and lost-ack idempotent replay. Mock and real evidence remain separate. Synthetic fixture lineage and limits are in `docs/SYNTHETIC_SCENARIOS.md`. Build/dependency caches and test artifacts are excluded from public-content scanning; original source provenance remains pinned as migration history.
+
+
+L2.5 planning adds contract/control-plane tests for exact runtime pinning and development-only EXPERIMENTAL activation. These plan tests do not prove a bridge exists. Actual L2.5 packages must add runtime handshake/serialization/lifecycle and synthetic real-runtime behavioral evidence before advancing.

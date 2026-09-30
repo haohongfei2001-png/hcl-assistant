@@ -93,7 +93,7 @@ AnswerRecord：answer_id、run_id、snapshot_id、text、claim_bindings、citati
 稳定capability_id不绑定研究包编号。每项必需：capability_id、contract_version、supported_input、language、scope、output_objects、limitations、runtime_implementation、i06_disposition、product_activation_policy、evidence_status。尚未接入runtime=null，语言空数组表示未认证覆盖；planned_languages不是实测语言支持。
 
 Disposition：PENDING_I06/RETAIN/SIMPLIFY/GENERICIZE/DISABLE/REPLACE/INCONCLUSIVE。
-Activation：MOCK_ONLY/DISABLED/EXPERIMENTAL/SCOPE_DEFAULT。DISABLE不得active；PENDING_I06不得production active；RETAIN仍需产品范围/语言/适配验证。selected/executed/output/used/cache分别记录。不兼容语义需major版本，不因实现替换重命名一切。
+Activation：MOCK_ONLY/DISABLED/EXPERIMENTAL/SCOPE_DEFAULT。DISABLE不得active；PENDING_I06不得production active，但在 L2.5 可使用 EXPERIMENTAL + production_enabled=false，并绑定 exact source repository/commit SHA、artifact digest、interface version 与 implementation id。EXPERIMENTAL 只表示 development bridge 可执行，不表示 RETAIN、语言覆盖、效力或 production readiness。RETAIN 仍需产品范围/语言/适配验证。selected/executed/output/used/cache分别记录。不兼容语义需major版本，不因实现替换重命名一切。
 
 ## C07 Run / operation / stream / cost
 
@@ -119,4 +119,16 @@ TEMPORARY：正文不进持久索引/日志/备份；L1进程内临时store，�
 
 ## C10 Research import gate
 
-L0–L2无研究Python import，无provider transport。L3只接approved artifact、exact digest/interface/disposition/limitations，无confirmation/eval/sealed资产。普通输入接入、合成忠实性、中文多轮验证分别记录，不继承研究效力标签。
+L0–L2 无研究 runtime import、无 provider transport。L2.5 允许唯一例外：从 `haohongfei2001-png/human-cognition-layer` 的**固定 exact commit SHA**按 allowlist 获取 development runtime/interface material，用于 synthetic/non-confirmation integration；禁止浮动 branch、全仓研究依赖、confirmation/eval/sealed 资产、研究凭据和真实私密数据。正式 I02–I06 outcome 不得成为 case-specific tuning 输入。
+
+L3 只负责 Production Capability Activation：在 I06 disposition 后固定 production-permitted artifact/digest/interface/limitations 并决定 activation；不把 L2.5 experimental execution 自动升级为 efficacy 或 production evidence。普通输入接入、合成忠实性、中文多轮验证分别记录，不继承研究效力标签。
+
+## C11 Experimental Runtime Bridge Contract
+
+BridgeConfig 必需字段：bridge_version、source_repository、source_commit_sha、artifact_digest、interface_version、implementation_id、allowed_runtime_paths、input_policy、execution_policy、timeout_policy、receipt_version。source_commit_sha 必须是 40 位 exact Git SHA；禁止 `main`、tag 或其他浮动 ref 作为执行身份。source_repository 当前只允许 `haohongfei2001-png/human-cognition-layer`。
+
+HandshakeResult 必需字段：bridge_version、source_commit_sha、artifact_digest、runtime_identity、interface_version、handshake_status、capability_manifest_digest、discovered_capabilities、serialization_version、receipt_version、limits、errors。handshake_status：READY / UNSUPPORTED_VERSION / DIGEST_MISMATCH / INTERFACE_MISMATCH / CAPABILITY_MANIFEST_INVALID / FAILED。非 READY 时不得执行 mechanism。
+
+L2.5 execution 只接受 synthetic / non-confirmation input，并保留 request/response schema version、timeout、cancel、error、operation/run receipt 与 actual treatment state。必须区分 selected、executed、output-produced、used-in-answer；机制没有适用 treatment 时返回 NO_TREATMENT/UNSUPPORTED，而不是伪造空成功。FAILED/UNRESOLVED 保持原状。
+
+Bridge/capability manifest 可以把 PENDING_I06 capability 标记为 development-only EXPERIMENTAL，但 production_enabled 必须 false。L2.5 结果的 evidence class 固定为 DEVELOPMENT_INTEGRATION_ONLY / NOT_EFFICACY_EVIDENCE。

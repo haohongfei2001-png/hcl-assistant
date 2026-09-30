@@ -14,7 +14,7 @@ class ProgressTests(unittest.TestCase):
         with self.assertRaises(check_planning.PlanningError): check_planning.validate_plan(self.p)
     def test_complete_stop_requires_l3_handoff(self):
         for r in self.p['packages']: r['state']='COMPLETE'
-        self.p.update(next_package_id=None,next_ready='STOP_WITH_HANDOFF_L3_GATED',phase='L2_COMPLETE')
+        self.p.update(next_package_id=None,next_ready='STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED',phase='L2_5_COMPLETE')
         check_planning.validate_plan(self.p)
         self.p['next_ready']='L3_AUTO_ACTIVATE'
         with self.assertRaises(check_planning.PlanningError): check_planning.validate_plan(self.p)

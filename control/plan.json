@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "product": "HCL Assistant",
-  "phase": "L2_COMPLETE",
-  "next_ready": "STOP_WITH_HANDOFF_L3_GATED",
-  "next_package_id": null,
+  "phase": "L2_5_READY",
+  "next_ready": "L2.5-01_PINNED_RUNTIME_BRIDGE_CONTRACT_AND_HANDSHAKE",
+  "next_package_id": "L2.5-01",
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
-  "current_executor_stop_after": "L2-04_OR_L3_GATE",
-  "future_work_allowed_through": "L2-04",
+  "current_executor_stop_after": "PLAN_AMENDMENT_MERGE",
+  "future_work_allowed_through": "L2.5-02",
   "research_sequence": [
     "I02",
     "I03",
@@ -35,7 +35,11 @@
       "NO_RESEARCH_DATA",
       "NO_SERVER_PERSISTENCE",
       "NO_REAL_PRIVATE_DATA"
-    ]
+    ],
+    "development_runtime_bridge_allowed": true,
+    "development_runtime_source_repository": "haohongfei2001-png/human-cognition-layer",
+    "development_runtime_pin_policy": "EXACT_COMMIT_SHA_AND_INTERFACE_DIGEST",
+    "development_runtime_input_policy": "SYNTHETIC_NON_CONFIRMATION_ONLY"
   },
   "invariants": {
     "assistant_first": true,
@@ -47,7 +51,13 @@
     "historical_model_output_is_independent_evidence": false,
     "mock_may_be_relabelled_real": false,
     "confirmation_material_allowed": false,
-    "max_provider_calls_l0_l2": 0
+    "max_provider_calls_l0_l2": 0,
+    "l2_5_production_activation_allowed": false,
+    "l2_5_confirmation_material_allowed": false,
+    "l2_5_real_private_data_allowed": false,
+    "l2_5_case_specific_eval_tuning_allowed": false,
+    "l2_5_efficacy_claims_allowed": false,
+    "l2_5_provider_backed_execution_requires_explicit_authorization": true
   },
   "packages": [
     {
@@ -136,11 +146,32 @@
       "state": "COMPLETE",
       "delta": "Lab shell and integrated mock acceptance",
       "evidence": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS"
+    },
+    {
+      "id": "L2.5-01",
+      "stage": "L2.5",
+      "depends_on": [
+        "L2-04"
+      ],
+      "state": "NEXT_READY",
+      "delta": "pinned development runtime bridge contract handshake and capability discovery",
+      "evidence": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "L2.5-02",
+      "stage": "L2.5",
+      "depends_on": [
+        "L2.5-01"
+      ],
+      "state": "WAITING_DEPENDENCY",
+      "delta": "real-runtime serialization lifecycle receipts and synthetic end-to-end execution",
+      "evidence": "NOT_IMPLEMENTED"
     }
   ],
   "satisfied_gates": [
     "L0_CANONICAL_SETUP",
-    "PHYSICAL_PRODUCT_REPOSITORY_SPLIT"
+    "PHYSICAL_PRODUCT_REPOSITORY_SPLIT",
+    "L2_MOCK_PRODUCT_COMPLETE"
   ],
   "l3_gates": [
     "I06_DISPOSITION",
@@ -154,12 +185,14 @@
     "efficacy": "NOT_TESTED",
     "real_language_generalization": "NOT_TESTED",
     "browser": "HEADLESS_CHROMIUM_MOCK_JOURNEYS",
-    "acceptance_matrix": "docs/ACCEPTANCE_MATRIX.md"
+    "acceptance_matrix": "docs/ACCEPTANCE_MATRIX.md",
+    "experimental_runtime_bridge": "NOT_IMPLEMENTED",
+    "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE"
   },
   "writer": {
-    "branch": "product/l1-01",
-    "scope": "L1-01_THROUGH_L2-04",
-    "status": "COMPLETED_HANDOFF"
+    "branch": "UNCLAIMED",
+    "scope": "L2.5-01_THROUGH_L2.5-02",
+    "status": "NEXT_READY_UNCLAIMED"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED"
 }

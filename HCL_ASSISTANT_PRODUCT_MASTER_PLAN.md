@@ -1,6 +1,6 @@
 # HCL Assistant Product Master Plan
 
-版本：Canonical 1.0 / 2026-09-30（物理迁移，产品定义与L0–L2不变）。唯一产品事实源：`haohongfei2001-png/hcl-assistant/main`。性质：Owner 已决产品方向的正式采用；合入 main 生效。当前实时状态只在 STATUS.md，执行队列只在 DEVELOPMENT_PLAN.md；字段契约在 contracts/PRODUCT_CONTRACTS_V1.md。不得以聊天旧建议覆盖 GitHub current main。
+版本：Canonical 1.1 / 2026-10-01（A1：新增 L2.5 Experimental Runtime Bridge；产品定义与 L0–L2 既定原则不变）。唯一产品事实源：`haohongfei2001-png/hcl-assistant/main`。性质：Owner 已决产品方向的正式采用；合入 main 生效。当前实时状态只在 STATUS.md，执行队列只在 DEVELOPMENT_PLAN.md；字段契约在 contracts/PRODUCT_CONTRACTS_V1.md。不得以聊天旧建议覆盖 GitHub current main。
 
 ## 1. Product North Star
 
@@ -37,6 +37,16 @@ Assistant 是第一层；Explain 是回答级按需依据；Lab 是高级研究/
 ### P06 Honest activation and evidence
 
 Selected、executed、result-produced、used-in-answer、cache-reused 分开记录。mock 不升级 live，接口通过不升级语言理解，代码正确性不升级 efficacy。产品控制层在线不代表所有研究机制已默认启用。
+
+## 2A. Canonical Amendment A1 — L2.5 Experimental Runtime Bridge
+
+Owner 进一步降低产品与研究线耦合：**L2 完成后不再等待 I06 才开始 runtime transport。** 在 L2 与正式 L3 之间新增 development-only 的 **L2.5 — EXPERIMENTAL_RUNTIME_BRIDGE**。这不改变 P01–P06，也不改变研究序列 `I02 → I03 → I04 → I05 → I06`。
+
+L2.5 只面向 synthetic / non-confirmation integration development。它允许从 `haohongfei2001-png/human-cognition-layer` 的**固定 exact commit SHA**和明确 allowlist 的 runtime/interface material 建立版本化桥接，执行目前可用的 HCL mechanism，并如实记录 `UNSUPPORTED / NO_TREATMENT / FAILED / UNRESOLVED`。它不授予 production activation，也不产生 efficacy evidence。
+
+L2.5 严禁：production-retained 标签；修改 I02–I06；confirmation source/gold；protected evaluation artifacts；LongMemEval；真实用户私密数据；按正式评估结果做 case-specific tuning；把 experimental 结果升级为 HCL efficacy / independent-generalization / production-readiness 证据。provider-backed execution 默认不授权，若某 runtime path 需要 provider，必须另有明确 development execution authorization。
+
+正式 L3 的职责收窄为 **Production Capability Activation**：复用已经建立并验证过的 transport/serialization/receipt 基础，根据 I06 的 `RETAIN / SIMPLIFY / GENERICIZE / DISABLE / REPLACE / INCONCLUSIVE` 及产品安全/范围验证决定 production activation；不再从零建设 runtime transport。
 
 ## 3. 用户价值与范围
 
@@ -129,14 +139,37 @@ Later：native mobile、macOS native、voice、social、avatars、agent marketpl
 
 ## 11. L0–L5
 
-L0：本 Master Plan、稳定契约、控制面、工作包、provider-free setup 检查。
-L1：持久化、修订、权限、检索边界、Controller lifecycle；不实现真实研究语义。
-L2：完整 synthetic/mock Assistant、Explain、纠错、文件和 Lab shell。
-L3：I06 后固定 runtime/interface/digest，按处置与接入验证启用能力。
-L4：新的非确认材料上的多轮、中文、更正、迟到证据、合成忠实性、延迟、成本和记忆污染验证。
-L5：保留实际有用路径，简化/删除无收益复杂度。
+L0：Master Plan、稳定契约、控制面、工作包与 provider-free setup 检查。**COMPLETE**。
 
-L0–L2 共九个 coherent packages，详见 docs/L0_L2_WORK_PACKAGES.md。研究仍为 I02 → I03 → I04 → I05 → I06；L0–L2 不需要它先给出阳性结果。L3 不能以 I06 完成自动代替产品级验证。
+L1：持久化、修订、权限、检索边界与 Controller lifecycle。**COMPLETE**。
+
+L2：完整 synthetic/mock Assistant、Explain、纠错、文件、Lab shell 与 browser acceptance。**COMPLETE / L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS**。
+
+### L2.5 — Experimental Runtime Bridge
+
+目的：在不等待 I06、也不污染研究评估的前提下，把产品接到一个**固定 SHA、development-only 的真实 HCL runtime**，提前完成 transport 与 integration engineering。L2.5 不是正式能力激活阶段。
+
+允许建设：versioned runtime bridge；exact HCL SHA / artifact digest verification；runtime handshake；capability manifest discovery；request/response serialization；timeout/error/cancel；operation/run receipts；synthetic end-to-end smoke；在 permitted synthetic inputs 上实际执行当前可用 HCL mechanism；如实保留 UNSUPPORTED / NO_TREATMENT / FAILED / UNRESOLVED。
+
+禁止：production-retained 或 scope-default production activation；confirmation/evaluation material；LongMemEval；真实用户私密数据；case-specific evaluation tuning；效力主张。运行时只可从 allowlisted repository/path/interface 获取，禁止把研究仓库整体变为产品依赖或把研究测试/数据打包进产品。
+
+L2.5 共两个 coherent packages：L2.5-01 固定 runtime contract/handshake/capability discovery；L2.5-02 完成 serialization、lifecycle/receipts 与 synthetic real-runtime end-to-end execution。详见工作包文档。两包不为 PR 数量服务。
+
+### L3 — Production Capability Activation
+
+I06 后进入。L3 **不从零建设 runtime transport**；它以 L2.5 已验证的 bridge/serialization/receipt 基础为起点，重新固定 production-permitted runtime artifact/interface，并依据 I06 disposition：
+- RETAIN：限定范围生产激活；
+- SIMPLIFY：以更简单实现激活；
+- GENERICIZE：保留通用路径，不冒称专门机制增益；
+- DISABLE：不得 production active；
+- REPLACE：切换到替代实现/版本；
+- INCONCLUSIVE：默认不作为已验证 production capability 激活。
+
+L3 仍需 I06 disposition、固定获准 production runtime artifact/interface、产品 adapter scope 验证与明确执行/数据授权。L2.5 的成功不能自动满足这些 production gates。
+
+L4：新的非 confirmation 材料上的多轮、中文、更正、迟到证据、合成/Explain 忠实性、普通任务非干扰、延迟、成本与 memory contamination 验证。
+
+L5：Evidence-driven optimization；保留真实有用路径，简化/删除无收益复杂度，不为排行榜维护机制。
 
 ## 12. 激活与处置
 
