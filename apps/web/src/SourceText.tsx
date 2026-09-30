@@ -1,0 +1,2 @@
+import React from 'react';
+export function SourceText({text,span}:{text:string;span?:number[]}){const points=Array.from(text);const valid=span?.length===2&&Number.isInteger(span[0])&&Number.isInteger(span[1])&&span[0]>=0&&span[1]>=span[0]&&span[1]<=points.length;return <pre>{valid?<>{points.slice(0,span![0]).join('')}<mark>{points.slice(span![0],span![1]).join('')}</mark>{points.slice(span![1]).join('')}</>:text}</pre>}

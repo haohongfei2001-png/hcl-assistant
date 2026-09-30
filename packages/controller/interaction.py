@@ -8,6 +8,7 @@ from packages.policy.privacy import PolicyContext
 from packages.adapter.mock import MockAdapter
 from packages.mock_runtime.scripted import extract
 from packages.synthesis.answer import synthesize
+from packages.explain.projection import claim_source_links
 from packages.controller import development
 
 
@@ -159,10 +160,11 @@ class Controller:
                 current=self.store.get(tenant,'run',run_id)
                 if not current['pending']: return
                 answer_id=uid()
-                current['answer']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'text':answer,'claim_bindings':prep['claim_bindings'],'citation_refs':run['selected_context']['source_versions'],'material_uncertainties':prep['material_uncertainties'],'coverage':prep['coverage'],'published_at':now(),'status':'PUBLISHED'}
+                source_links=claim_source_links(run['selected_context']['records'],prep['claim_bindings'])
+                current['answer']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'text':answer,'claim_bindings':prep['claim_bindings'],'citation_refs':source_links,'material_uncertainties':prep['material_uncertainties'],'coverage':prep['coverage'],'published_at':now(),'status':'PUBLISHED'}
                 current['scripted_extraction']='EXPLICIT_PREFIX_GRAMMAR_ONLY'
                 current['answer_identity']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id']}
-                current['explain_projection']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'judgment_basis':prep['claim_bindings'],'source_links':run['selected_context']['source_versions'],'redactions':[],'recorded_at':now()}
+                current['explain_projection']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'judgment_basis':prep['claim_bindings'],'source_links':source_links,'redactions':[],'recorded_at':now()}
                 current['pending']=False; current['run_receipt']['route']=current['route']; current['run_receipt']['outcome']='UNRESOLVED' if current['unresolved_updates'] else 'COMPLETED'; current['run_receipt']['finished_at']=now(); current['run_receipt']['usage']['latency_ms']=round((time.monotonic()-start)*1000)
                 self.emit(current,'answer.completed',current['answer']); self.store.put(tenant,'run',current)
         except Exception as exc:
