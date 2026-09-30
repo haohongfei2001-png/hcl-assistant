@@ -9,11 +9,11 @@
 开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前队列如下：
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-02_REVISION_EVIDENCE_MEMORY_LOOP**
+**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-02。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
 
-revision/change/evidence/source/history/memory control loop。验收：R13、R14、R15、R16
+bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->

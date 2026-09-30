@@ -12,6 +12,7 @@ from packages.store.ledger import Ledger, Fault, now
 from packages.store.registry import Stores
 from packages.controller.interaction import Controller
 from packages.explain.projection import project
+from packages.explain.product import conversation as conversation_view, search as history_search
 from packages.controller.lab import inspect
 from packages.store.pagination import page
 from packages.runtime_bridge.bridge import RuntimeBridge
@@ -97,9 +98,10 @@ def handler(application):
                     result=application.development_bridge.handshake() if application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}
                 elif path=='/v1/conversations': result=application.stores.conversations(tenant)
                 elif path=='/v1/topics': result=application.stores.persistent.list(tenant,'topic')
+                elif path=='/v1/history/search': result=history_search(application,tenant,query.get('q',[''])[0])
                 elif len(parts)==3 and parts[:2]==['v1','conversations']:
                     store=application.stores.for_conversation(tenant,parts[2]); c=store.get(tenant,'conversation',parts[2]); ctrl=application.controller(store)
-                    result={'conversation':c,'state_version':store.version(tenant),'events':store.history(tenant,c['id']),'runs':[ctrl.read(tenant,r['id']) for r in store.list(tenant,'run') if r['conversation_id']==c['id']]}
+                    result=conversation_view(ctrl,tenant,c['id'])
                 elif len(parts)==3 and parts[:2]==['v1','runs']:
                     ctrl=application.controller(application.stores.for_run(tenant,parts[2])); result=ctrl.read(tenant,parts[2])
                 elif len(parts)==4 and parts[:2]==['v1','runs'] and parts[3]=='events':

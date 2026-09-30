@@ -7,3 +7,5 @@ export function changeRecord(state:any,conversationId:string,id:string,action:st
 export function resolveBasis(c:any,run:any):any[];
 export function decodeFile(name:string,bytes:Uint8Array):{content:string;fileName:string;byteLength:number};
 export function exportConversation(c:any):any;
+
+export function reviseRecord(state:any,conversationId:string,recordId:string,intent:string,newContent?:string):any;
