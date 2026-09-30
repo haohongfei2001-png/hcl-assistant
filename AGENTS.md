@@ -6,9 +6,9 @@
 
 先读README、STATUS、DEVELOPMENT_PLAN、Master Plan1.2、docs/DOCUMENT_AUTHORITY.md、UX_SPEC、VISUAL_SYSTEM、contracts、PRODUCT_REFINEMENT_WORK_PACKAGES和ACCEPTANCE_MATRIX；再核对remote main、open PR和writer。普通用户先聊天；Explain/Inspector按需，Lab是高级研究环境。
 
-当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。**NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。旧自动checker仅覆盖旧阶段；P0-01先迁移当前队列校验/报告/消费者，保留所有旧安全断言。未适配消费者不得自动新调度。
+当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。**NEXT_READY: P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR**。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。
 
-A2采用者本次只能写Markdown与control/plan.json计划元数据，禁止应用、测试、脚本、workflow、manifest、runtime lock或研究代码变更；合并/exact-main核验后停止。新增P0/P1包未开始，须后续implementation Work认领。不把设计采用记为UI修复或效力结果。
+A2文档采用已合并。当前implementation Work获准按唯一队列实现P0/P1；一次一个writer，逐包exact-head审查/CI、合并和exact-main核验。当前认领为product/p0-01-truthful-preview；不得并行接管。
 
 长期终局为Understand → Revise → Judge → Help → Act。Judge = LONG_TERM_GOAL_ONLY，未实现为通用能力、未验证、未生产启用；不得凭终局新增已启用能力或agent执行权限，不推断私人研究概念。
 

@@ -10,7 +10,7 @@
 
 P0-01先迁移当前队列的checker/reporting/tests与产品队列消费者，再修对应surface的真实行为。自动产品调度不能继续读取legacy next字段；历史11包、生产/隐私/研究边界仍须严格验证。没有一般语义能力时明确不支持，不继续堆关键词脚本冒充理解。
 
-本次文档执行者仅采用文档与计划元数据；implementation_started=false。下一位implementation Work明确认领后才写代码，不将本次写入方案解释成启动实施。
+文档采用已完成；独立implementation Work已认领P0-01（product/p0-01-truthful-preview），implementation_started=true。包完成仍须真实验收与exact-main核验。
 
 ## 2. 依赖顺序
 
@@ -21,7 +21,7 @@ P0-01先迁移当前队列的checker/reporting/tests与产品队列消费者，�
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | WAITING_DEPENDENCY |
 | P1-03 | bounded Inspect/Settings与整体synthetic验收 | P1-02 | WAITING_DEPENDENCY |
 
-工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。所有新增包NOT_IMPLEMENTED；设计采用不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
+工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。P0-01实施中，后续包未实现；设计采用不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
 当前全部整改仅synthetic/provider-free、max_provider_calls=0、real_private_data_allowed=false、production_activation_allowed=false。Judge与Act不在当前开发包中。
 
