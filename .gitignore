@@ -13,3 +13,5 @@ playwright-report/
 *.sqlite3
 .tmp/
 .local/
+
+test-results/

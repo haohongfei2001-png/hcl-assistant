@@ -38,7 +38,7 @@ REVISION_ACTIONS = {'ADD', 'CORRECT', 'RETRACT', 'SUPERSEDE',
                     'HYPOTHETICAL_BRANCH', 'STOP_USING', 'DELETE'}
 PERMISSIONS = {'ACCOUNT_DATA_ACCESS', 'PERSON_PERSPECTIVE_ACCESS',
                'PERSISTENCE_REUSE_PERMISSION'}
-IGNORED_DIRS = {'.git', '.venv', '__pycache__', 'node_modules', 'dist', 'coverage', '.tmp', '.local'}
+IGNORED_DIRS = {'.git', '.venv', '__pycache__', 'node_modules', 'dist', 'coverage', 'test-results', 'playwright-report', '.tmp', '.local'}
 
 
 def require(condition: bool, message: str) -> None:
@@ -86,7 +86,7 @@ def validate_plan(plan: dict[str, Any]) -> None:
     require(boundary.get('mode') == 'INDEPENDENT_PRODUCT_REPOSITORY', 'wrong repository mode')
     require(boundary.get('repository_isolation') == 'COMPLETE_AT_REPOSITORY_BOUNDARY', 'repository isolation status')
     require(boundary.get('canonical_product_source') == 'haohongfei2001-png/hcl-assistant/main', 'stale or dual canonical source')
-    if plan.get('phase') == 'L0_COMPLETE':
+    if plan.get('phase', '').startswith(('L0', 'L1', 'L2')):
         require(boundary.get('real_data_allowed') is False and boundary.get('public_deployment_allowed') is False,
                 'migration does not authorize real data or deployment')
     packages = plan.get('packages', [])
@@ -100,9 +100,22 @@ def validate_plan(plan: dict[str, Any]) -> None:
         require(set(row.get('depends_on', [])) <= seen, 'unknown or forward/cyclic dependency')
         require(bool(row.get('delta')), 'product delta required')
         seen.add(key)
+    expected_ids=['L0-01','L1-01','L1-02','L1-03','L1-04','L2-01','L2-02','L2-03','L2-04']
+    require([r['id'] for r in packages]==expected_ids, 'canonical package boundaries changed')
+    for index,row in enumerate(packages):
+        require(row['depends_on']==([] if index==0 else [expected_ids[index-1]]), 'canonical dependencies changed')
+        require(row['state'] in {'COMPLETE','NEXT_READY','WAITING_DEPENDENCY'}, 'unknown package state')
+        if row['state']=='COMPLETE':
+            require(all(d['state']=='COMPLETE' for d in packages[:index]), 'completed package has unsatisfied dependencies')
     next_id = plan.get('next_package_id')
-    require(next_id in seen, 'unknown next package')
-    require(plan.get('next_ready', '').startswith(next_id + '_'), 'NEXT_READY id mismatch')
+    pending=[r for r in packages if r['state']!='COMPLETE']
+    if pending:
+        require(next_id in seen, 'unknown next package')
+        require(plan.get('next_ready', '').startswith(next_id + '_'), 'NEXT_READY id mismatch')
+        require(pending[0]['id']==next_id and pending[0]['state']=='NEXT_READY', 'unique dependency-safe NEXT_READY required')
+        require(all(r['state']=='WAITING_DEPENDENCY' for r in pending[1:]), 'multiple ready packages')
+    else:
+        require(next_id is None and plan.get('next_ready')=='STOP_WITH_HANDOFF_L3_GATED' and plan.get('phase')=='L2_COMPLETE', 'completed L2 must stop at L3 gate')
     require(plan.get('adoption_gate') == 'MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS', 'adoption gate required')
     require('PHYSICAL_PRODUCT_REPOSITORY_SPLIT' in plan.get('satisfied_gates', []), 'split completion missing')
     require('PHYSICAL_PRODUCT_REPOSITORY_SPLIT' not in plan.get('l3_gates', []), 'obsolete outstanding split blocker')
@@ -227,7 +240,7 @@ def validate_tree(root: Path) -> dict[str, Any]:
                 require(combined.is_relative_to(root), f'out-of-bound local doc link: {relative}')
                 require(combined.exists(), f'broken doc link: {relative}: {target}')
     digest = hashlib.sha256(json.dumps(fingerprints, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-    return {'check': 'L0_PLANNING_ONLY', 'package_count': len(plan['packages']),
+    return {'check': 'PRODUCT_CONTROL_CONTRACTS_ONLY', 'package_count': len(plan['packages']),
             'capability_candidates': len(load_json(root, 'contracts/capabilities.json')['capabilities']),
             'next_ready': plan['next_ready'], 'product_content_sha256': digest,
             'file_count': len(files), 'provider_calls': 0, 'efficacy': 'NOT_TESTED'}

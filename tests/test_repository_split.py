@@ -53,7 +53,11 @@ class RepositorySplitTests(unittest.TestCase):
 
     def test_next_ready_has_not_started(self):
         if self.plan['phase'] != 'L0_COMPLETE':
-            self.skipTest('Historical migration-only assertion; product implementation phase advanced')
+            self.assertEqual(self.plan['packages'][0]['state'], 'COMPLETE')
+            ledger = json.loads((ROOT / 'control/repository-migration.json').read_text())
+            self.assertFalse(ledger['l1_implementation_started'])
+            planning.validate_plan(self.plan)
+            return
         self.assertEqual(self.plan['next_ready'], 'L1-01_EVENT_SOURCE_STATE_LEDGER')
         self.assertEqual(self.plan['packages'][0]['state'], 'COMPLETE')
         self.assertEqual(self.plan['packages'][1]['state'], 'NEXT_READY')

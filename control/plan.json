@@ -1,13 +1,19 @@
 {
   "schema_version": "1.0",
   "product": "HCL Assistant",
-  "phase": "L0_COMPLETE",
-  "next_ready": "L1-01_EVENT_SOURCE_STATE_LEDGER",
-  "next_package_id": "L1-01",
+  "phase": "L2_COMPLETE",
+  "next_ready": "STOP_WITH_HANDOFF_L3_GATED",
+  "next_package_id": null,
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
-  "current_executor_stop_after": "PHYSICAL_REPOSITORY_SPLIT",
+  "current_executor_stop_after": "L2-04_OR_L3_GATE",
   "future_work_allowed_through": "L2-04",
-  "research_sequence": ["I02", "I03", "I04", "I05", "I06"],
+  "research_sequence": [
+    "I02",
+    "I03",
+    "I04",
+    "I05",
+    "I06"
+  ],
   "boundary": {
     "hosting_repository": "haohongfei2001-png/hcl-assistant",
     "path": ".",
@@ -33,17 +39,116 @@
     "max_provider_calls_l0_l2": 0
   },
   "packages": [
-    {"id":"L0-01","stage":"L0","depends_on":[],"state":"COMPLETE","delta":"canonical contracts and setup"},
-    {"id":"L1-01","stage":"L1","depends_on":["L0-01"],"state":"NEXT_READY","delta":"event source state ledger"},
-    {"id":"L1-02","stage":"L1","depends_on":["L1-01"],"state":"WAITING_DEPENDENCY","delta":"revision and historical dependencies"},
-    {"id":"L1-03","stage":"L1","depends_on":["L1-02"],"state":"WAITING_DEPENDENCY","delta":"privacy expiry and correction-aware retrieval"},
-    {"id":"L1-04","stage":"L1","depends_on":["L1-03"],"state":"WAITING_DEPENDENCY","delta":"always-on controller and run lifecycle"},
-    {"id":"L2-01","stage":"L2","depends_on":["L1-04"],"state":"WAITING_DEPENDENCY","delta":"desktop chat and text file flow"},
-    {"id":"L2-02","stage":"L2","depends_on":["L2-01"],"state":"WAITING_DEPENDENCY","delta":"multi-session synthetic cognition and natural synthesis"},
-    {"id":"L2-03","stage":"L2","depends_on":["L2-02"],"state":"WAITING_DEPENDENCY","delta":"Explain correction and memory controls"},
-    {"id":"L2-04","stage":"L2","depends_on":["L2-03"],"state":"WAITING_DEPENDENCY","delta":"Lab shell and integrated mock acceptance"}
+    {
+      "id": "L0-01",
+      "stage": "L0",
+      "depends_on": [],
+      "state": "COMPLETE",
+      "delta": "canonical contracts and setup"
+    },
+    {
+      "id": "L1-01",
+      "stage": "L1",
+      "depends_on": [
+        "L0-01"
+      ],
+      "state": "COMPLETE",
+      "delta": "event source state ledger",
+      "evidence": "PROVIDER_FREE_IMPLEMENTED"
+    },
+    {
+      "id": "L1-02",
+      "stage": "L1",
+      "depends_on": [
+        "L1-01"
+      ],
+      "state": "COMPLETE",
+      "delta": "revision and historical dependencies",
+      "evidence": "PROVIDER_FREE_REVISION_IMPLEMENTED"
+    },
+    {
+      "id": "L1-03",
+      "stage": "L1",
+      "depends_on": [
+        "L1-02"
+      ],
+      "state": "COMPLETE",
+      "delta": "privacy expiry and correction-aware retrieval",
+      "evidence": "PROVIDER_FREE_PRIVACY_RETRIEVAL_IMPLEMENTED"
+    },
+    {
+      "id": "L1-04",
+      "stage": "L1",
+      "depends_on": [
+        "L1-03"
+      ],
+      "state": "COMPLETE",
+      "delta": "always-on controller and run lifecycle",
+      "evidence": "MOCK_CONTROLLER_FUNCTIONAL"
+    },
+    {
+      "id": "L2-01",
+      "stage": "L2",
+      "depends_on": [
+        "L1-04"
+      ],
+      "state": "COMPLETE",
+      "delta": "desktop chat and text file flow",
+      "evidence": "MOCK_UI_FUNCTIONAL"
+    },
+    {
+      "id": "L2-02",
+      "stage": "L2",
+      "depends_on": [
+        "L2-01"
+      ],
+      "state": "COMPLETE",
+      "delta": "multi-session synthetic cognition and natural synthesis",
+      "evidence": "SYNTHETIC_REPLAY_ONLY"
+    },
+    {
+      "id": "L2-03",
+      "stage": "L2",
+      "depends_on": [
+        "L2-02"
+      ],
+      "state": "COMPLETE",
+      "delta": "Explain correction and memory controls",
+      "evidence": "MOCK_EXPLAIN_MEMORY_FUNCTIONAL"
+    },
+    {
+      "id": "L2-04",
+      "stage": "L2",
+      "depends_on": [
+        "L2-03"
+      ],
+      "state": "COMPLETE",
+      "delta": "Lab shell and integrated mock acceptance",
+      "evidence": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS"
+    }
   ],
-  "satisfied_gates": ["L0_CANONICAL_SETUP", "PHYSICAL_PRODUCT_REPOSITORY_SPLIT"],
-  "l3_gates": ["I06_DISPOSITION", "PINNED_PERMITTED_RUNTIME_ARTIFACT", "PRODUCT_ADAPTER_SCOPE_VALIDATION", "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"],
-  "evidence": {"product_implementation":"NOT_IMPLEMENTED", "real_runtime":"NOT_INTEGRATED", "efficacy":"UNTESTED"}
+  "satisfied_gates": [
+    "L0_CANONICAL_SETUP",
+    "PHYSICAL_PRODUCT_REPOSITORY_SPLIT"
+  ],
+  "l3_gates": [
+    "I06_DISPOSITION",
+    "PINNED_PERMITTED_RUNTIME_ARTIFACT",
+    "PRODUCT_ADAPTER_SCOPE_VALIDATION",
+    "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
+  ],
+  "evidence": {
+    "product_implementation": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS",
+    "real_runtime": "NOT_INTEGRATED",
+    "efficacy": "NOT_TESTED",
+    "real_language_generalization": "NOT_TESTED",
+    "browser": "HEADLESS_CHROMIUM_MOCK_JOURNEYS",
+    "acceptance_matrix": "docs/ACCEPTANCE_MATRIX.md"
+  },
+  "writer": {
+    "branch": "product/l1-01",
+    "scope": "L1-01_THROUGH_L2-04",
+    "status": "COMPLETED_HANDOFF"
+  },
+  "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED"
 }

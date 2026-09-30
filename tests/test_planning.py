@@ -149,7 +149,7 @@ class PlanningTests(unittest.TestCase):
     def test_missing_doc_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'product'
-            shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns('.git', '.venv', '__pycache__', 'node_modules'))
+            shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(*planning.IGNORED_DIRS))
             (root / 'contracts/PRODUCT_CONTRACTS_V1.md').unlink()
             with self.assertRaises(planning.PlanningError):
                 planning.validate_tree(root)
@@ -157,7 +157,7 @@ class PlanningTests(unittest.TestCase):
     def test_status_queue_disagreement_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'product'
-            shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns('.git', '.venv', '__pycache__', 'node_modules'))
+            shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(*planning.IGNORED_DIRS))
             (root / 'STATUS.md').write_text('NEXT_READY: wrong', encoding='utf-8')
             with self.assertRaises(planning.PlanningError):
                 planning.validate_tree(root)
@@ -165,7 +165,7 @@ class PlanningTests(unittest.TestCase):
     def test_outside_doc_link_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'product'
-            shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns('.git', '.venv', '__pycache__', 'node_modules'))
+            shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(*planning.IGNORED_DIRS))
             with (root / 'README.md').open('a', encoding='utf-8') as stream:
                 stream.write('\n[invalid](../../hcl)\n')
             with self.assertRaises(planning.PlanningError):

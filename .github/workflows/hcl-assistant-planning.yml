@@ -90,7 +90,7 @@ jobs:
               blob_count += 1
           receipt = {'repository': repo, 'commit_sha': sha, 'product_tree_sha': tree_sha,
                      'materialized_blobs': blob_count, 'research_blobs_read': 0,
-                     'provider_calls': 0, 'check_scope': 'PRODUCT_PLANNING_AND_REPOSITORY_SPLIT_ONLY'}
+                     'provider_calls': 0, 'check_scope': 'PRODUCT_CONTRACTS_BOUNDARY_AND_SYNTHETIC_ACCEPTANCE'}
           Path('product-source-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt, indent=2))
           PY
@@ -102,13 +102,25 @@ jobs:
           python3 scripts/check_planning.py | tee ../planning-receipt.json
           python3 scripts/check_repository.py | tee ../repository-receipt.json
           python3 -m unittest discover -s tests -v 2>&1 | tee ../planning-tests.txt
+      - name: Build and verify the synthetic browser product
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd product-export
+          if test -f package-lock.json; then
+            mkdir -p .tmp
+            npm ci --ignore-scripts
+            npm run build | tee ../web-build.txt
+            npx playwright install --with-deps chromium --only-shell
+            npm run test:browser 2>&1 | tee ../browser-tests.txt
+          fi
       - name: Publish exact-SHA planning and migration receipt
         if: always()
         shell: bash
         run: |
           {
             echo '## HCL Assistant planning/setup and repository split'
-            echo 'Only the independent product repository root was materialized. No L1 implementation or efficacy claim.'
+            echo 'Only the independent product repository root was materialized. Synthetic/mock acceptance only; no real HCL or efficacy claim.'
             echo '```json'
             test ! -f product-source-receipt.json || cat product-source-receipt.json
             test ! -f planning-receipt.json || cat planning-receipt.json
@@ -116,5 +128,7 @@ jobs:
             echo '```'
             echo '```text'
             test ! -f planning-tests.txt || tail -n 8 planning-tests.txt
+            test ! -f web-build.txt || tail -n 8 web-build.txt
+            test ! -f browser-tests.txt || tail -n 8 browser-tests.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,9 @@
+[project]
+name = "hcl-assistant"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.hcl-assistant]
+backend = "Python standard library / SQLite"
+provider-transport = false
