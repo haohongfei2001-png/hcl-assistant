@@ -13,7 +13,7 @@
 - 允许写本产品仓库根控制文档、contracts、docs、apps、packages、scripts、tests与产品workflows。不修改human-cognition-layer的runtime、evaluation、控制面、脚本、测试、workflow或历史receipt。
 - 不读取confirmation sources/gold、protected artifacts、eval credentials、provider secrets、真实私密数据或sealed LongMemEval。不clone/archive/mount研究仓库，不通过submodule或相对路径导入。
 - CI/build仅使用本产品仓库根，无symlink escape或向上扫描研究文件。仓库分离已完成；不声称public研究内容被密码学屏蔽，也不声称生产隐私已实现。
-- L1/L2：synthetic/mock only，provider transport budget=0，无deployment credentials、real user data、paid comparison或外部onboarding。L3 gates满足前无真实HCL semantic integration。
+- L1/L2：synthetic/mock only，provider transport budget=0，无外部deployment credentials、real user data、paid comparison或外部onboarding。允许GitHub内建Pages发布browser-only static synthetic preview；它不得包含后端、真实HCL、研究/evaluation材料、服务器持久化或真实私密数据，也不满足任何L3 gate。L3 gates满足前无真实HCL semantic integration。
 - 所有生产模拟路径也必经Controller。Base-only仅Lab实验，不回写生产context。mock不得改标签冒充live。
 - 不删失败测试、不降断言、不改标签或隐藏failed/refused/unresolved；修复缺陷或报告真实阻塞。
 - 禁止私有chain-of-thought收集/展示/存储。记录显式结果、provenance和usage，不持久化provider hidden reasoning正文。
