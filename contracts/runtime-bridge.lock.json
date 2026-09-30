@@ -54,5 +54,6 @@
     "maximum_ms": 10000,
     "max_response_bytes": 262144
   },
-  "receipt_version": "1.0"
+  "receipt_version": "1.0",
+  "capability_manifest_digest": "sha256:7ca66ccd3bbfa0401f755d7b34406bd61617f29797520ae4200bada70f6afab0"
 }

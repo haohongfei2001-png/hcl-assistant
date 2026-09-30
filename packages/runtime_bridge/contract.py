@@ -38,6 +38,7 @@ def validate_config(config):
             or config.get('receipt_version') != '1.0' or config.get('implementation_id') != pinned['implementation_id']
             or config.get('timeout_policy') != pinned['timeout_policy']):
         raise ValueError('CAPABILITY_MANIFEST_INVALID')
+    if config.get('capability_manifest_digest')!=pinned.get('capability_manifest_digest'):raise ValueError('CAPABILITY_MANIFEST_INVALID')
     if set(config) != set(pinned) or config.get('source_tree_sha') != pinned['source_tree_sha']:
         raise ValueError('UNSUPPORTED_VERSION')
 
@@ -72,8 +73,10 @@ def manifest(config):
                        language=[], evidence_status='DEVELOPMENT_INTEGRATION_ONLY',
                        runtime_implementation={k: config[k] for k in ('source_repository', 'source_commit_sha', 'artifact_digest', 'interface_version', 'implementation_id')},
                        product_activation_policy={'mode': 'EXPERIMENTAL', 'production_enabled': False})
+            row['output_objects']=['PublicExpression']
             row['limitations'] += ['Bounded literal syntax only; no language generalization or private-state truth.',
-                                   'Provider-free preparation only; no generated answer or production retention inference.']
+                                   'Provider-free preparation only; no generated answer or production retention inference.',
+                                   'Projection is a checked public expression, not a production belief/access record or general question answering.']
         rows.append(row)
     return {'schema_version': '1.0', 'capabilities': rows}
 
@@ -81,12 +84,14 @@ def manifest(config):
 def handshake(directory, config=None):
     config = load_config() if config is None else copy.deepcopy(config)
     result = {k: config.get(k) for k in ('bridge_version', 'source_commit_sha', 'artifact_digest', 'interface_version', 'receipt_version')}
-    result.update(runtime_identity={k: config.get(k) for k in ('source_repository', 'source_commit_sha', 'implementation_id')},
+    result.update(runtime_identity={**{k: config.get(k) for k in ('source_repository', 'source_commit_sha', 'implementation_id')},
+                                    'runtime_version':'git:'+str(config.get('source_commit_sha')),'native_runtime_version':None},
                   serialization_version='1.0', limits=config.get('timeout_policy'), errors=[],
                   capability_manifest_digest=None, discovered_capabilities=[], handshake_status='FAILED')
     try:
         verify_artifact(directory, config)
         discovered = manifest(config)
+        if fingerprint(discovered)!=config.get('capability_manifest_digest'):raise ValueError('CAPABILITY_MANIFEST_INVALID')
         result.update(handshake_status='READY', capability_manifest_digest=fingerprint(discovered),
                       discovered_capabilities=discovered['capabilities'], interface_digest=config['interface_digest'],
                       production_enabled=False, evidence_class='DEVELOPMENT_INTEGRATION_ONLY')

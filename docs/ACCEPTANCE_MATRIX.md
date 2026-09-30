@@ -83,3 +83,19 @@ Open limits: synthetic identity only; no production authentication, remote reten
 - A29：L2.5 execution 永远不能设置 production activation 或生成 efficacy evidence；L3 仍必须等待 I06 disposition。
 
 L2.5-01 branch acceptance: A23/A24 PASS within the pinned three-file provider-free slice (`test_runtime_handshake`, `test_runtime_acquisition`); actual subprocess handshake READY. A29 policy projection PASS, production_enabled=false / PENDING_I06. Other mechanism execution and A25–A28 remain pending L2.5-02. 104 Python checks, build and all 10 historical browser journeys PASS; external exact-head CI governs adoption.
+
+## L2.5 closure — actual development integration results
+
+126 Python tests, root checkers, typecheck/build, 12 headless browser journeys and the four-path original synthetic real-runtime Controller smoke PASS locally. GitHub exact-head CI repeats these checks; source checkpoints do not self-certify main adoption. Inputs originate in the authored `original_workshop_20261001` family in runtime tests/smoke and its browser sibling; no reused research/evaluation cases. The external artifact is exactly the three allowlisted files at `a8229fcf22eccb851c58502a09ae7cecb346faf5`, with file/Git/tree/artifact/interface/manifest digests in the lock. These are DEVELOPMENT_INTEGRATION_ONLY / NOT_EFFICACY_EVIDENCE.
+
+| ID | Actual evidence | Limit |
+|---|---|---|
+| A23 | `test_runtime_handshake`, `test_runtime_acquisition`, `test_runtime_execution`: actual process READY, wrong SHA/interface/digest/path and manifest drift refused | Product-owned callable interface; explicit reviewed repin required |
+| A24 | Separate discovered manifest snapshot, EXPERIMENTAL/PENDING_I06, production_enabled=false; retention/unknown-capability negatives | Two projected capabilities only; other eight unbridged |
+| A25 | Strict versioned request/response tests, source hash/span/quote validation, unknown/duplicate/nonfinite/bound refusal | Original synthetic sources only; metadata is not a private-data detector |
+| A26 | Real process timeout, active cancellation/reaping, exit/garbage/oversize response; Controller cancel/retry/concurrent revision | Execution uncertainty remains null + UNKNOWN, no automatic retry |
+| A27 | Operation flags/output refs, same-run Explain/Lab and deletion tests | Public expression syntax only; no private truth or broad semantics |
+| A28 | Mandatory actual-runtime Python E2E, four-path CLI smoke, two new headless browser journeys | Original named English modal source; Chinese/prose no-treatment preserved |
+| A29 | Controller refuses persistent/Topic/non-synthetic/unconfigured/typed-command paths; temporary body byte/restart tests; unchanged Pages tests | No production activation, efficacy or provider authorization |
+
+Open limits: no integration of the entire research runtime, no provider-backed extraction/generation, no general Chinese/pronoun understanding, no persistent HCL cognitive state, no production privacy or efficacy certification. The four L3/I06 gates remain unmet. Existing L0–L2 package evidence and historical failures remain unchanged.

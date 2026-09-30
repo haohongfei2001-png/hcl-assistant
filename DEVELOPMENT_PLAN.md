@@ -2,7 +2,7 @@
 
 Canonical: [Master Plan](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [packages](docs/L0_L2_WORK_PACKAGES.md), [contracts](contracts/PRODUCT_CONTRACTS_V1.md).
 
-**NEXT_READY: L2.5-02_EXPERIMENTAL_MECHANISM_SYNTHETIC_E2E**
+**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
 
 | ID | Delta | Dependencies | State |
 |---|---|---|---|
@@ -16,8 +16,8 @@ Canonical: [Master Plan](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), [packages](docs/
 | L2-03 | Explain correction and memory controls | L2-02 | COMPLETE |
 | L2-04 | Lab shell and integrated mock acceptance | L2-03 | COMPLETE |
 | L2.5-01 | pinned development runtime bridge contract handshake and capability discovery | L2-04 | COMPLETE |
-| L2.5-02 | real-runtime serialization lifecycle receipts and synthetic end-to-end execution | L2.5-01 | NEXT_READY |
+| L2.5-02 | real-runtime serialization lifecycle receipts and synthetic end-to-end execution | L2.5-01 | COMPLETE |
 
-Sole writer follows the unique NEXT_READY package. Latest package evidence: EXPERIMENTAL_TRANSPORT_VERIFIED. Actual SHA validation is recorded by CI, not fabricated in live state.
+Both L2.5 packages are complete on the review branch; the sole writer stops before L3. Latest package evidence: L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS. Actual SHA validation is recorded by CI, not fabricated in live state.
 
 L2.5 is development-only. After it completes, L3 remains I06-gated Production Capability Activation and reuses the bridge transport.

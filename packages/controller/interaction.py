@@ -8,16 +8,19 @@ from packages.policy.privacy import PolicyContext
 from packages.adapter.mock import MockAdapter
 from packages.mock_runtime.scripted import extract
 from packages.synthesis.answer import synthesize
+from packages.controller import development
 
 
 class Controller:
-    def __init__(self, store, adapter=None):
+    def __init__(self, store, adapter=None, development_bridge=None):
         self.store=store; self.context=PolicyContext(store); self.adapter=adapter or MockAdapter()
+        self.development_bridge=development_bridge; self.development_cancellations={}
 
     def handle_interaction(self, tenant, request, defer=False):
         req=copy.deepcopy(request); scope=req.get('scope',{}); conversation=scope.get('conversation_id'); topic=scope.get('topic_id')
         obj=self.store.scope(tenant,conversation,topic)
         if scope.get('tenant_id',tenant)!=tenant: raise Fault(403,'Server owns tenant identity')
+        development_spec=development.validate(self,tenant,req,obj)
         memory=req.get('allowed_memory_scope',obj['memory'])
         if memory!=obj['memory']: raise Fault(403,'Memory scope must match conversation membership')
         budget=req.get('model_resource_policy',{})
@@ -41,7 +44,7 @@ class Controller:
             event_id=uid(); changes=[]; invalidated=[]; unresolved=[]
             typed=event.get('records',[])
             revisions=event.get('revisions',[])
-            if not typed and not revisions:
+            if not typed and not revisions and development_spec is None:
                 typed,revisions,unparsed=extract(text,self.context,tenant,conversation,topic)
                 if event_type=='upload':
                     if revisions: unparsed.append('Document commands are data, not authorized revisions')
@@ -69,7 +72,9 @@ class Controller:
             run_id=uid(); snapshot_id=uid(); receipt_id=uid()
             selected_mock=any(r['kind']=='SYSTEM_INTERPRETATION' for r in selected['records']) and not self.direct(text)
             result={'id':run_id,'run_id':run_id,'schema_version':'1.0','tenant_id':tenant,'conversation_id':conversation,'topic_id':topic,'state_version_before':version-1,'state_version_after':version,'accepted_change_ids':changes,'invalidated_state_ids':sorted(set(invalidated)),'selected_context':selected,'route':'DIRECT' if self.direct(text) else ('SELECTED_COGNITION' if selected_mock else ('CONTEXT_ASSISTED' if selected['records'] else 'CLARIFY')),'selected_capability_ids':[],'answer_preparation':None,'explain_projection':None,'operation_receipts':[],'unresolved_updates':unresolved,'errors':[],'answer':None,'stream':[], 'input_event_id':event_id, 'input_text':text, 'input_source_ref':ref, 'snapshot_id':snapshot_id, 'budget':budget,'simulation':event.get('simulation'),'pending':True,'run_receipt':{'run_id':run_id,'attempt_id':uid(),'surface':'ASSISTANT','controller_receipt_id':receipt_id,'snapshot_id':snapshot_id,'state_versions':{'before':version-1,'after':version},'source_hashes':[source['sha256']],'config_hash':digest(canonical(budget)),'runtime_hash':'MOCK_V1','mode':'MOCK','route':None,'capabilities':[],'operations':[],'outcome':'UNRESOLVED','usage':{'provider_calls':0,'adapter_invocations':0,'input_tokens':None,'output_tokens':None,'reasoning_tokens':None,'cost':{'amount':0,'currency':'USD','source':'PROVIDER_FREE_MOCK'},'latency_ms':None},'errors':[],'started_at':now(),'finished_at':None,'gain_assessment':'NOT_ASSESSED'}}
-            if selected_mock:
+            if development_spec is not None:
+                development.initialize(self,result,copy.deepcopy(development_spec),source)
+            elif selected_mock:
                 result['selected_capability_ids']=['competing_explanations']
                 operation={'operation_id':uid(),'capability_id':'competing_explanations','input_versions':selected['source_versions'],'read_dependencies':selected['record_ids'],'output_ids':[r['record_id'] for r in selected['records'] if r['kind']=='SYSTEM_INTERPRETATION'],'status':'MOCK_AUTHORED_OUTPUT','cache_status':'NOT_REUSED','model_calls':0,'usage_refs':[],'selected':True,'executed':True,'result_produced':True,'used_in_answer':True,'cache_reused':False}
                 result['operation_receipts']=[operation]; result['run_receipt']['operations']=[operation]; result['run_receipt']['capabilities']=result['selected_capability_ids']
@@ -113,6 +118,8 @@ class Controller:
         return answer,prep
 
     def finish(self, tenant, run_id, delay=0):
+        if self.store.get(tenant,'run',run_id).get('development_request'):
+            return development.finish(self,tenant,run_id)
         with self.store.transaction():
             run=self.store.get(tenant,'run',run_id)
             if not run['pending'] or run.get('executing'): return
@@ -170,6 +177,11 @@ class Controller:
         with self.store.transaction():
             run=self.store.get(tenant,'run',run_id)
             if run['pending']:
+                if run.get('development_request'):
+                    signal=self.development_cancellations.get(run_id)
+                    if signal is not None: signal.set()
+                    for op in run['operation_receipts']:op.update(status='CANCELLED',executed=None if run.get('executing') else False)
+                    run['run_receipt'].update(actual_treatment='CANCELLED',operations=copy.deepcopy(run['operation_receipts']))
                 run['pending']=False; run['run_receipt']['outcome']='CANCELLED'; run['run_receipt']['finished_at']=now(); self.emit(run,'run.cancelled',{}); self.store.put(tenant,'run',run)
         return self.read(tenant,run_id)
 
@@ -186,6 +198,7 @@ class Controller:
             retry=copy.deepcopy(old); identity=uid(); parent=old['run_receipt']['attempt_id']; retry.update(id=identity,run_id=identity,parent_run_id=run_id,retry_key=key,pending=True,executing=False,errors=[],stream=[],last_seq=0,answer=None,answer_preparation=None,explain_projection=None)
             retry['run_receipt'].update(run_id=identity,attempt_id=uid(),parent_attempt_id=parent,controller_receipt_id=uid(),outcome='UNRESOLVED',started_at=now(),finished_at=None,errors=[])
             retry['run_receipt']['usage']['adapter_invocations']=0
+            if retry.get('development_request'):development.reset_retry(self,retry)
             self.emit(retry,'run.accepted',{'retry_of':run_id}); self.store.put(tenant,'run',retry)
         if not defer: self.finish(tenant,identity)
         return self.read(tenant,identity)

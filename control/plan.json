@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "product": "HCL Assistant",
-  "phase": "L2_5_IMPLEMENTING",
-  "next_ready": "L2.5-02_EXPERIMENTAL_MECHANISM_SYNTHETIC_E2E",
-  "next_package_id": "L2.5-02",
+  "phase": "L2_5_COMPLETE",
+  "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
+  "next_package_id": null,
   "adoption_gate": "MERGED_MAIN_AND_EXACT_SHA_PLANNING_PASS",
   "current_executor_stop_after": "L2.5-02",
   "future_work_allowed_through": "L2.5-02",
@@ -163,15 +163,16 @@
       "depends_on": [
         "L2.5-01"
       ],
-      "state": "NEXT_READY",
+      "state": "COMPLETE",
       "delta": "real-runtime serialization lifecycle receipts and synthetic end-to-end execution",
-      "evidence": "NOT_IMPLEMENTED"
+      "evidence": "L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS"
     }
   ],
   "satisfied_gates": [
     "L0_CANONICAL_SETUP",
     "PHYSICAL_PRODUCT_REPOSITORY_SPLIT",
-    "L2_MOCK_PRODUCT_COMPLETE"
+    "L2_MOCK_PRODUCT_COMPLETE",
+    "L2_5_DEVELOPMENT_BRIDGE_COMPLETE"
   ],
   "l3_gates": [
     "I06_DISPOSITION",
@@ -180,19 +181,19 @@
     "EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION"
   ],
   "evidence": {
-    "product_implementation": "EXPERIMENTAL_TRANSPORT_VERIFIED",
-    "real_runtime": "NOT_INTEGRATED",
+    "product_implementation": "L2_MOCK_PRODUCT_VERIFIED_WITH_LIMITS",
+    "real_runtime": "EXPERIMENTAL_PINNED_PROVIDER_FREE_SLICE_ONLY",
     "efficacy": "NOT_TESTED",
     "real_language_generalization": "NOT_TESTED",
-    "browser": "HEADLESS_CHROMIUM_MOCK_JOURNEYS",
+    "browser": "HEADLESS_CHROMIUM_MOCK_AND_PINNED_DEVELOPMENT_JOURNEYS",
     "acceptance_matrix": "docs/ACCEPTANCE_MATRIX.md",
-    "experimental_runtime_bridge": "EXPERIMENTAL_TRANSPORT_VERIFIED",
+    "experimental_runtime_bridge": "L2_5_EXPERIMENTAL_RUNTIME_INTEGRATION_VERIFIED_WITH_LIMITS",
     "experimental_runtime_results": "NOT_EFFICACY_EVIDENCE"
   },
   "writer": {
     "branch": "product/l2-5-runtime-bridge",
     "scope": "L2.5-01_THROUGH_L2.5-02",
-    "status": "SOLE_WRITER_CLAIMED"
+    "status": "REVIEW_READY_STOPPED_BEFORE_L3"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED"
 }

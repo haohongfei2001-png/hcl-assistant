@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 from packages.runtime_bridge.contract import load_config, validate_config, manifest, handshake, fingerprint
 from packages.runtime_bridge.bridge import RuntimeBridge
 
@@ -44,6 +45,22 @@ class HandshakeTests(unittest.TestCase):
                 self.assertEqual(row['product_activation_policy']['mode'],'EXPERIMENTAL')
                 self.assertEqual(row['runtime_implementation']['source_commit_sha'],self.config['source_commit_sha'])
             else: self.assertIsNone(row['runtime_implementation'])
+
+    def test_discovery_snapshot_drift_cannot_infer_retention(self):
+        rows=manifest(self.config)
+        rows['capabilities'][1]['i06_disposition']='RETAIN'
+        with patch('packages.runtime_bridge.contract.manifest',return_value=rows):
+            result=handshake(os.environ['HCL_DEVELOPMENT_ARTIFACT'])
+        self.assertEqual(result['handshake_status'],'CAPABILITY_MANIFEST_INVALID')
+        self.assertEqual(result['discovered_capabilities'],[])
+
+    def test_wrong_process_identity_and_interface_have_explicit_refusal(self):
+        bridge=RuntimeBridge(os.environ['HCL_DEVELOPMENT_ARTIFACT']);ready=bridge.handshake()
+        for field,value,status in [('source_commit_sha','f'*40,'UNSUPPORTED_VERSION'),('artifact_digest','wrong','DIGEST_MISMATCH'),
+                                  ('interface_version','wrong','INTERFACE_MISMATCH'),('discovered_capabilities',[],'CAPABILITY_MANIFEST_INVALID')]:
+            actual={**ready,field:value}
+            with patch.object(bridge,'_exchange',return_value=actual):result=bridge.handshake()
+            self.assertEqual(result['handshake_status'],status);self.assertEqual(result['discovered_capabilities'],[])
 
     def test_missing_runtime_is_failed_without_mock_fallback(self):
         result=RuntimeBridge('/does/not/exist').handshake()

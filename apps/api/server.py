@@ -2,6 +2,7 @@
 import argparse
 import base64
 import json
+import os
 from pathlib import Path
 import threading
 import time
@@ -13,10 +14,12 @@ from packages.controller.interaction import Controller
 from packages.explain.projection import project
 from packages.controller.lab import inspect
 from packages.store.pagination import page
+from packages.runtime_bridge.bridge import RuntimeBridge
 
 
 class Application:
-    def __init__(self, path=':memory:'):
+    def __init__(self, path=':memory:', development_runtime_directory=None):
+        self.development_bridge=RuntimeBridge(development_runtime_directory) if development_runtime_directory is not None else None
         self.stores=Stores(Ledger(path)); self.controllers={}; self.lock=threading.RLock()
         store=self.stores.persistent
         with store.transaction():
@@ -31,7 +34,7 @@ class Application:
 
     def controller(self, store):
         with self.lock:
-            if store not in self.controllers: self.controllers[store]=Controller(store)
+            if store not in self.controllers: self.controllers[store]=Controller(store,development_bridge=self.development_bridge)
             return self.controllers[store]
 
     def start(self, ctrl, tenant, run):
@@ -90,7 +93,9 @@ def handler(application):
         def do_GET(self):
             try:
                 tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); path=parsed.path; parts=path.strip('/').split('/')
-                if path=='/v1/conversations': result=application.stores.conversations(tenant)
+                if path=='/v1/development/runtime':
+                    result=application.development_bridge.handshake() if application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}
+                elif path=='/v1/conversations': result=application.stores.conversations(tenant)
                 elif path=='/v1/topics': result=application.stores.persistent.list(tenant,'topic')
                 elif len(parts)==3 and parts[:2]==['v1','conversations']:
                     store=application.stores.for_conversation(tenant,parts[2]); c=store.get(tenant,'conversation',parts[2]); ctrl=application.controller(store)
@@ -156,7 +161,7 @@ def serve(application, port=8765):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(); parser.add_argument('--port',type=int,default=8765); parser.add_argument('--database',default=':memory:'); args=parser.parse_args()
-    app=Application(args.database); server=serve(app,args.port)
+    parser=argparse.ArgumentParser(); parser.add_argument('--port',type=int,default=8765); parser.add_argument('--database',default=':memory:'); parser.add_argument('--development-runtime-directory',default=os.environ.get('HCL_DEVELOPMENT_ARTIFACT')); args=parser.parse_args()
+    app=Application(args.database,args.development_runtime_directory); server=serve(app,args.port)
     try: server.serve_forever()
     finally: server.server_close(); app.close()

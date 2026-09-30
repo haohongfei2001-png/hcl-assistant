@@ -10,3 +10,5 @@ L1/L2 adds actual SQLite/restart, revision, policy, Controller, loopback HTTP/SS
 
 
 L2.5 planning adds contract/control-plane tests for exact runtime pinning and development-only EXPERIMENTAL activation. These plan tests do not prove a bridge exists. Actual L2.5 packages must add runtime handshake/serialization/lifecycle and synthetic real-runtime behavioral evidence before advancing.
+
+L2.5 verification first requires the external three-file exact-SHA artifact (README acquisition command) and `HCL_DEVELOPMENT_ARTIFACT`. Mandatory smoke tests fail explicitly if it is missing; they never skip or silently substitute mock. Runtime tests use original synthetic workshop statements only, no formal evaluation inputs. The two added browser journeys verify the real subprocess/Controller/Explain/Lab path and no-treatment/retention refusal; all ten old mock journeys remain.
