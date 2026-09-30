@@ -33,3 +33,5 @@ L5 EVIDENCE_DRIVEN_OPTIMIZATION：保留实用路径，删除/简化无收益复
 ## 执行规则
 
 L0已完成。本轮迁移执行者完成exact-main核验和旧目录处置决定后停止，不开始L1。后续产品Work在L1/L2依赖满足时自主推进实现、测试、修复、PR与合并。修改live queue同时更新STATUS与control/plan.json，不把每日状态写进Master Plan。每次以实际main、head CI、receipt为准；只更新本产品仓库控制面，不写研究仓库或retired产品目录。
+
+Dedicated L1/L2 Work claimed: `product/l1-01`; sequential sole writer. Current package L1-01 is being implemented; completion requires behavioral evidence.

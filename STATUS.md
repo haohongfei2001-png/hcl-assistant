@@ -33,3 +33,5 @@ L1/L2仍只允许synthetic/provider-free。真实数据及部署仍需明确授�
 本轮迁移执行者在exact-main验证和旧目录安全退役/延后清理决定后停止，不开始L1-01。下一位专门产品Work按本仓库README、AGENTS、DEVELOPMENT_PLAN及契约认领唯一writer，从L1-01开始。
 
 旧研究产品目录只保留retired migration provenance身份；即使物理清理deferred，也绝不是第二产品队列或事实源。研究I02 → I03 → I04 → I05 → I06不变。
+
+Dedicated L1/L2 Work claimed: `product/l1-01`; sequential sole writer. Current package L1-01 is being implemented; completion requires behavioral evidence.
