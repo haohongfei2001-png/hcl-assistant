@@ -189,9 +189,23 @@ def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
     return q
 
 
+def queue_summary(q):
+    current = next((r for r in q['packages'] if r['id'] == q['next_package_id']), None)
+    detail = (current['delta'] + '。验收：' + '、'.join(current['acceptance'])) if current else '四包已完成；L3四门槛未满足，停止交接，不启动provider、Judge或Act。'
+    return ('<!-- CURRENT_PRODUCT_QUEUE_START -->\n'
+            '**NEXT_READY: ' + q['next_ready'] + '**\n\n'
+            '当前产品阶段：' + q['phase'] + '。唯一当前任务：' + (q['next_package_id'] or '无，等待L3门槛') + '。\n\n'
+            + detail + '\n\n'
+            '任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。\n'
+            '<!-- CURRENT_PRODUCT_QUEUE_END -->')
+
+
+
 def validate_queue_mirrors(root: Path, q: dict[str, Any]) -> None:
     for name in ('STATUS.md', 'DEVELOPMENT_PLAN.md', 'AGENTS.md', 'README.md'):
         text = safe_path(root, name).read_text(encoding='utf-8')
+        summaries = re.findall(r'<!-- CURRENT_PRODUCT_QUEUE_START -->.*?<!-- CURRENT_PRODUCT_QUEUE_END -->', text, flags=re.S)
+        require(summaries == [queue_summary(q)], f'{name} current queue summary mismatch')
         markers = re.findall(r'\*\*NEXT_READY: ([A-Z0-9_.-]+)\*\*', text)
         require(markers == [q['next_ready']], f'{name} current NEXT_READY mirror mismatch')
     text = safe_path(root, 'DEVELOPMENT_PLAN.md').read_text(encoding='utf-8')

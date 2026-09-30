@@ -32,3 +32,10 @@ UTF-8 TXT/Markdown up to 64 KiB is retained completely with byte counts; invalid
 - Root checks, build, pinned development smoke, exact-head CI and exact-main CI remain required before package adoption
 
 Local browser launch is not used in this environment; hosted CI is the actual browser verification path. No result is inferred from a screenshot or from the local backend to the Pages surface. See PR8 for exact commit/run links and actual results.
+
+## Verification iteration retained
+
+- Initial implementation `eb101635aa6c334b998e5030bf82a196dc6b1b64`: [CI36779184997](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36779184997) PASS, 151 Python tests/build/development smoke and 18 browser journeys. Independent review subsequently found stale-tab resurrection and residual-v1-storage risks; this initial pass was not accepted as closure.
+- Storage serialization revision `432f623fe102591bb9b8b40754fc0006af722e20`: [CI36779632366](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36779632366) FAIL, 15 browser journeys passed and 5 Pages journeys failed; root/Python/build/smoke passed. Async save completion could clear a newer draft; tests also failed to wait for accepted saves. No failed test was removed or weakened. Fixes bind draft clearance to the submitted value, keep send disabled during saving, explicitly await save completion, and add a delayed-lock newer-draft/repeated-send regression.
+
+Web Locks serialize browser storage writes; persisted revision checks reject stale copies. Cross-tab changes refresh visible records and dismiss cached panels while preserving unsent drafts and temporary in-memory conversations. Browsers without Web Locks fail explicitly without unsafe writes. Remaining exact-head/full browser verification is pending.

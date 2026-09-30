@@ -9,20 +9,10 @@ import re
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.check_planning import L3_STOP, PlanningError, require, validate_plan, validate_queue_mirrors
+from scripts.check_planning import L3_STOP, PlanningError, require, validate_plan, validate_queue_mirrors, queue_summary
 
 ROOT = Path(__file__).resolve().parents[1]
 
-
-def queue_summary(q):
-    current = next((r for r in q['packages'] if r['id'] == q['next_package_id']), None)
-    detail = (current['delta'] + '。验收：' + '、'.join(current['acceptance'])) if current else '四包已完成；L3四门槛未满足，停止交接，不启动provider、Judge或Act。'
-    return ('<!-- CURRENT_PRODUCT_QUEUE_START -->\n'
-            '**NEXT_READY: ' + q['next_ready'] + '**\n\n'
-            '当前产品阶段：' + q['phase'] + '。唯一当前任务：' + (q['next_package_id'] or '无，等待L3门槛') + '。\n\n'
-            + detail + '\n\n'
-            '任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。\n'
-            '<!-- CURRENT_PRODUCT_QUEUE_END -->')
 
 
 def refresh_queue_summary(text, q):
@@ -42,7 +32,6 @@ def advance(package: str, evidence: str, root: Path = ROOT) -> None:
     require(bool(evidence.strip()) and evidence not in {'NOT_IMPLEMENTED', 'NOT_TESTED'}, 'actual evidence reference required')
     rows = q['packages']
     current = next(r for r in rows if r['id'] == package)
-    old_next = q['next_ready']
     current.update(state='COMPLETE', evidence=evidence)
     index = rows.index(current)
     if index + 1 < len(rows):

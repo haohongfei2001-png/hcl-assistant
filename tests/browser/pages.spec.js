@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 const key='hcl-assistant-pages-preview-v2';
 async function open(page){await page.goto('http://127.0.0.1:4174/');}
-async function send(page,text){await page.locator('#composer').fill(text);await page.locator('#send').click();}
+async function send(page,text,accepted=true){await page.locator('#composer').fill(text);await page.locator('#send').click();if(accepted)await expect(page.locator('#composer')).toHaveValue('');}
 async function stored(page){return page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key);}
 test('Pages temporary canary is absent from all persistent bytes and reload',async({page})=>{
  await open(page);await page.locator('#memoryScope').selectOption('TEMPORARY');await page.locator('#newConversation').click();await send(page,'记录：ORIGINAL_BROWSER_TEMP_CANARY');await send(page,'演示：查看当前背景');
@@ -47,7 +47,16 @@ test('Pages two tabs cannot resurrect deletion or stop-use after unrelated write
 test('Pages storage failure keeps draft and records unchanged; legacy key removed beside v2',async({page})=>{
  await open(page);await send(page,'记录：ORIGINAL_QUOTA_BASE');const before=await stored(page);
  await page.evaluate(()=>{Storage.prototype.setItem=function(){throw new DOMException('synthetic quota','QuotaExceededError')}});
- await send(page,'UNSAVED_ORIGINAL_DRAFT');await expect(page.locator('#composer')).toHaveValue('UNSAVED_ORIGINAL_DRAFT');await expect(page.locator('#error')).toContainText('未保存');expect(await stored(page)).toEqual(before);
+ await send(page,'UNSAVED_ORIGINAL_DRAFT',false);await expect(page.locator('#composer')).toHaveValue('UNSAVED_ORIGINAL_DRAFT');await expect(page.locator('#error')).toContainText('未保存');expect(await stored(page)).toEqual(before);
  await page.reload();await page.evaluate(()=>localStorage.setItem('hcl-assistant-pages-preview-v1','LEGACY_TEMP_ORIGINAL_CANARY'));await page.reload();
  expect(await page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('LEGACY_TEMP_ORIGINAL_CANARY');
+});
+
+test('Pages slow serialized save preserves a newer draft and rejects repeated send',async({page})=>{
+ await open(page);
+ await page.evaluate(()=>{const original=navigator.locks.request.bind(navigator.locks);let release;window.releaseSyntheticLock=()=>release();navigator.locks.request=(name,action)=>original(name,async()=>{await new Promise(resolve=>release=resolve);return action()})});
+ await page.locator('#composer').fill('记录：FIRST_PENDING_SYNTHETIC');await page.locator('#send').click();await expect(page.locator('#send')).toBeDisabled();
+ await page.locator('#composer').fill('SECOND_UNSENT_SYNTHETIC_DRAFT');await expect(page.locator('#send')).toBeDisabled();
+ await page.evaluate(()=>window.releaseSyntheticLock());await expect(page.locator('article')).toHaveCount(1);await expect(page.locator('#composer')).toHaveValue('SECOND_UNSENT_SYNTHETIC_DRAFT');await expect(page.locator('#send')).toBeEnabled();
+ expect((await stored(page)).conversations[0].records).toHaveLength(1);
 });
