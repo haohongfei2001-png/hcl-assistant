@@ -64,7 +64,7 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 
 ## 5. Continuum V1 视觉增量的权威与采用门槛
 
-以上第4节的“当前/下一项”只记录 A2 原采用时点；全局下一项始终来自最新 product_development，不恢复 P0-01。此次视觉采用已协调到 main `905ff1fbb3b2264757931e8d9ff5fdff54e7a32f`：P0-01、P1-01、P1-02 均保持 COMPLETE，P1-03 是唯一 NEXT_READY。本次只采用设计资产/规格/计划元数据，不接管或改写已合入实现与证据。
+以上第4节的“当前/下一项”只记录 A2 原采用时点；全局下一项始终来自最新 product_development，不恢复 P0-01。此次视觉采用已重新协调到 main `333b39f71cede6b741bfdd3486a66d6958901ce0`：P0-01、P1-01、P1-02 均保持 COMPLETE；D1-01 是当前唯一 NEXT_READY，P1-03 等待其完成。本次只采用设计资产/规格/计划元数据，不接管、改写或越过 D1-01 已采用的实现、writer、预算与证据。
 
 | V1 位置 | 权威范围 |
 |---|---|
@@ -78,6 +78,6 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 
 优先级按作用域：产品架构/权限/来源/研究与生产门槛始终高于图内示例；目标外观以五张批准稿和 Visual 为准；静态图未表达的行为以 UX/V1 Implementation 为准；事实只来自 exact-SHA 代码/回执；队列只来自 product_development。图片里的企业、引用、PDF按钮或智能体不是新授权，语义替换须显式记录但不能变成任意换皮。
 
-机器 `product_plan_version` 保持 `1.2/A2-Product`；不为视觉采用修改 checker/tests/workflows 的硬编码四包结构。三个 V1 交付切片从属既有 P1-03，不持有独立 NEXT_READY 或执行者，不构成第二队列。其原 R17–R20 义务和全部既有回归仍适用，新增 V 验收必须有实际证据。
+机器 `product_plan_version` 保持 `1.2/A2-Product`；不为视觉采用修改当前 checker/tests/workflows 已采用的 package identities、依赖或验收数组。三个 V1 交付切片从属既有 P1-03，不持有独立 NEXT_READY 或执行者，不构成第二队列。其原 R17–R20 义务和全部既有回归仍适用，新增 V 验收必须有实际证据。
 
 任何并发 main 前进都需重新基线协调，只在最新树上重放本次资产/规格/计划差异并保留新 main 父历史。不得 force-push、重置已完成状态、覆盖历史证据/固定锁/维护配置或以过期 CI 合并新 head。
