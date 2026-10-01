@@ -39,4 +39,4 @@ The implementation PR includes a table: reference ID / region / expected appeara
 
 All required captures and journeys must be supplied before claiming V1 implemented. A missing capture, unverified browser behavior, unresolved major visual discrepancy or dishonest state is a failed/pending criterion, not a silent PASS. The final companion winner is intentionally not an exit gate; A/B/off support is.
 
-The existing checker validates the current four-package queue and its original acceptance IDs; it does not automatically inspect these new V-items. Review their evidence explicitly, and keep P1-03 incomplete until both its original R17–R20 obligations and the V-items are satisfied. No new queue or weakened assertion is introduced by this document.
+The existing checker validates the current live product queue, including the authorized D1-01→P1-03 dependency and their existing acceptance IDs; it does not automatically inspect these new V-items. Review their evidence explicitly, and keep P1-03 incomplete until both its original R17–R20 obligations and the V-items are satisfied. No new queue or weakened assertion is introduced by this document.
