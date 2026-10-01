@@ -65,8 +65,11 @@ class Unconfigured:
 def application(env=None):
     env=os.environ if env is None else env
     # Fail closed; never select local SQLite/mock on a cloud setup error.
+    store=None
     try:
         config=CloudConfig.from_env(env)
-        return CloudApplication(config,runtime=env.get('HCL_DEVELOPMENT_ARTIFACT','.hcla-runtime'))
+        store=PostgresLedger(config.database_url)
+        return CloudApplication(config,store=store,runtime=env.get('HCL_DEVELOPMENT_ARTIFACT','.hcla-runtime'))
     except Exception:
+        if store is not None:store.close()
         return Unconfigured()

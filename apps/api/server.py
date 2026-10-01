@@ -98,6 +98,8 @@ def handler(application):
                         application.lifecycle.cancel_temporary(data.get('request_id'));self.json(200,{'cancel_requested':True});return
                     if len(parts)==4 and parts[:2]==['v1','runs'] and parts[3]=='execute':
                         self.json(200,application.execute(tenant,parts[2]));return
+                    if path=='/v1/sources' or (len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events'):
+                        if data.get('event',{}).get('type','message') in {'message','upload'} and application.live_chat_service is None:raise Fault(503,'模型服务尚未启用，请联系管理员；无需在网页填写密钥')
                 if path=='/v1/topics': result=application.stores.persistent.topic(tenant,data.get('title','Topic'))
                 elif path=='/v1/conversations': result=application.stores.conversation(tenant,title=data.get('title','新对话'),topic_id=data.get('topic_id'),memory=data.get('memory','CONVERSATION'))
                 elif len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events':

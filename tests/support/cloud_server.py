@@ -5,6 +5,7 @@ without installing a certificate. This is never imported by the deploy entry.
 """
 import os
 import threading
+import time
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from types import SimpleNamespace
 from urllib.parse import urlsplit
@@ -31,9 +32,18 @@ with psycopg.connect(DSN,autocommit=True) as admin:
 class FixtureAuth(CloudAuth):
  def boundary(self,request,mutation=False):
   if request.client_address[0]!='127.0.0.1' or request.headers.get('Origin') not in (None,'http://127.0.0.1:5173'):raise ValueError('Loopback fixture only')
-  headers=dict(request.headers);headers['Host']=self.host
-  if mutation:headers['Origin']=self.origin
+  headers={'Host':self.host,'Origin':self.origin if mutation else None,'X-HCLA-Request':request.headers.get('X-HCLA-Request'),'Sec-Fetch-Site':request.headers.get('Sec-Fetch-Site')}
   return super().boundary(SimpleNamespace(headers=headers),mutation)
+
+class CompletionWriter:
+ def __init__(self,original,mode):self.original=original;self.mode=mode;self.done=False
+ def write(self,value):
+  if b'"type": "cloud.completed"' in value and self.mode:
+   time.sleep(1.5)
+   if self.mode=='interrupt':self.done=True;raise BrokenPipeError()
+  if self.done:raise BrokenPipeError()
+  return self.original.write(value)
+ def __getattr__(self,name):return getattr(self.original,name)
 
 class Handler(BaseHTTPRequestHandler):
  def __init__(self,*args,**kwargs):
@@ -42,6 +52,12 @@ class Handler(BaseHTTPRequestHandler):
   adapter=DeepSeekAdapter(base_url=config.base_url,model=config.model,api_key=config.api_key,transport_factory=FakeTransport,wall_timeout=10)
   app=CloudApplication(cfg,store=PostgresLedger('',connection=connection),adapter=adapter,runtime=os.environ.get('HCL_DEVELOPMENT_ARTIFACT'))
   app.development_auth=FixtureAuth(app.stores.persistent,cfg.origin,cfg.login,cfg.verifier)
-  try:make_handler(app)(*args,**kwargs)
+  try:
+   class FixtureHandler(make_handler(app)):
+    def do_POST(self):
+     mode=self.headers.get('X-HCLA-Fixture-Completion')
+     if mode in {'delay','interrupt'}:self.wfile=CompletionWriter(self.wfile,mode)
+     return super().do_POST()
+   FixtureHandler(*args,**kwargs)
   finally:app.close()
 if __name__=='__main__':ThreadingHTTPServer(('127.0.0.1',8771),Handler).serve_forever()

@@ -47,4 +47,19 @@ class CloudBudget(DevelopmentBudget):
             charged=max(Decimal(old['charged_usd']),actual or Decimal(0))
             self.store.db.execute('UPDATE budget_attempts SET outcome=?,charged_usd=?,actual_usd=?,input_tokens=?,output_tokens=? WHERE run_key=? AND attempt_key=?',(outcome,_money(charged),_money(actual) if actual is not None else None,input_tokens,output_tokens,*keys))
             self._held=None
+    def snapshot(self):
+        with self.store.transaction():
+            rows=self.store.db.execute('SELECT * FROM budget_attempts').fetchall()
+            with localcontext() as context:
+                context.prec=64
+                charged=sum((Decimal(r['charged_usd']) for r in rows),Decimal(0))
+                reserved=sum((Decimal(r['reserved_usd']) for r in rows),Decimal(0))
+                known=[Decimal(r['actual_usd']) for r in rows if r['actual_usd'] is not None]
+                return {'request_count':len(rows),'max_requests':self.config.max_requests,
+                        'active_requests':sum(r['outcome']=='active' for r in rows),
+                        'reserved_cost_usd':_money(reserved),'charged_cost_usd':_money(charged),
+                        'max_cost_usd':_money(self.config.max_cost_usd),'actual_provider_cost_usd':None,
+                        'cost_basis':'CONFIGURED_PEAK_RATES_NOT_PROVIDER_INVOICE',
+                        'known_usage_priced_upper_bound_usd':_money(sum(known,Decimal(0))) if known else None,
+                        'unknown_usage_requests':len(rows)-len(known),'over_budget':charged>self.config.max_cost_usd}
     def close(self): pass

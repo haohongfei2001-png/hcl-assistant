@@ -1,8 +1,7 @@
 import {test,expect} from '@playwright/test';
 test.skip(!process.env.HCLA_TEST_POSTGRES_DSN,'Cloud browser fixture requires isolated Postgres');
 async function enter(page){
- await page.route('**/v1/**',async route=>{const response=await route.fetch({url:route.request().url().replace('127.0.0.1:5173','127.0.0.1:8771')});await route.fulfill({response})});
- await page.goto('/');await page.getByLabel('账号',{exact:true}).fill('owner');await page.getByLabel('密码',{exact:true}).fill('offline password fixture');await page.getByRole('button',{name:'登录',exact:true}).click();
+ await page.goto('/');await page.getByLabel('账号',{exact:true}).fill('owner');await page.getByLabel('密码',{exact:true}).fill('offline password fixture');const signedIn=page.waitForResponse(r=>r.url().endsWith('/v1/development/login'));await page.getByRole('button',{name:'登录',exact:true}).click();expect((await signedIn).status()).toBe(200);
  await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('本次仅使用原创合成输入，并使用服务器已批准额度').check();
 }
@@ -21,4 +20,12 @@ test('cloud temporary HCL uses reviewed Bridge and disappears on refresh',async(
 test('cloud temporary multi-turn uses tab state and privacy deletion clears sources',async({page})=>{
  await enter(page);await page.getByLabel('记忆范围').selectOption('TEMPORARY');await close(page);await send(page,'报告[云端合成]：TEMP_CLOUD_DELETE_CANARY');await send(page,'另一个原创合成问题');
  await page.getByRole('button',{name:'记忆管理',exact:true}).click();await page.locator('.memory-card').filter({hasText:'TEMP_CLOUD_DELETE_CANARY'}).getByRole('button',{name:'删除',exact:true}).click();await expect(page.locator('.memory-card').filter({hasText:'TEMP_CLOUD_DELETE_CANARY'})).toHaveCount(0);await page.getByRole('button',{name:'关闭记忆管理'}).click();await expect(page.locator('.messages')).not.toContainText('TEMP_CLOUD_DELETE_CANARY');
+});
+for(const mode of ['delay','interrupt'])test(`cloud temporary privacy acceptance clears React bodies before ${mode} completion`,async({page})=>{
+ await enter(page);await page.getByLabel('记忆范围').selectOption('TEMPORARY');await close(page);await send(page,'报告[隐私合成]：STREAM_DELETE_PRIVATE_CANARY');
+ await page.route('**/v1/temporary/execute',route=>route.continue({headers:{...route.request().headers(),'X-HCLA-Fixture-Completion':mode}}));
+ await page.getByRole('button',{name:'记忆管理',exact:true}).click();await page.locator('.memory-card').filter({hasText:'STREAM_DELETE_PRIVATE_CANARY'}).getByRole('button',{name:'删除',exact:true}).click();
+ await expect(page.locator('body')).not.toContainText('STREAM_DELETE_PRIVATE_CANARY',{timeout:1000});
+ if(mode==='interrupt'){await expect(page.getByRole('alert')).toContainText('中断');await expect(page.locator('body')).not.toContainText('STREAM_DELETE_PRIVATE_CANARY')}
+ else await expect(page.getByRole('button',{name:'停止',exact:true})).toHaveCount(0);
 });

@@ -86,7 +86,7 @@ class PostgresLedger(Ledger):
         if connection is None:
             import psycopg
             from psycopg.rows import dict_row
-            connection=psycopg.connect(dsn,autocommit=True,prepare_threshold=None,row_factory=dict_row,connect_timeout=5)
+            connection=psycopg.connect(dsn,sslrootcert="system",autocommit=True,prepare_threshold=None,row_factory=dict_row,connect_timeout=5)
         self.connection=connection; self.tenant=tenant; self.volatile=False
         role=connection.execute("SELECT rolsuper,rolbypassrls,pg_has_role(current_user,'hcla_app','member') AS member FROM pg_roles WHERE rolname=current_user").fetchone()
         if role is None or role['rolsuper'] or role['rolbypassrls'] or not role['member']:

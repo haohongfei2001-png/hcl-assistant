@@ -3,10 +3,11 @@ import type {Conversation,Run} from './api';
 type Packet={view:{conversation:Conversation;state_version:number;runs:Run[];events:unknown[]};context:Record<string,unknown>;sources:{id:string;version:number;sha256:string;deleted?:boolean}[];explains:Record<string,unknown>;inspections:Record<string,unknown>;snapshot:unknown};
 type Entry={conversation:Conversation;packet:Packet;requestId?:string;done?:Promise<void>;error?:Error;listeners:Set<()=>void>;unavailable?:boolean};
 const entries=new Map<string,Entry>();
+const runOwners=new Map<string,Entry>();
 let enabled=false;
 export function setCloudTemporary(value:boolean){enabled=value}
-function entryForRun(id:string){return [...entries.values()].find(e=>e.packet.view.runs.some(r=>r.run_id===id))}
-export function clearTemporary(){entries.clear()}
+function entryForRun(id:string){return runOwners.get(id)}
+export function clearTemporary(){entries.clear();runOwners.clear()}
 function notify(entry:Entry){for(const listener of entry.listeners)listener()}
 async function execute(entry:Entry,request:unknown){
  if(entry.unavailable)throw new Error('409: 临时连接已中断，请新建对话');
@@ -23,7 +24,7 @@ async function execute(entry:Entry,request:unknown){
    while(true){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let boundary;
     while((boundary=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);const line=block.split('\n').find(l=>l.startsWith('data: '));if(!line)continue;const event=JSON.parse(line.slice(6));
      if(event.type==='cloud.accepted'||event.type==='cloud.run'){
-      const run=event.payload as Run;
+      const run=event.payload as Run;runOwners.set(run.run_id,entry);
       const privacy=(request as {event?:{revisions?:{action:string}[]}}).event?.revisions?.some(r=>['DELETE','STOP_USING'].includes(r.action));
       if(privacy&&!wasAccepted){entry.packet={view:{conversation:entry.conversation,state_version:run.state_version_after,runs:[],events:[]},context:{records:[],managed_records:[],managed_sources:[]},sources:[],explains:{},inspections:{},snapshot:null}}
       entry.packet.view.state_version=run.state_version_after;entry.packet.view.runs=entry.packet.view.runs.some(r=>r.run_id===run.run_id)?entry.packet.view.runs.map(r=>r.run_id===run.run_id?run:r):[...entry.packet.view.runs,run];
@@ -77,7 +78,7 @@ export async function temporaryApi(path:string,body:unknown,raw:(path:string,bod
     if(owner.requestId)await raw('/v1/temporary/cancel',{request_id:owner.requestId});
     const run=owner.packet.view.runs.find(r=>r.run_id===parts[2])!;return {handled:true,value:structuredClone(run)};
    }
-   if(parts.length===3)return {handled:true,value:structuredClone(owner.packet.view.runs.find(r=>r.run_id===parts[2]))};
+   if(parts.length===3){if(owner.unavailable)throw new Error('409: 临时对话已中断，内容已清理');return {handled:true,value:structuredClone(owner.packet.view.runs.find(r=>r.run_id===parts[2]))}};
   }
  }
  if(parts[1]==='answers'&&parts[3]==='explain')for(const item of entries.values())if(parts[2] in item.packet.explains)return {handled:true,value:structuredClone(item.packet.explains[parts[2]])};
