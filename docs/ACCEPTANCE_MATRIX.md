@@ -47,3 +47,14 @@ P0/P1完成不开放L3或把Judge升级实现。真实日常MVP、中文多轮�
 | U08 | Account connection and stalled login have bounded, visible recovery | No automatic login/register resubmission, stale response or lost email; passwords clear | U2-01 |
 | U09 | First member message uses consent next to Send without opening Settings | Enter/attachment/sample cannot bypass synthetic-use consent or server authorization | U2-01 |
 | U10 | Unavailable model/account blocks sending while keeping the draft and readable history | No fallback paid dispatch, relaxed entitlement, enabled Auth or false live-ready claim | U2-01 |
+
+## Bounded account recovery
+
+| ID | Positive obligation | Negative / boundary | Package |
+|---|---|---|---|
+| M07 | Explicit recovery flag, fixed provider/callback and generic email confirmation | Default disabled; no account enumeration through response or pending state | M2-01 |
+| M08 | Same-browser PKCE, one-use code, distinct cookie and original deadline | Expired/reused/cross-session proof cannot authorize recovery or product routes | M2-01 |
+| M09 | Purpose-bound encrypted verifier/access material and callback URL scrubbing | No password/token in browser storage or app logs; hosting access-log retention remains separate | M2-01 |
+| M10 | Reset revokes local sessions and fences login/refresh/dispatch across instances | Old links/grants and concurrent mutations refused; uncertain remote writes retain a barrier | M2-01 |
+| M11 | Mobile/desktop request, password rejection, expiry and locked-state recovery are clear | No automatic mutation replay or misleading restart advice; no live email required for tests | M2-01 |
+| M12 | Disposable PostgreSQL concurrency/RLS, actual browser evidence and exact-main verification | Schema compatibility or fake-provider success does not establish live consumer readiness | M2-01 |

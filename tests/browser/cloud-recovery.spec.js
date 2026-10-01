@@ -16,7 +16,8 @@ test('phone recovery scrubs the code and completes without storing upstream secr
  await page.setViewportSize({width:390,height:844});const path=await requestLink(page),code=new URL('http://fixture'+path).searchParams.get('code');const seen=[];
  page.on('request',r=>seen.push({url:r.url(),kind:r.resourceType(),referer:r.headers().referer||''}));await enterLink(page,path);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('recovery-phone-password-form.png'),fullPage:true,animations:'disabled'});
- expect(seen.filter(r=>r.kind!=='document').some(r=>r.url.includes(code)||r.referer.includes(code))).toBe(false);
+ const leaks=seen.filter(r=>r.kind!=='document'&&(r.url.includes(code)||r.referer.includes(code))).map(r=>({path:new URL(r.url).pathname,kind:r.kind,urlContainsCode:r.url.includes(code),referrerContainsCode:r.referer.includes(code)}));
+ await info.attach('recovery-request-check',{body:JSON.stringify({nonDocumentRequests:seen.filter(r=>r.kind!=='document').length,leaks}),contentType:'application/json'});expect(leaks).toEqual([]);
  await change(page,'offline changed browser password');await expect(page.getByRole('heading',{name:'密码已更新',exact:true})).toBeVisible();await page.screenshot({path:info.outputPath('recovery-phone-complete.png'),fullPage:true,animations:'disabled'});
  const storage=await page.evaluate(()=>JSON.stringify({local:localStorage,session:sessionStorage,cookie:document.cookie}));for(const secret of [code,'offline changed browser password','offline-recovery-access','code_verifier'])expect(storage).not.toContain(secret);
  await page.getByRole('button',{name:'返回登录'}).click();await login(page,'offline changed browser password');
@@ -29,7 +30,7 @@ test('unknown email gets the same generic request confirmation',async({page})=>{
 
 test('a link cannot be consumed by another browser and cannot be reused',async({page,browser})=>{
  const path=await requestLink(page);const context=await browser.newContext();const other=await context.newPage();
- try{await other.goto('http://127.0.0.1:5173'+path);await expect(other.getByRole('alert')).toContainText('恢复验证暂未完成');await expect(other.getByLabel('新密码',{exact:true})).toHaveCount(0);expect(new URL(other.url()).search).toBe('');
+ try{await other.goto('http://127.0.0.1:5173'+path);await expect(other.getByRole('alert')).toContainText('恢复验证暂未完成');await expect(other.getByLabel('新密码',{exact:true})).toHaveCount(0);expect(new URL(other.url()).search).toBe('');await other.getByRole('button',{name:'检查恢复状态'}).click();await expect(other.getByRole('button',{name:'重新申请链接'})).toBeVisible();
   await enterLink(page,path);await change(page,'offline replay-safe password');await expect(page.getByRole('heading',{name:'密码已更新',exact:true})).toBeVisible();await page.goto(path);await expect(page.getByLabel('新密码',{exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'重新申请链接'})).toBeVisible();
  }finally{await context.close()}
 });
@@ -47,7 +48,7 @@ test('a rejected password clears the fields and needs an explicit new attempt',a
 test('an uncertain password mutation never repeats or unlocks through a fresh link',async({page},info)=>{
  await enterLink(page,await requestLink(page));let updates=0;page.on('request',r=>{if(r.url().endsWith('/v1/account/recovery/complete'))updates++});
  await change(page,'uncertain-fixture browser password');await expect(page.getByRole('status')).toContainText('恢复暂时锁定');await expect(page.getByRole('alert')).toHaveCount(0);await expect(page.getByLabel('新密码',{exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'重新申请链接'})).toHaveCount(0);expect(updates).toBe(1);
- await page.getByRole('button',{name:'检查恢复状态'}).click();await expect(page.getByRole('status')).toContainText('恢复暂时锁定');expect(updates).toBe(1);await page.screenshot({path:info.outputPath('recovery-uncertain-locked.png'),fullPage:true,animations:'disabled'});
+ await page.getByRole('button',{name:'检查恢复状态'}).click();await expect(page.getByRole('status')).toContainText('恢复暂时锁定');expect(updates).toBe(1);await expect(page.getByRole('button',{name:'检查恢复状态'})).toBeEnabled();await page.screenshot({path:info.outputPath('recovery-uncertain-locked.png'),fullPage:true,animations:'disabled'});
  // A second cookie can prove mailbox control; it still cannot bypass uncertainty.
  await page.context().clearCookies();const path=await requestLink(page);await page.goto(path);await expect(page.getByRole('status')).toContainText('恢复暂时锁定');await expect(page.getByRole('alert')).toHaveCount(0);await expect(page.getByLabel('新密码',{exact:true})).toHaveCount(0);expect(updates).toBe(1);
 });

@@ -5,31 +5,33 @@ type RecoveryStatus={locked?:boolean;available:boolean;ready:boolean;requested?:
 declare global {interface Window {__hclaRecovery?:{code:string|null;invalid:boolean}}}
 export function RecoveryEntry({onBack,initialEmail='',callback=false}:{onBack:()=>void;initialEmail?:string;callback?:boolean}){
  const [status,setStatus]=useState<RecoveryStatus|null>(null),[email,setEmail]=useState(initialEmail),[password,setPassword]=useState(''),[confirmation,setConfirmation]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
- const live=useRef(true),revision=useRef(0),flight=useRef<AbortController|null>(null),code=useRef<string|null>(null),exchangeStarted=useRef(false),invalidCallback=useRef(false);
+ const live=useRef(true),revision=useRef(0),flight=useRef<AbortController|null>(null),code=useRef<string|null>(null),exchangeStarted=useRef(false),exchangeFailed=useRef(false),invalidCallback=useRef(false);
  async function perform(work:(signal:AbortSignal,active:()=>boolean)=>Promise<void>){
   const epoch=++revision.current;flight.current?.abort();const controller=new AbortController();flight.current=controller;const timeout=setTimeout(()=>controller.abort(),15000);setBusy(true);
   const active=()=>live.current&&epoch===revision.current;
   try{await work(controller.signal,active)}finally{clearTimeout(timeout);if(active()){setBusy(false);flight.current=null}}
  }
+ function reconcile(value:RecoveryStatus){return exchangeFailed.current&&!value.ready&&!value.locked&&!value.updated&&!value.requested?{...value,restart_required:true}:value}
  async function check(){await perform(async(signal,active)=>{try{
   let value=await api<RecoveryStatus>('/v1/account/recovery/status',undefined,signal);
   if(value.available&&code.current&&!exchangeStarted.current){exchangeStarted.current=true;const valueCode=code.current;code.current=null;value=await api<RecoveryStatus>('/v1/account/recovery/exchange',{code:valueCode},signal)}
-  if(!active())return;setStatus(value);setError(value.locked?'':value.restart_required?'恢复链接已使用、失效或结果未确认，请重新申请链接':invalidCallback.current&&!value.ready?'恢复链接无效，请重新申请':'');
+  if(!active())return;value=reconcile(value);setStatus(value);setError(value.locked||value.updated?'':value.restart_required?'恢复链接已使用、失效或结果未确认，请重新申请链接':invalidCallback.current&&!value.ready?'恢复链接无效，请重新申请':'');
  }catch{if(active()){
+  if(exchangeStarted.current)exchangeFailed.current=true;
   let value:RecoveryStatus={available:true,ready:false,restart_required:true};
   if(exchangeStarted.current&&!signal.aborted){try{value=await api<RecoveryStatus>('/v1/account/recovery/status',undefined,signal)}catch{/* Read only; never exchange a code twice. */}}
-  if(active()){setStatus(value.locked||value.ready||value.updated?value:{...value,requested:false,restart_required:true});setError(value.locked||value.ready?'':'恢复验证暂未完成。可以检查状态；链接失效时请重新申请，不会自动重复验证或修改密码')}
+  if(active()){setStatus(reconcile(value));setError(value.locked||value.ready||value.updated?'':'恢复验证暂未完成。可以检查状态；链接失效时请重新申请，不会自动重复验证或修改密码')}
  }}})}
  useEffect(()=>{live.current=true;if(callback){const initial=window.__hclaRecovery;delete window.__hclaRecovery;code.current=initial?.code||null;if(initial?.invalid){invalidCallback.current=true;setError('恢复链接无效，请重新申请')}};void check();return()=>{live.current=false;revision.current++;flight.current?.abort();code.current=null}},[]);
  useEffect(()=>{if(!status?.ready||!status.expires_at)return;const timer=setTimeout(()=>{revision.current++;flight.current?.abort();setBusy(false);setPassword('');setConfirmation('');setStatus(value=>value?{...value,ready:false,restart_required:true}:value);setError('恢复验证已过期，请重新申请链接')},Math.max(0,status.expires_at*1000-Date.now()));return()=>clearTimeout(timer)},[status?.ready,status?.expires_at]);
- async function request(event:React.FormEvent){event.preventDefault();if(busy)return;setError('');setMessage('');code.current=null;await perform(async(signal,active)=>{try{
+ async function request(event:React.FormEvent){event.preventDefault();if(busy)return;setError('');setMessage('');code.current=null;exchangeFailed.current=false;await perform(async(signal,active)=>{try{
   const value=await api<{message:string;expires_at:number}>('/v1/account/recovery/start',{email},signal);if(active()){setStatus({available:true,ready:false,requested:true,expires_at:value.expires_at});setMessage(value.message)}
  }catch{if(active())setError('申请暂未完成，请稍后重试。不会自动重复发送；如果已收到链接，请在当前浏览器打开')}})}
  async function complete(event:React.FormEvent){event.preventDefault();if(busy)return;if(password!==confirmation){setError('两次输入的新密码不一致');return}setError('');await perform(async(signal,active)=>{try{
   const value=await api<{updated:boolean;message:string}>('/v1/account/recovery/complete',{password,confirmation},signal);if(active()){setStatus({available:true,ready:false,updated:value.updated});setMessage(value.message)}
  }catch(caught){if(active()){setError(/^Error: 400:/.test(String(caught))?'密码未更新，请换用更强的新密码再试':'密码更新未确认，请检查恢复状态。现有登录可能已结束，不会自动重复修改');try{const value=await api<RecoveryStatus>('/v1/account/recovery/status',undefined,signal);if(active()){setStatus(value);if(value.locked)setError('')}}catch{/* The visible check action reads state without replaying the mutation. */}}}
  finally{if(active()){setPassword('');setConfirmation('')}}})}
- function restart(){invalidCallback.current=false;revision.current++;flight.current?.abort();code.current=null;exchangeStarted.current=true;setBusy(false);setError('');setMessage('');setPassword('');setConfirmation('');setStatus({available:true,ready:false})}
+ function restart(){invalidCallback.current=false;exchangeFailed.current=false;revision.current++;flight.current?.abort();code.current=null;exchangeStarted.current=true;setBusy(false);setError('');setMessage('');setPassword('');setConfirmation('');setStatus({available:true,ready:false})}
  return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="recovery-heading"><div className="account-brand">HCL <span>Assistant</span></div><h1 id="recovery-heading">{status?.updated?'密码已更新':status?.ready?'设置新密码':'找回账号'}</h1>
   <p className="account-intro">恢复链接仅用于修改密码，不能查看对话。请使用发起申请的浏览器打开链接。</p>
   {error&&<p role="alert" className="account-feedback">{error}</p>}{message&&<p role="status" className="account-feedback">{message}</p>}
