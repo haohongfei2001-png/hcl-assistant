@@ -179,7 +179,7 @@ class MemberPostgresTests(unittest.TestCase):
         from packages.runtime_bridge.bridge import RuntimeBridge
         import os
         runtime=os.environ.get('HCL_DEVELOPMENT_ARTIFACT');self.assertTrue(runtime,'Reviewed runtime is mandatory in cloud CI')
-        a.development_bridge=RuntimeBridge(runtime)
+        a.development_bridge=RuntimeBridge(runtime);b.development_bridge=RuntimeBridge(runtime)
         conv='temp-'+str(uuid.uuid4());request=self.request({'id':conv,'memory':'TEMPORARY'},'Ada said, "I believe that MEMBER_TEMP_BODY_CANARY starts Friday."')
         request['development_execution']={'schema_version':'1.0','capability_id':'belief_interpretation','query':'What does Ada believe?','input_class':'SYNTHETIC_NON_CONFIRMATION','fixture_family':'ORIGINAL_PRODUCT_SYNTHETIC','purpose':'DEVELOPMENT_INTEGRATION_ONLY','timeout_ms':3000}
         data={'conversation_id':conv,'request_id':str(uuid.uuid4()),'snapshot':None,'request':request}

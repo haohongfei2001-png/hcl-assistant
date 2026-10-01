@@ -23,6 +23,14 @@ test('registration requires confirmation and exposes no server credential',async
  await page.screenshot({path:info.outputPath('member-confirmation-entry.png'),fullPage:true});
 });
 
+test('ordinary account entry remains usable on a narrow phone screen',async({page},info)=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.getByLabel('用户邮箱')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:info.outputPath('member-mobile-entry.png'),fullPage:true});
+ await page.getByLabel('用户邮箱').fill('a@example.test');await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
+ expect((await browserRead(page,'/v1/account/status')).body.account_scope).toBe(expectedScope('a'));
+});
+
 test('two member browsers have separate history and cannot use owner routes',async({page,browser},info)=>{
  const paths=[];page.on('request',r=>paths.push(new URL(r.url()).pathname));await enter(page);await send(page,'原创合成：MEMBER_A_PRIVATE_CANARY');
  const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');
