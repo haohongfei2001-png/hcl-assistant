@@ -4,6 +4,7 @@ import getpass
 import os
 from pathlib import Path
 import subprocess
+import signal
 import sys
 import time
 import urllib.request
@@ -33,8 +34,8 @@ def main():
     frontend_env={k:v for k,v in os.environ.items() if not k.startswith(('HCLA_','DEEPSEEK_'))}
     children=[]
     try:
-        children.append(subprocess.Popen([sys.executable,'-m','apps.api.development_server'],cwd=ROOT,env=server_env))
-        children.append(subprocess.Popen(['npm','run','dev'],cwd=ROOT,env=frontend_env,stdout=subprocess.DEVNULL))
+        children.append(subprocess.Popen([sys.executable,'-m','apps.api.development_server'],cwd=ROOT,env=server_env,start_new_session=True))
+        children.append(subprocess.Popen(['npm','run','dev'],cwd=ROOT,env=frontend_env,stdout=subprocess.DEVNULL,start_new_session=True))
         deadline=time.monotonic()+30
         while time.monotonic()<deadline:
             if any(child.poll() is not None for child in children):raise RuntimeError('A service exited during startup')
@@ -53,10 +54,14 @@ def main():
     except Exception:print('Local startup stopped. Check the service error above; no automatic retry.',file=sys.stderr);return 1
     finally:
         for child in children:
-            if child.poll() is None:child.terminate()
+            try:os.killpg(child.pid,signal.SIGTERM)
+            except ProcessLookupError:pass
         for child in children:
             try:child.wait(timeout=5)
-            except subprocess.TimeoutExpired:child.kill();child.wait()
+            except subprocess.TimeoutExpired:
+                try:os.killpg(child.pid,signal.SIGKILL)
+                except ProcessLookupError:pass
+                child.wait()
 
 if __name__=='__main__':
     sys.path.insert(0,str(ROOT));raise SystemExit(main())

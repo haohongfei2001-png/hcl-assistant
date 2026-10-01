@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-async function conversation(page){await page.goto('/');if(await page.getByRole('button',{name:'＋ 新对话',exact:true}).count()===0)await page.getByRole('button',{name:'切换侧栏'}).click();const created=page.waitForResponse(r=>r.url().endsWith('/v1/conversations')&&r.request().method()==='POST');await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeFocused();return (await (await created).json()).id;}
+async function conversation(page){await page.goto('/');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();if(await page.getByRole('button',{name:'＋ 新对话',exact:true}).count()===0)await page.getByRole('button',{name:'切换侧栏'}).click();const created=page.waitForResponse(r=>r.url().endsWith('/v1/conversations')&&r.request().method()==='POST');await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeFocused();return (await (await created).json()).id;}
 
 test('desktop keyboard chat, raw source and refresh recovery',async({page})=>{
  await conversation(page);await expect(page.getByText('交互演示，不连接模型')).toBeVisible();

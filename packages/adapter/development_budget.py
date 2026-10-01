@@ -229,7 +229,7 @@ class DevelopmentBudget:
 
     def _policy(self):
         c = self.config
-        return json.dumps({'version': 1, 'budget_key': _key(c.budget_id),
+        return json.dumps({'version': 2, 'input_reservation': 'FULL_DOCUMENTED_CONTEXT_FOR_SUPPORTED_MODELS', 'budget_key': _key(c.budget_id),
                            'endpoint_model_key': hashlib.sha256((c.base_url + '\n' + c.model).encode()).hexdigest(),
                            'max_requests': c.max_requests, 'max_cost_usd': _money(c.max_cost_usd),
                            'input_usd_per_million': _money(c.input_usd_per_million),
@@ -303,7 +303,9 @@ class DevelopmentBudget:
                             self._db.execute("UPDATE development_budget_attempts SET outcome='unknown' WHERE outcome='active'")
                         if len(rows) >= self.config.max_requests:
                             raise BudgetError('request_budget_exhausted')
-                        reservation = self._cost(input_bytes, self.config.max_output_tokens)
+                        # Reserve the entire documented 1M context (rounded upward), not an undocumented byte/token framing estimate.
+                        input_upper = 1048576 if self.config.model in {'deepseek-v4-pro','deepseek-flash'} else input_bytes
+                        reservation = self._cost(input_upper, self.config.max_output_tokens)
                         with localcontext() as context:
                             context.prec = 64
                             total = sum((Decimal(row['charged_usd']) for row in rows), Decimal(0))

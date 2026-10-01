@@ -17,7 +17,7 @@ class FakeTransport:
         self.sent=True;request=json.loads(body);messages=request['messages'];question=messages[-1]['content'];all_text=json.dumps(messages,ensure_ascii=False)
         if 'OFFLINE_ERROR' in question:return 429,{}
         answer='原创离线自然语言流程测试：可以安排一个纸灯工作坊。'
-        if 'HCL1' in all_text:answer='Ada 明确表达了工作坊周五开始的信念。[HCL1]'
+        if '"marker": "HCL1"' in messages[0]['content']:answer='Ada 明确表达了工作坊周五开始的信念。[HCL1]'
         elif '什么颜色' in question and '蓝色' in all_text:answer='按前面提供的原创合成设定，纸灯是蓝色。'
         parts=[{'id':'offline-fixture','model':'offline-explicit-model','choices':[{'delta':{'reasoning_content':'HIDDEN_REASONING_CANARY'},'finish_reason':None}]}]
         parts += [{'id':'offline-fixture','model':'offline-explicit-model','choices':[{'delta':{'content':answer[i:i+8]},'finish_reason':None}]} for i in range(0,len(answer),8)]

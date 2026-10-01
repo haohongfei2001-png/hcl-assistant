@@ -195,6 +195,15 @@ class DevelopmentBudgetTests(unittest.TestCase):
         budget.reserve('run-1', 'attempt-1', 100)
         budget.finish('run-1', 'attempt-1', 'completed')
 
+    def test_real_model_reserves_full_context_within_initial_ten_dollar_grant(self):
+        config=DevelopmentConfig.from_env(fake_env(HCLA_DEEPSEEK_MODEL='deepseek-v4-pro',HCLA_DEV_MAX_REQUESTS='6',HCLA_DEV_MAX_COST_USD='10',HCLA_DEV_MAX_OUTPUT_TOKENS='2048',HCLA_DEV_INPUT_USD_PER_MILLION='1.32',HCLA_DEV_OUTPUT_USD_PER_MILLION='3.96'))
+        budget=self.budget(config)
+        for n in range(6):
+            r=budget.reserve('r'+str(n),'a'+str(n),100)
+            self.assertEqual(r.reserved_cost_usd,Decimal('1.3922304'))
+            budget.finish('r'+str(n),'a'+str(n),'unknown')
+        with self.assertRaises(BudgetError):budget.reserve('r7','a7',100)
+        self.assertEqual(budget.snapshot()['reserved_cost_usd'],'8.3533824')
     def test_policy_changes_cannot_reset_or_expand_the_same_database(self):
         budget = self.budget()
         budget.reserve('run-1', 'attempt-1', 10)

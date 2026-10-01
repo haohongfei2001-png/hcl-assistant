@@ -1,0 +1,64 @@
+name: Manual development chat smoke
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Explicit approved DeepSeek model ID (no fallback)
+        required: true
+        type: string
+      input_usd_per_million:
+        description: Current official maximum/cache-miss input USD per million
+        required: true
+        type: string
+      output_usd_per_million:
+        description: Current official maximum output USD per million
+        required: true
+        type: string
+      grant:
+        description: Explicit product grant hcla-20261001-six-requests-usd10
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: hcla-initial-development-live-grant
+  cancel-in-progress: false
+jobs:
+  original-synthetic-smoke:
+    if: github.repository == 'haohongfei2001-png/hcl-assistant' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Acquire only the reviewed three-file runtime
+        run: |
+          mkdir -p .local
+          python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-reviewed-runtime"
+          echo "HCL_DEVELOPMENT_ARTIFACT=$RUNNER_TEMP/hcla-reviewed-runtime" >> "$GITHUB_ENV"
+      - name: One bounded product grant; never default CI or automatic retry
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HCLA_APPROVED_GRANT: ${{ inputs.grant }}
+          HCLA_DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          HCLA_DEEPSEEK_BASE_URL: https://api.deepseek.com
+          HCLA_DEEPSEEK_MODEL: ${{ inputs.model }}
+          # No listening service is started by this job; this placeholder is not an access grant.
+          HCLA_DEV_ACCESS_TOKEN: offline-no-listening-server-placeholder
+          HCLA_DEV_MAX_REQUESTS: '6'
+          HCLA_DEV_MAX_COST_USD: '10'
+          HCLA_DEV_INPUT_USD_PER_MILLION: ${{ inputs.input_usd_per_million }}
+          HCLA_DEV_OUTPUT_USD_PER_MILLION: ${{ inputs.output_usd_per_million }}
+          HCLA_DEV_MAX_OUTPUT_TOKENS: '2048'
+          HCLA_DEV_BUDGET_ID: hcla-20261001-six-requests-usd10
+        run: python3 scripts/smoke_development_chat.py
+      - name: Retain only original synthetic acceptance and budget metadata
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: development-chat-original-synthetic-receipt
+          path: .local/development-chat-receipt.json
+          retention-days: 7
+          if-no-files-found: ignore

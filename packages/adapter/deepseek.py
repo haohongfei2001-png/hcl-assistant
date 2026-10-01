@@ -32,6 +32,7 @@ _USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens",
 _FINISH_REASONS = {"stop", "length", "content_filter", "tool_calls",
                    "insufficient_system_resource", "aborted"}
 _MAX_EVENT_BYTES = 1024 * 1024
+_WORKER_STOP_TIMEOUT = 0.05
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ class DeepSeekResult:
     send_state: str = "not_sent"
     error_code: str | None = None
     http_status: int | None = None
+    transport_stopped: bool = False
 
 
 class _ProtocolError(Exception):
@@ -190,7 +192,8 @@ def _usage(value: object) -> dict[str, int]:
 class DeepSeekAdapter:
     def __init__(self, *, base_url: str, model: str, api_key: str,
                  connect_timeout: float = 10.0, wall_timeout: float = 120.0,
-                 max_output_bytes: int = 262144, transport_factory: Callable | None = None):
+                 max_output_bytes: int = 262144, transport_factory: Callable | None = None,
+                 thinking_enabled: bool = True, reasoning_effort: str = "high"):
         self.endpoint = _endpoint(base_url, transport_factory is not None)
         if not isinstance(model, str) or _TOKEN.fullmatch(model) is None:
             raise ValueError("explicit_model_required")
@@ -201,6 +204,12 @@ class DeepSeekAdapter:
                 raise ValueError("positive_finite_deadline_required")
         if type(max_output_bytes) is not int or max_output_bytes < 1:
             raise ValueError("positive_output_limit_required")
+        if type(thinking_enabled) is not bool:
+            raise ValueError("boolean_thinking_mode_required")
+        if reasoning_effort not in ("low", "high", "max"):
+            raise ValueError("unsupported_reasoning_effort")
+        self.thinking_enabled = thinking_enabled
+        self.reasoning_effort = reasoning_effort
         self.model = model
         self._api_key = api_key
         self.connect_timeout = float(connect_timeout)
@@ -216,6 +225,9 @@ class DeepSeekAdapter:
         Callback code must be nonblocking; callback exceptions are sanitized and
         terminate this request. Stop/delete callers must also gate their own stores.
         Missing usage is unknown (an empty dict), not zero. Cost is always unknown.
+        A false transport_stopped means worker termination is unconfirmed: callers
+        must retain concurrency/budget reservations and an unknown attempt until
+        independently reconciled. close() alone never proves IO has stopped.
         """
         cancel = cancel_event if cancel_event is not None else threading.Event()
         content: list[str] = []
@@ -224,6 +236,9 @@ class DeepSeekAdapter:
         http_status = None
         transport = None
         stop = threading.Event()
+        worker_done = threading.Event()
+        worker_thread: threading.Thread | None = None
+        worker_started = False
 
         def send_state():
             if transport is None:
@@ -240,14 +255,23 @@ class DeepSeekAdapter:
                     transport.close()
                 except Exception:
                     pass
+            transport_stopped = not worker_started
+            if worker_started:
+                # Bounded join: a stubborn transport may ignore close(). Never
+                # claim its slot can be released merely because we requested stop.
+                worker_thread.join(timeout=_WORKER_STOP_TIMEOUT)
+                transport_stopped = worker_done.is_set() and not worker_thread.is_alive()
             state = send_state()
+            if not transport_stopped and state != "sent":
+                state = "unknown"
             if outcome == "FAILED" and error in ("connect_timeout", "wall_timeout", "transport_error", "timeout") and state != "not_sent":
                 outcome = "UNKNOWN"
             return DeepSeekResult(outcome=outcome, content="" if discard else "".join(content),
                                   requested_model=self.model, actual_model=actual_model,
                                   request_id=request_id, finish_reason=finish_reason,
                                   usage=dict(usage), send_state=state,
-                                  error_code=error, http_status=http_status)
+                                  error_code=error, http_status=http_status,
+                                  transport_stopped=transport_stopped)
 
         if cancel.is_set():
             return result("CANCELLED", "cancelled")
@@ -264,7 +288,9 @@ class DeepSeekAdapter:
         try:
             body = json.dumps({"model": self.model, "messages": clean_messages,
                                "stream": True, "stream_options": {"include_usage": True},
-                               "max_tokens": max_tokens}, ensure_ascii=False).encode("utf-8")
+                               "max_tokens": max_tokens,
+                               "thinking": {"type": "enabled" if self.thinking_enabled else "disabled"},
+                               "reasoning_effort": self.reasoning_effort}, ensure_ascii=False).encode("utf-8")
         except (ValueError, UnicodeError):
             return result("FAILED", "invalid_request")
         clean_messages.clear()
@@ -302,6 +328,8 @@ class DeepSeekAdapter:
             except Exception as error:
                 # No exception text, repr, traceback, response or request retained.
                 put("error", "timeout" if isinstance(error, TimeoutError) else "transport_error")
+            finally:
+                worker_done.set()
 
         def metadata(value):
             return value if (isinstance(value, str) and _TOKEN.fullmatch(value)
@@ -330,7 +358,12 @@ class DeepSeekAdapter:
                 transport = self._transport_factory(self.endpoint, self.connect_timeout)
             except Exception:
                 return result("FAILED", "transport_setup_failed")
-            threading.Thread(target=worker, daemon=True, name="deepseek-stream-io").start()
+            worker_thread = threading.Thread(target=worker, daemon=True, name="deepseek-stream-io")
+            try:
+                worker_thread.start()
+                worker_started = True
+            except RuntimeError:
+                return result("FAILED", "transport_setup_failed")
             while not terminal:
                 if cancel.is_set():
                     return result("CANCELLED", "cancelled")

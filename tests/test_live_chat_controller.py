@@ -24,7 +24,7 @@ class Adapter:
         self.messages.append(copy.deepcopy(messages))
         if self.hook:self.hook()
         on_delta(self.answer)
-        return DeepSeekResult(self.outcome,self.answer,self.model,actual_model=self.model,send_state='sent',usage={'prompt_tokens':30,'completion_tokens':12},finish_reason='stop')
+        return DeepSeekResult(self.outcome,self.answer,self.model,actual_model=self.model,send_state='sent',usage={'prompt_tokens':30,'completion_tokens':12},finish_reason='stop',transport_stopped=True)
 
 class LiveChatTests(unittest.TestCase):
     def setUp(self):
@@ -39,7 +39,7 @@ class LiveChatTests(unittest.TestCase):
         self.assertEqual(run['answer']['text'],self.adapter.answer);self.assertEqual(run['run_receipt']['actual_treatment'],'NO_TREATMENT')
         self.assertEqual(run['run_receipt']['provider']['actual_model'],self.adapter.model)
         self.assertIsNone(run['run_receipt']['usage']['cost']['amount']);self.assertEqual(run['run_receipt']['usage']['provider_calls'],1)
-        self.assertEqual(project(run)['source_links'],[]);self.assertEqual(len(self.budget.calls),1)
+        self.assertEqual(project(run)['source_links'],[]);self.assertEqual(len(self.budget.calls),1);self.assertEqual(run['budget']['max_provider_calls'],1)
     def test_followup_uses_permitted_original_input_not_generated_memory(self):
         first=self.say('虚构活动的纸灯是蓝色')
         second=self.say('刚才说的纸灯是什么颜色？')
@@ -70,6 +70,10 @@ class LiveChatTests(unittest.TestCase):
         run=self.say('准备回答')
         self.assertIsNone(run['answer']);self.assertFalse(any(e['type'].startswith('answer.') for e in run['stream']))
         self.assertEqual(len(self.budget.finished),1)
+    def test_unconfirmed_transport_stop_retains_reservation_and_no_answer(self):
+        self.adapter.generate=lambda *args,**kwargs:DeepSeekResult('UNKNOWN','',self.adapter.model,send_state='unknown',transport_stopped=False)
+        run=self.say('合成超时')
+        self.assertEqual(run['run_receipt']['outcome'],'UNKNOWN');self.assertIsNone(run['answer']);self.assertEqual(self.budget.finished,[])
     def test_failure_and_partial_not_masked_and_paid_retry_refused(self):
         for outcome in ['FAILED','PARTIAL','UNKNOWN']:
             self.adapter.outcome=outcome;run=self.say('合成失败测试'+outcome)

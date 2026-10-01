@@ -132,7 +132,8 @@ class DeepSeekAdapterTests(unittest.TestCase):
         result = adapter.generate(MESSAGES, max_tokens=64)
         self.assertEqual(result.outcome, "SUCCEEDED")
         self.assertEqual(json.loads(fake.body), {"model": MODEL, "messages": MESSAGES,
-                         "stream": True, "stream_options": {"include_usage": True}, "max_tokens": 64})
+                         "stream": True, "stream_options": {"include_usage": True}, "max_tokens": 64,
+                         "thinking": {"type": "enabled"}, "reasoning_effort": "high"})
         self.assertEqual(fake.headers["Authorization"], "Bearer " + SECRET)
         self.assertNotIn(SECRET, repr(adapter))
         self.assertEqual(fake.endpoint, "https://api.deepseek.com/v1/chat/completions")
@@ -463,6 +464,83 @@ class DeepSeekAdapterTests(unittest.TestCase):
             self.assertEqual(stream._connection.requests, 0)
             self.assertFalse(stream.sent)
             self.assertEqual(errors, ["closed"])
+
+    def test_transport_stopped_defaults_false(self):
+        from packages.adapter.deepseek import DeepSeekResult
+        self.assertFalse(DeepSeekResult("UNKNOWN", "", MODEL).transport_stopped)
+
+    def test_confirmed_worker_exit_and_pre_send_returns_mark_stopped(self):
+        result = self.generate(FakeTransport([event(chunk("answer", finish="stop")), DONE]))
+        self.assertTrue(result.transport_stopped)
+        result = self.adapter(FakeTransport()).generate(MESSAGES, max_tokens=0)
+        self.assertTrue(result.transport_stopped)
+        cancel = threading.Event()
+        cancel.set()
+        result = self.adapter(FakeTransport()).generate(MESSAGES, max_tokens=1, cancel_event=cancel)
+        self.assertTrue(result.transport_stopped)
+
+    def test_stubborn_read_cannot_claim_transport_stopped(self):
+        release, read_exited = threading.Event(), threading.Event()
+        class StubbornTransport(FakeTransport):
+            def read(self, size):
+                self.read_started.set()
+                try:
+                    release.wait(2)  # close deliberately cannot unblock this read.
+                    return event(chunk("late answer", finish="stop")) + DONE
+                finally:
+                    read_exited.set()
+        fake = StubbornTransport()
+        deltas = []
+        try:
+            started = time.monotonic()
+            result = self.generate(fake, deltas=deltas, wall_timeout=0.04)
+            self.assertLess(time.monotonic() - started, 0.4)
+            self.assertEqual((result.outcome, result.error_code), ("UNKNOWN", "wall_timeout"))
+            self.assertFalse(result.transport_stopped)
+            self.assertTrue(fake.closed.is_set())
+            self.assertFalse(read_exited.is_set())
+            self.assertEqual(deltas, [])
+        finally:
+            release.set()
+            self.assertTrue(read_exited.wait(1))
+        time.sleep(0.02)
+        self.assertEqual(deltas, [])
+        self.assertFalse(result.transport_stopped)  # A receipt does not change later.
+
+    def test_stubborn_post_remains_unknown_until_independent_reconciliation(self):
+        release, post_exited = threading.Event(), threading.Event()
+        class StubbornTransport(FakeTransport):
+            def post(self, body, headers):
+                try:
+                    release.wait(2)
+                    return super().post(body, headers)
+                finally:
+                    post_exited.set()
+        fake = StubbornTransport()
+        try:
+            result = self.generate(fake, connect_timeout=0.02, wall_timeout=0.4)
+            self.assertEqual((result.outcome, result.send_state), ("UNKNOWN", "unknown"))
+            self.assertFalse(result.transport_stopped)
+            self.assertFalse(post_exited.is_set())
+        finally:
+            release.set()
+            self.assertTrue(post_exited.wait(1))
+
+    def test_explicit_thinking_and_effort_configuration(self):
+        for thinking, effort in ((True, "low"), (True, "max"), (False, "high")):
+            with self.subTest(thinking=thinking, effort=effort):
+                fake = FakeTransport([event(chunk("answer", finish="stop")), DONE])
+                result = self.adapter(fake, thinking_enabled=thinking, reasoning_effort=effort).generate(MESSAGES, max_tokens=1)
+                self.assertEqual(result.outcome, "SUCCEEDED")
+                self.assertEqual(json.loads(fake.body)["thinking"], {"type": "enabled" if thinking else "disabled"})
+                self.assertEqual(json.loads(fake.body)["reasoning_effort"], effort)
+                self.assertNotIn("reasoning_content", json.loads(fake.body))
+        for value in (None, 1, "enabled"):
+            with self.assertRaisesRegex(ValueError, "boolean_thinking_mode_required"):
+                self.adapter(FakeTransport(), thinking_enabled=value)
+        for value in (None, "medium", "ultra", "", 1):
+            with self.assertRaisesRegex(ValueError, "unsupported_reasoning_effort"):
+                self.adapter(FakeTransport(), reasoning_effort=value)
 
     def test_default_transport_constructed_without_connect_or_secret_repr(self):
         stream = _HTTPSStream("https://api.deepseek.com/v1/chat/completions", 2)

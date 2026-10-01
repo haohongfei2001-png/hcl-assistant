@@ -112,11 +112,12 @@ class LiveChat:
                 if response:
                     current['development_result']=response
                     for op in current['operation_receipts']:
-                        op.update(status=response['status'],selected=response['selected'],executed=response['executed'],result_produced=response['result_produced'],used_in_answer=False,output_ids=[o['output_id'] for o in outputs],provenance=response['provenance'],native_receipt_digest=response['native_receipt_digest'])
+                        op.update(status=response['status'],actual_treatment=response['status']=='EXECUTED',selected=response['selected'],executed=response['executed'],result_produced=response['result_produced'],used_in_answer=False,output_ids=[o['output_id'] for o in outputs],provenance=response['provenance'],native_receipt_digest=response['native_receipt_digest'])
                 current['run_receipt']['actual_treatment']=response['status'] if response else 'NO_TREATMENT'
                 current['run_receipt']['operations']=copy.deepcopy(current['operation_receipts'])
                 messages,bindings=self.messages(controller,tenant,current,outputs)
                 run['history_source_refs']=current['history_source_refs']
+                current['run_receipt']['history_source_refs']=copy.deepcopy(current['history_source_refs'])
                 reservation=self.budget.reserve(run_id,current['run_receipt']['attempt_id'],len(json.dumps(messages,ensure_ascii=False).encode())+512)
                 if not reservation.granted:raise Fault(409,'PROVIDER_ATTEMPT_ALREADY_RESERVED')
                 reserved=True
@@ -134,17 +135,17 @@ class LiveChat:
                     controller.emit(current,'answer.delta',{'text':text});store.put(tenant,'run',current)
             result=self.adapter.generate(messages,max_tokens=self.config.max_output_tokens,cancel_event=cancel,on_delta=delta)
             usage=result.usage if all(k in result.usage for k in ('prompt_tokens','completion_tokens')) else {}
-            self.budget.finish(run_id,run['run_receipt']['attempt_id'],{'SUCCEEDED':'completed','PARTIAL':'unknown','FAILED':'failed','CANCELLED':'cancelled','UNKNOWN':'unknown'}[result.outcome],input_tokens=usage.get('prompt_tokens'),output_tokens=usage.get('completion_tokens'))
+            if result.transport_stopped:self.budget.finish(run_id,run['run_receipt']['attempt_id'],{'SUCCEEDED':'completed','PARTIAL':'unknown','FAILED':'failed','CANCELLED':'cancelled','UNKNOWN':'unknown'}[result.outcome],input_tokens=usage.get('prompt_tokens'),output_tokens=usage.get('completion_tokens'))
             with store.transaction():
                 current=store.get(tenant,'run',run_id);receipt=current['run_receipt']
-                receipt['provider']={'requested_model':result.requested_model,'actual_model':result.actual_model,'request_id':result.request_id,'finish_reason':result.finish_reason,'send_state':result.send_state,'error_code':result.error_code,'http_status':result.http_status}
+                receipt['provider']={'requested_model':result.requested_model,'actual_model':result.actual_model,'request_id':result.request_id,'finish_reason':result.finish_reason,'send_state':result.send_state,'thinking':'enabled','reasoning_effort':'high','error_code':result.error_code,'http_status':result.http_status}
                 receipt['usage'].update(provider_calls=1 if result.send_state=='sent' else 0 if result.send_state=='not_sent' else None,input_tokens=result.usage.get('prompt_tokens'),output_tokens=result.usage.get('completion_tokens'),reasoning_tokens=result.usage.get('reasoning_tokens'),provider_usage=result.usage,latency_ms=round((time.monotonic()-started)*1000))
                 # Do not claim a charge is zero or known merely from a configured upper bound.
-                allowed=current['pending'] and not cancel.is_set() and valid(controller,tenant,run)
+                allowed=current['pending'] and not cancel.is_set() and result.transport_stopped and valid(controller,tenant,run)
                 if not allowed or result.outcome!='SUCCEEDED':
                     current['answer']=None;current['stream']=[e for e in current['stream'] if not e['type'].startswith('answer.')]
-                    current['errors']=[result.error_code or ('STALE_OR_CANCELLED_OUTPUT_WITHHELD' if not allowed else result.outcome)]
-                    if receipt['outcome']!='CANCELLED':receipt['outcome']=result.outcome if allowed else 'CANCELLED' if cancel.is_set() else 'PARTIAL'
+                    current['errors']=[('TRANSPORT_TERMINATION_UNCONFIRMED' if not result.transport_stopped else result.error_code) or ('STALE_OR_CANCELLED_OUTPUT_WITHHELD' if not allowed else result.outcome)]
+                    if receipt['outcome']!='CANCELLED':receipt['outcome']='UNKNOWN' if not result.transport_stopped else result.outcome if allowed else 'CANCELLED' if cancel.is_set() else 'PARTIAL'
                     controller.emit(current,'run.failed',{'reason':current['errors'][0]})
                 else:
                     claims=[copy.deepcopy(bindings[m]) for m in dict.fromkeys(re.findall(r'\[(S\d+|HCL\d+)\]',result.content)) if m in bindings]
@@ -155,6 +156,7 @@ class LiveChat:
                     used=[c['operation_output_id'] for c in claims if 'operation_output_id' in c]
                     for op in current['operation_receipts']:op['used_in_answer']=any(i in op['output_ids'] for i in used)
                     receipt['operations']=copy.deepcopy(current['operation_receipts'])
+                    if current.get('development_result'):current['development_result']['used_in_answer']=bool(used)
                     current['answer_preparation']={'snapshot_id':run['snapshot_id'],'valid_context_refs':run['selected_context'].get('record_ids',[]),'operation_output_refs':used,'claim_bindings':claims,'alternatives':[],'assumptions':run['selected_context'].get('assumptions',[]),'coverage':'PARTIAL','material_uncertainties':['Provider-generated response; citations are explicit bindings, not efficacy proof.']}
                     answer_id=uid();current['answer']={'answer_id':answer_id,'run_id':run_id,'snapshot_id':run['snapshot_id'],'text':result.content,'claim_bindings':claims,'citation_refs':links,'coverage':'PARTIAL','status':'PUBLISHED','published_at':now()}
                     current['answer_identity']={k:current['answer'][k] for k in ('answer_id','run_id','snapshot_id')}
@@ -162,7 +164,8 @@ class LiveChat:
                     receipt['outcome']='COMPLETED';controller.emit(current,'answer.completed',current['answer'])
                 current['pending']=False;receipt['finished_at']=now();store.put(tenant,'run',current)
         except Exception as exc:
-            if reserved and result is None:self.budget.finish(run_id,run['run_receipt']['attempt_id'],'unknown')
+            # Without a returned transport-stop handshake, retain the active lock.
+            # Restart may recover it only once no live transport owner remains.
             reason=str(exc) if isinstance(exc,Fault) else 'DEVELOPMENT_PROVIDER_FAILED'
             with store.transaction():
                 current=store.get(tenant,'run',run_id)

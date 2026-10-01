@@ -14,6 +14,11 @@ def application(database, budget_database, runtime=None, env=None):
     status=configuration_status(env);service=None;auth=None
     if status['configured']:
         config=DevelopmentConfig.from_env(env)
+        from decimal import Decimal
+        rates={'deepseek-v4-pro':('1.32','3.96'),'deepseek-flash':('0.30','1.20')}
+        if config.model not in rates:raise ValueError('Explicit currently supported model required')
+        minimum=rates[config.model]
+        if config.input_usd_per_million<Decimal(minimum[0]) or config.output_usd_per_million<Decimal(minimum[1]):raise ValueError('Peak provider pricing contract required')
         budget=DevelopmentBudget(budget_database,config)
         service=LiveChat(config,budget,DeepSeekAdapter(base_url=config.base_url,model=config.model,api_key=config.api_key))
         auth=DevelopmentAuth(config.access_token)

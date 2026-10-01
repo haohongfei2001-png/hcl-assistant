@@ -26,8 +26,10 @@ class Controller:
         live=live_chat.validate(self,req,obj)
         memory=req.get('allowed_memory_scope',obj['memory'])
         if memory!=obj['memory']: raise Fault(403,'Memory scope must match conversation membership')
-        budget=req.get('model_resource_policy',{})
-        if budget.get('max_provider_calls',0)!=0 or budget.get('adapter','MOCK')!='MOCK': raise Fault(403,'L1/L2 has no provider transport')
+        budget=req.get('model_resource_policy',{'adapter':'DEEPSEEK','max_provider_calls':1,'max_adapter_calls':1} if live else {})
+        if live:
+            if budget.get('adapter')!='DEEPSEEK' or budget.get('max_provider_calls')!=1:raise Fault(403,'Development chat requires one explicitly permitted provider attempt')
+        elif budget.get('max_provider_calls',0)!=0 or budget.get('adapter','MOCK')!='MOCK': raise Fault(403,'L1/L2 has no provider transport')
         if not 0<=budget.get('max_adapter_calls',1)<=1: raise Fault(400,'At most one mock adapter call per attempt')
         event=req.get('event',{}); text=event.get('text','')
         if not isinstance(text,str): raise Fault(400,'Text required')
@@ -87,7 +89,10 @@ class Controller:
             return self.store.put(tenant,'run',result)
         result=self.store.atomic(tenant,conversation,req.get('idempotency_key'),req,req.get('expected_state_version'),commit)
         for other_id,signal in list(self.live_cancellations.items()):
-            if other_id!=result['run_id']:signal.set()
+            if other_id!=result['run_id']:
+                try:self.store.get(tenant,'run',other_id)
+                except Fault:continue
+                signal.set()
         run=self.read(tenant,result['run_id'])
         if not defer and run['pending']: self.finish(tenant,run['run_id'])
         return self.read(tenant,run['run_id'])
@@ -190,7 +195,7 @@ class Controller:
                     signal=self.live_cancellations.get(run_id)
                     if signal is not None: signal.set()
                     run['stream']=[e for e in run['stream'] if not e['type'].startswith('answer.')]
-                if run.get('development_request'):
+                if run.get('development_request') and not run.get('live_chat'):
                     signal=self.development_cancellations.get(run_id)
                     if signal is not None: signal.set()
                     for op in run['operation_receipts']:op.update(status='CANCELLED',executed=None if run.get('executing') else False)
