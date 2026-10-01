@@ -16,3 +16,6 @@ playwright-report/
 
 test-results/
 pages-dist/
+
+.hcla-runtime/
+supabase/.temp/

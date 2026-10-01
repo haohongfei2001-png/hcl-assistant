@@ -9,11 +9,11 @@
 开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前队列如下：
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
+**NEXT_READY: C1-01_CLOUD_HOSTING_ADAPTATION**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：C1-01。
 
-当前5包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+isolated Postgres storage, HTTPS owner sessions, request-owned durable execution, atomic budget and offline cloud acceptance。验收：C01、C02、C03、C04、C05、C06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -40,7 +40,7 @@ Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。�
 
 在配置好的本地电脑中运行 `npm run chat`，同一命令启动API与共享网页、等待就绪并打开浏览器；Ctrl-C同时停止二者。首次普通依赖安装为 `npm ci --ignore-scripts`。需要操作员直接安全输入配置时运行 `npm run chat -- --configure`；密钥和本地访问密码是隐藏终端输入，不进入网页、仓库或浏览器存储。
 
-已验证DeepSeek后端开发链路和固定HCL合成Bridge参与，UI链路另有零调用浏览器测试；没有声称真实provider浏览器端到端或用户Mac安装已经验收。首轮6次开发调用授权已用完并关闭，不能拿旧grant初始化新的额度。后续本地使用需要一个安全配置且明确获准的新产品运行环境/额度，见[操作说明与实际结果](docs/DEVELOPMENT_CHAT.md)。线上真实聊天托管按用户指示暂停，下面的Pages仍只是静态演示。
+已验证DeepSeek后端开发链路和固定HCL合成Bridge参与，UI链路另有零调用浏览器测试；没有声称真实provider浏览器端到端或用户Mac安装已经验收。首轮6次开发调用授权已用完并关闭，不能拿旧grant初始化新的额度。后续本地使用需要一个安全配置且明确获准的新产品运行环境/额度，见[操作说明与实际结果](docs/DEVELOPMENT_CHAT.md)。用户已于2026-10-01批准云端托管适配；代码与离线验收见 [cloud hosting](docs/CLOUD_HOSTING.md)。真实托管地址、账户配置及新模型额度尚未启用；下面的Pages仍只是静态演示。
 
 ## Run the existing local synthetic product
 
@@ -79,3 +79,7 @@ L3仍需I06处置、固定获准production artifact/interface、产品adapter sc
 Historical authorization/dependency record: D1-01 is now completed within its bounded evidence scope; the initial six-call grant is closed. Current task state is the live queue above.
 
 User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
+
+## Cloud hosting amendment (2026-10-01 08:36 UTC)
+
+Owner approved C1-01 engineering adaptation after P1-03 for isolated Vercel/Postgres hosting. This adds a bounded package to the sole current queue; it does not reopen completed packages, change the reviewed HCL lock, authorize account provisioning, create credentials, reuse another app database, authorize real private data or renew the exhausted provider grant. Offline CI remains zero provider calls. Runtime hosting is not production HCL activation or efficacy evidence. Details: [cloud hosting contract](docs/CLOUD_HOSTING.md).

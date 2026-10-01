@@ -9,6 +9,7 @@ import re
 import threading
 import time
 from packages.store.ledger import Fault, now, uid
+from packages.adapter.development_budget import BudgetError
 from packages.runtime_bridge.contract import fingerprint
 
 
@@ -58,8 +59,9 @@ def valid(controller,tenant,run):
 
 
 class LiveChat:
-    def __init__(self, config, budget, adapter):
+    def __init__(self, config, budget, adapter, cancellation_factory=None):
         self.config=config; self.budget=budget; self.adapter=adapter
+        self.cancellation_factory=cancellation_factory
     def ready(self):
         if self.config is None or self.budget is None or self.adapter is None:raise Fault(503,'Development configuration required')
 
@@ -96,7 +98,7 @@ class LiveChat:
         return messages,bindings
 
     def finish(self,controller,tenant,run_id):
-        store=controller.store;cancel=threading.Event();reserved=False;started=time.monotonic();result=None
+        store=controller.store;cancel=self.cancellation_factory(run_id) if self.cancellation_factory else threading.Event();reserved=False;started=time.monotonic();result=None
         with store.transaction():
             run=store.get(tenant,'run',run_id)
             if not run['pending'] or run.get('executing'):return
@@ -174,7 +176,7 @@ class LiveChat:
         except Exception as exc:
             # Without a returned transport-stop handshake, retain the active lock.
             # Restart may recover it only once no live transport owner remains.
-            reason=str(exc) if isinstance(exc,Fault) else 'DEVELOPMENT_PROVIDER_FAILED'
+            reason=str(exc) if isinstance(exc,(Fault,BudgetError)) else 'DEVELOPMENT_PROVIDER_FAILED'
             with store.transaction():
                 current=store.get(tenant,'run',run_id)
                 if current['pending']:

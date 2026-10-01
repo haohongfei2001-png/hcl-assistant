@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'tests/browser',testMatch:'cloud-hosting.spec.js',workers:1,use:{baseURL:'http://127.0.0.1:5173',headless:true,launchOptions:process.env.HCLA_BROWSER_EXECUTABLE?{executablePath:process.env.HCLA_BROWSER_EXECUTABLE}:{}},reporter:'list',webServer:[{command:'python3 -m tests.support.cloud_server',port:8771,reuseExistingServer:false},{command:'npm run dev',port:5173,reuseExistingServer:false}],timeout:30000});

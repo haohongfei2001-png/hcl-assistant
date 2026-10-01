@@ -1,11 +1,13 @@
 import React,{useEffect,useState} from 'react';
-import {api} from './api';
-export type DevelopmentStatus={enabled:boolean;authenticated:boolean;configuration:{configured?:boolean;missing?:string[];invalid?:string[]}};
-export function DevelopmentEntry({children}:{children:(live:boolean)=>React.ReactNode}){
- const [status,setStatus]=useState<DevelopmentStatus|null>(null),[secret,setSecret]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
- async function refresh(){try{setStatus(await api<DevelopmentStatus>('/v1/development/status'));setError('')}catch{setError('无法连接本地服务，请检查一键启动终端')}}
+import {api,configureCloud} from './api';
+import {clearTemporary} from './cloud-temporary';
+export type DevelopmentStatus={enabled:boolean;authenticated:boolean;cloud?:boolean;request_bound?:boolean;configuration:{configured?:boolean;provider_enabled?:boolean;missing?:string[];invalid?:string[]}};
+export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolean,onLogout?:()=>void)=>React.ReactNode}){
+ const [status,setStatus]=useState<DevelopmentStatus|null>(null),[secret,setSecret]=useState(''),[login,setLogin]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ async function refresh(){try{const next=await api<DevelopmentStatus>('/v1/development/status');configureCloud(Boolean(next.request_bound));setStatus(next);setError('')}catch{setError('暂时无法连接服务，请稍后重试')}}
  useEffect(()=>{void refresh()},[]);
- if(status&&!status.enabled)return children(false);
- if(status?.authenticated)return children(true);
- return <main className="development-entry"><h1>HCL Assistant 开发态聊天</h1><p>仅用于原创合成输入。服务器配置完整并获准预算后才会调用真实模型。</p>{error&&<p role="alert">{error}</p>}{!status?<button onClick={()=>void refresh()}>检查连接</button>:!status.configuration.configured?<><h2>需要服务器配置</h2><p>尚未接通真实聊天。请按开发配置指南在服务器安全配置界面填写，不要把 API key 放到聊天或前端。</p><ul>{[...(status.configuration.missing||[]),...(status.configuration.invalid||[])].map(name=><li key={name}>{name}</li>)}</ul><button onClick={()=>void refresh()}>重新检查</button></>:<form onSubmit={async event=>{event.preventDefault();if(busy)return;setBusy(true);setError('');try{await api('/v1/development/login',{access_token:secret});setSecret('');await refresh()}catch{setSecret('');setError('登录失败或尝试过多，请检查本地访问口令后重试')}finally{setBusy(false)}}}><label>本地开发访问口令<input type="password" autoComplete="off" value={secret} onChange={event=>setSecret(event.target.value)}/></label><p>这是本地访问口令，不是 DeepSeek API key；不会写入浏览器存储。</p><button disabled={busy||!secret}>{busy?'验证中…':'打开聊天'}</button></form>}</main>
+ if(status&&!status.enabled)return children(false,false);
+ if(status?.authenticated)return children(true,Boolean(status.cloud),status.cloud?()=>{void api('/v1/development/logout',{}).then(()=>{clearTemporary();setStatus({...status,authenticated:false})}).catch(()=>setError('退出未完成，请重试'))}:undefined);
+ const cloud=Boolean(status?.cloud);
+ return <main className="development-entry"><h1>{cloud?'HCL Assistant':'HCL Assistant 开发态聊天'}</h1><p>{cloud?'登录后继续你的对话。当前是仅限原创合成内容的个人开发预览。':'仅用于原创合成输入。服务器配置完整并获准预算后才会调用真实模型。'}</p>{error&&<p role="alert">{error}</p>}{!status?<button onClick={()=>void refresh()}>检查连接</button>:!status.configuration.configured?<><h2>{cloud?'服务尚未启用':'需要服务器配置'}</h2><p>{cloud?'管理员完成一次性配置后，即可在这里登录使用。请勿在聊天中提供密码或 API key。':'尚未接通真实聊天。请按开发配置指南在服务器安全配置界面填写，不要把 API key 放到聊天或前端。'}</p>{!cloud&&<ul>{[...(status.configuration.missing||[]),...(status.configuration.invalid||[])].map(name=><li key={name}>{name}</li>)}</ul>}<button onClick={()=>void refresh()}>重新检查</button></>:<form onSubmit={async event=>{event.preventDefault();if(busy)return;setBusy(true);setError('');try{await api('/v1/development/login',cloud?{login,password:secret}:{access_token:secret});setSecret('');await refresh()}catch{setSecret('');setError(cloud?'登录失败或尝试过多，请检查账号和密码后重试':'登录失败或尝试过多，请检查本地访问口令后重试')}finally{setBusy(false)}}}>{cloud&&<label>账号<input autoComplete="username" value={login} onChange={event=>setLogin(event.target.value)}/></label>}<label>{cloud?'密码':'本地开发访问口令'}<input type="password" autoComplete={cloud?'current-password':'off'} value={secret} onChange={event=>setSecret(event.target.value)}/></label>{!cloud&&<p>这是本地访问口令，不是 DeepSeek API key；不会写入浏览器存储。</p>}<button disabled={busy||!secret||(cloud&&!login)}>{busy?'验证中…':cloud?'登录':'打开聊天'}</button></form>}</main>
 }

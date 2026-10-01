@@ -217,12 +217,12 @@
     "authority": "SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE",
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
-    "phase": "ASSISTANT_FIRST_REFINEMENT_COMPLETE",
-    "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
-    "next_package_id": null,
+    "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
+    "next_ready": "C1-01_CLOUD_HOSTING_ADAPTATION",
+    "next_package_id": "C1-01",
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
-    "current_request_scope": "AUTHORIZED_DEVELOPMENT_CHAT_CODE_OFFLINE_AND_EXPLICIT_BUDGET_ONLY",
-    "current_executor_stop_after": "P1-03_OR_L3_GATE",
+    "current_request_scope": "AUTHORIZED_CLOUD_ADAPTATION_OFFLINE_ZERO_PROVIDER",
+    "current_executor_stop_after": "C1-01_OR_EXTERNAL_SETUP_GATE",
     "implementation_started": true,
     "implementation_requires_separate_work": false,
     "execution_scope": "SYNTHETIC_PRODUCT_REFINEMENT_AND_GATED_DEVELOPMENT_CHAT",
@@ -378,6 +378,24 @@
             ]
           }
         ]
+      },
+      {
+        "id": "C1-01",
+        "task": "C1-01_CLOUD_HOSTING_ADAPTATION",
+        "depends_on": [
+          "P1-03"
+        ],
+        "state": "NEXT_READY",
+        "delta": "isolated Postgres storage, HTTPS owner sessions, request-owned durable execution, atomic budget and offline cloud acceptance",
+        "acceptance": [
+          "C01",
+          "C02",
+          "C03",
+          "C04",
+          "C05",
+          "C06"
+        ],
+        "evidence": "NOT_IMPLEMENTED"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -418,6 +436,21 @@
       "change_scope": "DESIGN_ASSETS_SPECIFICATIONS_AND_PLAN_METADATA_ONLY",
       "new_top_level_queue": false,
       "current_checker_validates_visual_items": false
+    },
+    "cloud_hosting": {
+      "authorized_by": "USER_APPROVAL_2026_10_01_0836_UTC",
+      "implementation_authorized": true,
+      "provisioning_authorized": false,
+      "credential_creation_authorized": false,
+      "live_provider_calls_authorized": false,
+      "existing_app_data_reuse_allowed": false,
+      "deployment_verified": false,
+      "document": "docs/CLOUD_HOSTING.md"
+    },
+    "writer": {
+      "branch": "product/cloud-hosting-adaptation",
+      "package": "C1-01",
+      "status": "ACTIVE_IMPLEMENTATION"
     }
   },
   "writer": {

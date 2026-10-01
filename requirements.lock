@@ -1,1 +1,4 @@
-# Python >=3.11 standard library only; no third-party backend dependencies.
+# Local mode requires no third-party backend package. Cloud runtime pins:
+psycopg==3.2.12
+psycopg-binary==3.2.12
+typing-extensions==4.16.0

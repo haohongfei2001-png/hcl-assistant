@@ -81,3 +81,7 @@
 每包在最新main基线认领；保持一个implementation writer。PR写明实际变化、命令、exact SHA、结果与限制；exact-head通过后合并，复核exact-main。不得force-push覆盖并发工作，不绕过失败CI，不把mock/experimental改标live。内部常规代码决策遵从已采用规格，只有实质产品方向或权限变化才需要重新采用。
 
 当前产品整改不是研究I02–I06的新支线，不读取确认材料，不修改研究结果。若新原型显示某结构没有帮助，先减少展示与实现复杂度，不重新发明五套产品方案。
+
+## C1-01 — Cloud hosting adaptation amendment
+
+Owner approved 2026-10-01 08:36 UTC, after adopted P1-03. Preserve the existing shared UI/Controller/DeepSeek adapter and pinned synthetic HCL Bridge. Build isolated Postgres persistence, HTTPS owner-only authentication, atomic non-refunded provider reservations, request-owned streaming/replay/cancellation, and temporary tab-memory round trips. Accept C01–C06 in [cloud contract](CLOUD_HOSTING.md); evidence in [C1 evidence](C1_01_EVIDENCE.md). Ordinary use needs only URL/login/chat after one-time secure operator setup. No paid provisioning, persistent credential creation, old-grant renewal, TodayAction-data reuse, real private-data or production HCL activation follows from this code approval.
