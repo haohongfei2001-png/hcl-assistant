@@ -93,3 +93,7 @@ Owner-approved six-point screenshot refinement after C1-01. One implementation w
 ## U2-01 Consumer account entry and first chat
 
 Owner requested 2026-10-01 21:18 UTC. Refine ordinary-user journeys on the existing member/AssistantShell path: a coherent narrow-screen login/register view, bounded requests with explicit recovery, inline synthetic-use consent without a Settings visit, and a preserved draft while generation is unavailable. U07–U10 require injected-auth/browser failure journeys and actual captures, followed by exact-head/main gates. See [evidence](U2_01_EVIDENCE.md). Auth delivery, password recovery, paid billing and production activation remain separate incomplete capabilities.
+
+## M2-01 Bounded password recovery
+
+One disabled consumer-account slice after U2-01: server-side PKCE, recovery-only cookies, purpose-encrypted transient material, one-use mutation and session-generation fencing. Accept M07–M12 in [the contract](PASSWORD_RECOVERY.md), with [exact-head/main evidence](M2_01_EVIDENCE.md). No MFA, social login, billing or live activation.

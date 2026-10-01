@@ -7,11 +7,11 @@
 先读README、STATUS、DEVELOPMENT_PLAN、Master Plan1.2、docs/DOCUMENT_AUTHORITY.md、UX_SPEC、VISUAL_SYSTEM、contracts、PRODUCT_REFINEMENT_WORK_PACKAGES和ACCEPTANCE_MATRIX；再核对remote main、open PR和writer。普通用户先聊天；Explain/Inspector按需，Lab是高级研究环境。
 
 当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。<!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
+**NEXT_READY: M2-01_BOUNDED_PASSWORD_RECOVERY**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M2-01。
 
-当前9包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+默认关闭的密码找回、服务端 PKCE、一次性恢复与登录撤销、跨会话隔离和错误恢复。验收：M07、M08、M09、M10、M11、M12
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。
@@ -72,3 +72,7 @@ Owner explicitly requested ordinary-user registration/login development while th
 ## Consumer journey amendment (2026-10-01 21:18 UTC)
 
 Owner requested continued consumer-product improvement. U2-01 is the bounded next slice: the adopted visual language on the mobile account entry, explicit connection/sign-in recovery, first-message consent next to Send, and truthful account/model availability. It preserves one chat UI and all synthetic-only, tenant, entitlement, budget and activation gates. No live Auth, credential, paid email, billing, provider or private-data activation is included.
+
+## Password recovery amendment (2026-10-01 22:10 UTC)
+
+M2-01 adds one disabled, bounded ordinary-account recovery flow after U2-01. Follow [the recovery contract](docs/PASSWORD_RECOVERY.md). Code/offline tests are authorized; no live email, Auth configuration, credential changes, public rights, paid service, model or guest activation is authorized by this slice.

@@ -96,7 +96,9 @@ class MemberAuthUnitTests(unittest.TestCase):
 @unittest.skipUnless(baseline.DSN,'Disposable local Postgres required in cloud CI')
 class MemberPostgresTests(unittest.TestCase):
     setUpClass=classmethod(baseline.CloudPostgresTests.setUpClass.__func__)
-    setUp=baseline.CloudPostgresTests.setUp
+    def setUp(self):
+        FakeMemberProvider.reset()
+        baseline.CloudPostgresTests.setUp(self)
     tearDown=baseline.CloudPostgresTests.tearDown
     store=baseline.CloudPostgresTests.store
     request=baseline.CloudPostgresTests.request

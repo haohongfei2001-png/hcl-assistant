@@ -2,11 +2,13 @@ import React,{useEffect,useRef,useState} from 'react';
 import {api,configureCloud,setMemberReady} from './api';
 import {clearTemporary} from './cloud-temporary';
 import './account-entry.css';
+import {RecoveryEntry} from './RecoveryEntry';
 
-type Status={available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{enabled:boolean;temporary?:boolean;persistent?:boolean;reason?:string|null}};
+type Status={recovery_available?:boolean;available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{enabled:boolean;temporary?:boolean;persistent?:boolean;reason?:string|null}};
 export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean,logoutPending:boolean,generation:{model:boolean;temporary:boolean;persistent:boolean})=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode}){
  const [status,setStatus]=useState<Status|null>(null),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[register,setRegister]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  const scope=useRef(''),channel=useRef<BroadcastChannel|null>(null),live=useRef(true),revision=useRef(0);
+ const [recover,setRecover]=useState(false);
  const [renewing,setRenewing]=useState(false),[serviceError,setServiceError]=useState(false),[showPassword,setShowPassword]=useState(false);
  const authFlight=useRef<AbortController|null>(null);
  const flight=useRef<{epoch:number;promise:Promise<void>;controller:AbortController}|null>(null);
@@ -44,6 +46,7 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
   catch(error){if(!live.current||epoch!==revision.current)return;if(/^Error: 401:/.test(String(error)))complete();else setError('退出未完成，请重试')}
   finally{clearTimeout(timeout);if(live.current)setBusy(false)}
  }
+ if(recover)return <RecoveryEntry initialEmail={email} onBack={()=>setRecover(false)}/>;
  if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,{model:Boolean(status.model_enabled),temporary:Boolean(status.entitlements?.enabled&&status.entitlements.temporary),persistent:Boolean(status.entitlements?.enabled&&status.entitlements.persistent)});
  async function submit(event:React.FormEvent){
   event.preventDefault();if(busy||!status?.available)return;setBusy(true);setError('');setMessage('');
@@ -67,6 +70,7 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
    <button className="account-primary" disabled={busy||!email||password.length<12}>{busy?'正在处理…':register?'注册账号':'登录账号'}</button>
   </form>}
   {status?.available&&<button className="account-switch" type="button" disabled={busy} onClick={()=>{setRegister(!register);setPassword('');setShowPassword(false);setError('');setMessage('')}}>{register?'已有账号，返回登录':'没有账号，注册'}</button>}
+  {status?.recovery_available&&!register&&<button className="account-switch" disabled={busy} onClick={()=>{setPassword('');setRecover(true)}}>忘记密码</button>}
   <details className="account-admin"><summary>管理员入口</summary><button disabled={busy} onClick={()=>{clear();onOwner()}}>打开管理员登录</button></details>
  </section></main>
 }

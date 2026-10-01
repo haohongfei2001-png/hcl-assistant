@@ -101,6 +101,8 @@ class Guard:
                 c.execute('SET LOCAL search_path = hcla, pg_catalog')
                 c.execute("SELECT set_config('hcla.tenant', %s, true)", (self.store.tenant,))
                 c.execute("SELECT set_config('hcla.member_session', %s, true)", (self.store.member_session_key or '',))
+                c.execute("SELECT set_config('hcla.recovery_session', %s, true)", (self.store.recovery_session_key or '',))
+                c.execute("SELECT set_config('hcla.recovery_gc', 'off', true)")
                 c.execute("SET LOCAL lock_timeout = '5s'")
                 c.execute("SET LOCAL statement_timeout = '10s'")
                 c.execute('SELECT pg_advisory_xact_lock(171956945, 1)')
@@ -136,7 +138,7 @@ class PostgresLedger(Ledger):
             except ssl.SSLError:
                 startup.mark(StartupCode.DATABASE_TLS)
                 raise
-        self.connection=connection; self.tenant=tenant; self.volatile=False; self.member_session_key=None
+        self.connection=connection; self.tenant=tenant; self.volatile=False; self.member_session_key=None; self.recovery_session_key=None
         try:
             startup.mark(StartupCode.DATABASE_ROLE)
             role=connection.execute("SELECT rolsuper,rolbypassrls,pg_has_role(current_user,'hcla_app','member') AS member FROM pg_roles WHERE rolname=current_user").fetchone()

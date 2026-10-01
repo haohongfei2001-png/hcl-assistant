@@ -49,6 +49,7 @@ class CloudConfig:
     trial:object|None=field(default=None,repr=False)
     cloud_api_key:str=field(default='',repr=False)
     member_provider:object|None=field(default=None,repr=False)
+    member_recovery:bool=False
     @classmethod
     def from_env(cls,env):
         if not env.get('HCLA_DATABASE_URL') or not env.get('HCLA_PUBLIC_ORIGIN'):raise ValueError('Cloud setup incomplete')
@@ -88,4 +89,6 @@ class CloudConfig:
             if provider is None:raise ValueError('Trial requires a new explicit model grant')
         from packages.cloud.member_auth import MemberProviderConfig
         member_provider=MemberProviderConfig.from_env(env)
-        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider,trial,env.get('HCLA_DEEPSEEK_API_KEY',''),member_provider)
+        recovery=env.get('HCLA_MEMBER_RECOVERY','')
+        if recovery not in ('','pkce') or (recovery and member_provider is None):raise ValueError('Invalid account recovery configuration')
+        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider,trial,env.get('HCLA_DEEPSEEK_API_KEY',''),member_provider,recovery=='pkce')

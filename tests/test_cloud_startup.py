@@ -217,6 +217,22 @@ class CloudStartupTests(unittest.TestCase):
                 del self.config.member_provider
                 stack.close()
 
+    def test_recovery_startup_failure_is_fixed_redacted_and_closed(self):
+        for phase in ['RECOVERY_SCHEMA','RECOVERY_AUTH']:
+            with self.subTest(phase=phase):
+                self.capture.seek(0);self.capture.truncate();store,temporary,stack=self.application_patches()
+                self.config.member_provider=SimpleNamespace(url='https://abcdefghijklmnopqrst.supabase.co',publishable_key=SENTINEL);self.config.member_recovery=True;self.config.state_key=b'synthetic-recovery-startup-key'
+                store.transaction.side_effect=lambda:nullcontext()
+                stack.enter_context(patch.object(cloud_server,'verify_member_schema'))
+                stack.enter_context(patch('packages.cloud.member_auth.MemberAuth'))
+                recovery=stack.enter_context(patch('packages.cloud.recovery.RecoveryAuth'))
+                if phase=='RECOVERY_SCHEMA':store.db.execute.side_effect=SecretFailure(SENTINEL)
+                else:recovery.side_effect=SecretFailure(SENTINEL)
+                self.check_unconfigured(cloud_server.application({}));self.check_record(phase)
+                store.close.assert_called_once();temporary.close.assert_called_once()
+                if phase=='RECOVERY_SCHEMA':recovery.assert_not_called()
+                del self.config.member_provider;del self.config.member_recovery;del self.config.state_key;stack.close()
+
     def test_no_grant_never_constructs_provider_or_budget(self):
         store, temporary, _ = self.application_patches()
         app = cloud_server.application({})

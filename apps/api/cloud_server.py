@@ -23,8 +23,9 @@ def verify_member_schema(store):
     # Compile metadata-only reads under the restricted role. LIMIT0 reads no
     # session, identity, ciphertext or budget row. Never create schema on startup.
     columns={
-        'member_sessions':'session_key,tenant,issuer,subject,auth_epoch,expires_at,absolute_expires_at,refresh_ciphertext,refresh_state,refresh_owner,refresh_started_at',
+        'member_sessions':'session_key,tenant,issuer,subject,auth_epoch,auth_generation,expires_at,absolute_expires_at,refresh_ciphertext,refresh_state,refresh_owner,refresh_started_at',
         'member_login_attempts':'identity_key,attempted_at',
+        'member_auth_generations':'tenant,generation,terminal_ticket,reset_pending,reset_owner,reset_phase,uncertainty_ticket',
         'member_entitlements':'tenant,grant_id,enabled,starts_at,expires_at,temporary_enabled,persistent_enabled,max_requests,max_cost_usd',
         'member_budget_attempts':'tenant,grant_id,run_key,attempt_key,charged_usd,outcome',
         'execution':'tenant', 'temporary_heads':'tenant',
@@ -35,6 +36,7 @@ def verify_member_schema(store):
         fields.extend(alias+'.'+name for name in names.split(','))
     with store.transaction():
         store.db.execute('SELECT '+','.join(fields)+' FROM '+' CROSS JOIN '.join(tables)+' LIMIT 0').fetchall()
+        if not store.db.execute("SELECT has_sequence_privilege(current_user,'hcla.member_auth_order','USAGE') AS permitted").fetchone()['permitted']:raise Fault(503,'Account ordering metadata unavailable')
 
 class CloudApplication:
     cloud=True
@@ -49,13 +51,19 @@ class CloudApplication:
             self.stores=CloudStores(store)
             startup.mark(StartupCode.OWNER_AUTH)
             self.development_auth=CloudAuth(store,config.origin,config.login,config.verifier)
-            self.member_auth=None;self.member_context=None;self.entitlements=None
+            self.member_auth=None;self.member_context=None;self.entitlements=None;self.recovery_auth=None
             if getattr(config,'member_provider',None) or member_provider:
                 from packages.cloud.member_auth import MemberAuth,SupabaseAuthProvider
                 startup.mark(StartupCode.MEMBER_SCHEMA)
                 verify_member_schema(store)
                 startup.mark(StartupCode.MEMBER_AUTH)
                 self.member_auth=MemberAuth(store,config.origin,config.state_key,member_provider or SupabaseAuthProvider(config.member_provider))
+                if getattr(config,'member_recovery',False):
+                    startup.mark(StartupCode.RECOVERY_SCHEMA)
+                    with store.transaction():store.db.execute('SELECT request_key,identity_key,issuer,auth_epoch,start_ticket,expires_at,phase,secret_ciphertext,tenant,subject,access_expires_at,operation_key,reset_generation,bound_generation,attempts,outcome FROM member_recovery LIMIT 0').fetchall()
+                    startup.mark(StartupCode.RECOVERY_AUTH)
+                    from packages.cloud.recovery import RecoveryAuth
+                    self.recovery_auth=RecoveryAuth(self.member_auth,config.state_key)
             startup.mark(StartupCode.RUNTIME_BRIDGE)
             self.development_bridge=RuntimeBridge(Path(runtime).absolute()) if runtime else None
             startup.mark(StartupCode.LIFECYCLE)
@@ -114,7 +122,7 @@ class CloudApplication:
         try:
             principal=self.member_auth.require(cookie)
         except Fault as error:
-            if error.status==401:return {'available':True,'authenticated':False,'renewable':self.member_auth.renewable(cookie)}
+            if error.status==401:return {'available':True,'authenticated':False,'renewable':self.member_auth.renewable(cookie),'recovery_available':self.recovery_auth is not None}
             raise
         from packages.cloud.entitlements import Entitlements
         rights=Entitlements(self.stores.persistent).status()
