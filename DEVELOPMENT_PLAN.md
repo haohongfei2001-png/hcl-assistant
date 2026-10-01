@@ -3,11 +3,11 @@
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
+**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
+当前5包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -26,7 +26,7 @@ bounded inspect/settings and integrated original synthetic acceptance。验收�
 | P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | COMPLETE |
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | COMPLETE |
 | D1-01 | development-only DeepSeek chat | P1-02 | COMPLETE |
-| P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | NEXT_READY |
+| P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | COMPLETE |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
@@ -54,9 +54,13 @@ PR #6在本次采用期间已由另一执行者合入 `e2a72050e184e61f45b17de3f
 
 ## Development-only chat amendment (2026-09-30 23:48 UTC)
 
+Historical authorization/dependency record: D1-01 is now completed within its bounded evidence scope; the initial six-call grant is closed. Current task state is the live queue above.
+
 User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
 
-## Continuum V1 设计实施增量（不另建队列）
+## Continuum V1 设计采用历史与实施范围（不另建队列）
+
+下段关于D1-01 NEXT_READY和采用基线是PR11时的历史快照，当前状态以文件顶部唯一队列及[P1-03/Continuum证据](docs/CONTINUUM_V1_EVIDENCE.md)为准。所列V1-A/B/C义务仍保留，现有实施/验收已逐项记录，不恢复旧队列。
 
 最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。五张批准 PNG 的原始 payload 已按 manifest 无损嵌入 UTF-8 SVG 文本包装并完成反解校验；本采用变更通过 exact-head/main 后成为正式视觉基准。视觉采用不等于实现完成。
 

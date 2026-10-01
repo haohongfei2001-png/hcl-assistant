@@ -1,0 +1,331 @@
+/* CONTINUUM-V1-20261001 derivative implementation of UI-01/02/03 and M-01/02.
+   Original image payloads remain unchanged. Load AFTER style.css and apply
+   continuum-shell to the existing .layout root. All component rules are opt-in.
+   This stylesheet changes presentation only; it does not grant capabilities. */
+.continuum-shell {
+ --sidebar:232px;
+ --reading:760px;
+ --muted:#576486;
+ --line:#dce5f8;
+ --accent:#526bee;
+ --continuum-ink:#151d43;
+ --continuum-field:#edf3fd;
+ --continuum-frost:#e7efff;
+ --continuum-surface:#ffffff;
+ --continuum-selected:#e5ecff;
+ --continuum-focus:#3958c4;
+ --continuum-shadow:0 12px 36px rgba(70,91,147,.08);
+ color:var(--continuum-ink);
+ background:radial-gradient(ellipse at 24% 15%,#dce8fc 0,transparent 48%),radial-gradient(ellipse at 86% 64%,#e8e9fc 0,transparent 52%),#edf3fd;
+ font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+ font-size:16px;
+ line-height:1.7;
+ isolation:isolate;
+ min-width:0;
+ height:100dvh;
+ overflow:hidden;
+ color-scheme:light;
+}
+.continuum-shell *, .continuum-shell *::before, .continuum-shell *::after {box-sizing:border-box}
+.continuum-shell :is(button,input,select,textarea) {font:inherit;color:inherit}
+.continuum-shell :is(button,summary) {min-height:44px;font-size:14px;line-height:20px;border-radius:12px;touch-action:manipulation}
+.continuum-shell button {padding:10px 14px}
+.continuum-shell :is(button,summary):hover {background:#e6edff}
+.continuum-shell :is(button,summary,a,input,select,textarea):focus-visible {outline:3px solid var(--continuum-focus);outline-offset:3px}
+.continuum-shell button:disabled {opacity:1;color:#5c6989;background:#e9eef9;cursor:default}
+.continuum-shell :is(small,.muted) {font-size:13px;line-height:20px;color:var(--muted)}
+.continuum-shell :is(p,li,dd,label) {overflow-wrap:anywhere}
+.continuum-shell ::selection {color:#151d43;background:#cad7ff}
+.continuum-shell #sidebar {
+ padding:22px 12px 18px;
+ gap:12px;
+ background:#e5edfc;
+ border-right:1px solid #edf4ff;
+ box-shadow:inset -1px 0 0 rgba(255,255,255,.45);
+}
+.continuum-shell .brand {padding:0 12px 26px;font-size:21px;font-weight:650;line-height:30px;letter-spacing:-.025em;white-space:nowrap}
+.continuum-shell .brand span {font-size:inherit;font-weight:inherit;color:inherit}
+.continuum-shell #sidebar>button {text-align:left;padding-inline:20px;color:#35456f}
+.continuum-shell #sidebar .new-conversation {min-height:56px;color:#1d2c5b;font-weight:600;background:#f4f7ff;border:1px solid #fff;border-radius:16px;box-shadow:0 4px 18px #8ca1d415}
+.continuum-shell #sidebar .new-conversation:hover {background:#fff}
+.continuum-shell #sidebar nav {gap:5px;margin-top:10px}
+.continuum-shell #sidebar nav button {padding:10px 12px;gap:8px;min-height:44px;color:#41547e}
+.continuum-shell #sidebar nav button[aria-current=true] {position:relative;color:#172651;background:#dce6ff;box-shadow:inset 3px 0 0 #647cf6;font-weight:600}
+.continuum-shell #sidebar nav button small {font-size:12px;flex:none}
+.continuum-shell .sidebar-bottom {padding:12px 4px 4px;gap:6px;border-top:1px solid #d4e0f4}
+.continuum-shell .sidebar-bottom button {text-align:left;color:#35456f}
+.continuum-shell .chat-workspace {min-width:0;overflow:hidden}
+.continuum-shell .chat-workspace>header {min-height:68px;height:auto;padding:12px 24px;gap:14px;border:0;background:transparent;flex-wrap:wrap}
+.continuum-shell .chat-workspace>header>button:first-child {flex:none;color:#2d3d66}
+.continuum-shell .conversation-identity {gap:10px;flex:0 1 auto;min-width:0}
+.continuum-shell .conversation-identity strong {font-size:17px;line-height:25px;max-width:280px;letter-spacing:-.01em;font-weight:600}
+.continuum-shell .conversation-identity span {font-size:13px;line-height:20px;color:#576486;white-space:normal;max-width:220px}
+.continuum-shell .header-search {display:flex;align-items:center;justify-content:flex-start;gap:10px;flex:1 1 210px;min-width:0;max-width:370px;margin-left:auto;border:1px solid #c6d3ee;border-radius:999px;background:#f3f7ff;color:#576486;text-align:left;padding:10px 16px}
+.continuum-shell .header-search :is(span,kbd) {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.continuum-shell .header-search kbd {margin-left:auto;flex:none;border:1px solid #dbe3f5;background:#fff;border-radius:5px;padding:0 5px;font-size:12px}
+.continuum-shell .environment {max-width:260px;margin-left:auto;padding:8px 12px;min-height:44px;font-size:12px;line-height:19px;text-align:right;color:#40537c;background:#eff4fe;border:1px solid #d6e1f5;border-radius:12px;overflow-wrap:anywhere}
+.continuum-shell .header-search+.environment {margin-left:0}
+.continuum-shell .chat-workspace>main {width:100%;max-width:936px;padding:10px 24px 0;margin:0 auto;min-width:0;min-height:0}
+.continuum-shell .messages {min-width:0;min-height:0;padding:10px 0 22px;scrollbar-gutter:stable;scroll-padding-block:20px;overscroll-behavior:contain}
+.continuum-shell article {padding-bottom:24px;min-width:0;scroll-margin:18px;outline-offset:4px}
+.continuum-shell .user-message {display:block;width:fit-content;max-width:94%;margin:0 0 14px auto;padding:14px 18px;border:1px solid #f8fbff;border-radius:16px;background:#f1f5ff;color:#24345f;font-size:16px;line-height:27px;box-shadow:0 5px 20px #718cc408}
+.continuum-shell .assistant-message {padding:24px 28px 8px;border:1px solid #fff;border-bottom:0;border-radius:24px 24px 0 0;background:#fff;color:#26365f;font-size:16px;line-height:28px;min-width:0;box-shadow:0 -4px 24px #6c82b307}
+.continuum-shell .answer-identity {display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;line-height:20px;color:#172447;margin:0 0 18px;font-weight:600}
+.continuum-shell .answer-identity>small {font-weight:400;color:var(--muted)}
+.continuum-shell .answer-identity .companion {flex:none;margin:-8px -2px -8px -4px}
+.continuum-shell .markdown {min-width:0;max-width:100%}
+.continuum-shell .markdown p {margin:0 0 18px;line-height:28px}
+.continuum-shell .markdown :is(h1,h2,h3,h4) {color:#151d43;font-weight:650;letter-spacing:-.015em;overflow-wrap:anywhere}
+.continuum-shell .markdown h1 {font-size:25px;line-height:35px;margin:24px 0 18px}
+.continuum-shell .markdown h2 {font-size:23px;line-height:33px;margin:24px 0 16px}
+.continuum-shell .markdown h3 {font-size:20px;line-height:30px;margin:24px 0 14px}
+.continuum-shell .markdown :is(ul,ol) {padding-left:25px;margin:14px 0 20px}
+.continuum-shell .markdown li {margin-bottom:7px}
+.continuum-shell .markdown blockquote {background:#f0f5ff;color:#40547c;border-left:3px solid #829afa;border-radius:0 12px 12px 0;margin:18px 0;padding:13px 18px}
+.continuum-shell .markdown a {color:#334fc1;overflow-wrap:anywhere;text-decoration-thickness:1px;text-underline-offset:3px}
+.continuum-shell .markdown :not(pre)>code {color:#2b4075;background:#edf2ff;border:1px solid #e0e8fa;white-space:break-spaces;overflow-wrap:anywhere;font-size:14px}
+.continuum-shell .code-block {max-width:100%;border-color:#d8e2f7;border-radius:14px;background:#f1f5ff;box-shadow:none}
+.continuum-shell .code-block>div {background:#eaf0fd;border-bottom:1px solid #dce5f7;color:#4c5f87;font-size:13px}
+.continuum-shell .code-block pre {max-width:100%;overflow:auto;overscroll-behavior:contain;padding:16px;white-space:pre;font-size:14px;line-height:22px;color:#23345e}
+.continuum-shell .code-block pre code {font-size:inherit;line-height:inherit;color:inherit;background:none}
+.continuum-shell .table-scroll {max-width:100%;overflow:auto;overscroll-behavior:contain;border:1px solid #d8e2f7;border-radius:13px;margin:16px 0 22px}
+.continuum-shell table {width:100%;min-width:100%;border-collapse:collapse;font-size:14px;line-height:23px;color:#354975}
+.continuum-shell :is(th,td) {border:1px solid #dce5f8;padding:9px 12px;vertical-align:top;overflow-wrap:anywhere;white-space:normal}
+.continuum-shell th {background:#eaf0fe;color:#263c70;font-weight:600}
+.continuum-shell td {background:#fbfcff}
+.continuum-shell tbody tr:nth-child(even) td {background:#f5f8ff}
+.continuum-shell .turn-actions {min-width:0;min-height:58px;padding:8px 18px 14px 26px;gap:4px;background:#fff;border:1px solid #fff;border-top:0;border-radius:0 0 24px 24px;color:#425d99}
+.continuum-shell .turn-actions :is(button,summary) {font-size:13px;color:#3f5791;min-height:44px}
+.continuum-shell .turn-actions>button:first-child {border:1px solid #dfe6fb;background:#f5f8ff;border-radius:999px}
+.continuum-shell .message-menu {position:static;max-width:100%;min-width:min(180px,100%);background:#fff;border:1px solid #d7e1f7;border-radius:14px;box-shadow:var(--continuum-shadow);margin:6px 0;padding:6px}
+.continuum-shell .turn-notice {color:#835600;background:#fff7e7;border:1px solid #eee0b9;border-radius:10px;padding:10px 12px;font-size:14px;line-height:23px}
+.continuum-shell .composer {position:relative;isolation:isolate;flex-shrink:0;min-width:0;padding:16px 18px 12px;border:1px solid #fff;border-radius:26px;background:#fff;box-shadow:0 10px 32px rgba(106,130,184,.08),inset 0 0 0 1px #f9fbff}
+.continuum-shell .composer:focus-within {border-color:#a6b7f3;box-shadow:0 0 0 2px #cbd6ff,0 10px 30px #738bba12}
+.continuum-shell .composer textarea {min-width:0;min-height:60px;max-height:224px;padding:3px 8px 10px;color:#1e2d54;background:transparent;font-size:16px;line-height:27px;scrollbar-width:thin}
+.continuum-shell .composer textarea::placeholder {color:#61729a;opacity:1}
+.continuum-shell .composer textarea:focus-visible {outline:0}
+.continuum-shell .composer-controls {display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;padding-top:8px}
+.continuum-shell .composer-controls>button {border:1px solid #dce4f8;background:#f6f8ff;border-radius:999px;padding:10px 16px;min-height:46px;font-size:14px;color:#23365f}
+.continuum-shell .composer-controls>small {font-size:12px;line-height:19px;color:#586a91;flex:1 1 180px}
+.continuum-shell .composer-controls :is(.send,button:last-child) {margin-left:auto;min-width:58px;min-height:48px}
+.continuum-shell .composer-controls .send {color:#fff;background:#4e65e4;border:1px solid #4e65e4;box-shadow:0 4px 12px #657aea30;font-weight:600}
+.continuum-shell .composer-controls .send:hover {background:#405adb;border-color:#405adb}
+.continuum-shell .composer-controls .send:disabled {color:#5a698b;background:#e7edfb;border-color:#d4dff3;box-shadow:none}
+.continuum-shell .attachment {display:flex;flex-wrap:wrap;gap:8px;max-width:100%;padding:10px 12px;margin:6px 0;border:1px solid #dae4f8;border-radius:14px;background:#f1f5ff;color:#425882;font-size:13px;line-height:21px}
+.continuum-shell .composer-note {margin:8px 8px max(14px,env(safe-area-inset-bottom));font-size:12px;line-height:19px;color:#596b91;text-align:center;flex-shrink:0}
+.continuum-shell .error {color:#932d40;background:#fff1f3;border:1px solid #f1d4db;border-radius:14px;padding:12px 16px;font-size:14px;line-height:23px;margin:10px 0}
+.continuum-shell .danger {color:#a43147}
+/* Home prompt, the shared composer, then real supported suggestion actions.
+   The parent places home-suggestions AFTER the composer, not inside a bitmap. */
+.continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {max-width:1072px;padding-top:18px;overflow-y:auto;overscroll-behavior:contain;justify-content:flex-start}
+.continuum-shell:is(.is-home,:has(.home-stage)) .messages {flex:0 0 auto;overflow:visible;scrollbar-gutter:auto;padding:62px 0 24px}
+.continuum-shell .home-stage {display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,330px);align-items:center;gap:16px;min-height:288px;padding:0 18px;text-align:left}
+.continuum-shell .home-copy {min-width:0;padding:10px 0}
+.continuum-shell .home-copy>small {display:block;color:#596a92;font-size:15px;line-height:24px;margin-bottom:14px}
+.continuum-shell .home-copy h1 {color:#151d43;font-size:clamp(30px,3.05vw,44px);font-weight:650;line-height:1.34;letter-spacing:-.045em;margin:0 0 18px}
+.continuum-shell .home-copy h1 :is(em,strong,span) {color:#526bee;font-style:normal;font-weight:inherit}
+.continuum-shell .home-copy p {max-width:620px;color:#465981;font-size:17px;line-height:28px;margin:0 0 12px}
+.continuum-shell .home-copy p.muted {font-size:13px;line-height:21px;color:#586b93}
+.continuum-shell .home-companion {display:flex;align-items:center;justify-content:center;min-width:0;align-self:center;pointer-events:none}
+.continuum-shell .home-stage:not(:has(.home-companion .companion)) {grid-template-columns:minmax(0,1fr)}
+.continuum-shell .home-companion:empty {display:none}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer {min-height:192px;padding:22px 22px 17px;border-radius:28px}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer textarea {min-height:105px;padding:4px 4px 18px;font-size:18px;line-height:29px}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer-controls {padding-top:10px}
+.continuum-shell .home-suggestions {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 16px;margin:22px 10px 18px;padding:0;list-style:none}
+.continuum-shell .home-suggestions>* {min-width:0}
+.continuum-shell .home-suggestions :is(button,a) {display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:50px;height:100%;padding:12px 18px;border:1px solid #fff;border-radius:999px;color:#304773;background:#f6f9ff;font-size:14px;line-height:22px;text-align:left;text-decoration:none;overflow-wrap:anywhere}
+.continuum-shell .home-suggestions :is(button,a):hover {background:#fff;border-color:#cddaf9}
+/* Dialog styles support the existing overlay and the integrator's dialog-panel hook. */
+.continuum-shell :is(.overlay,.dialog-panel) {color:#24345f;background:#fff;border:1px solid #fff;border-radius:24px;box-shadow:0 18px 60px #3d548828;padding:22px;width:min(430px,calc(100vw - 32px));max-width:100%;max-height:calc(100dvh - 32px);overflow:auto}
+.continuum-shell :is(.overlay,.dialog-panel)::backdrop {background:rgba(36,54,91,.18)}
+.continuum-shell .panel-header {min-height:44px;margin-bottom:18px;gap:10px;color:#15234a}
+.continuum-shell .panel-header strong {font-size:17px;line-height:26px;font-weight:650}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(h2,h3,h4) {color:#17254e;line-height:1.45;font-weight:650;overflow-wrap:anywhere}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) h2 {font-size:21px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) h3 {font-size:17px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(p,li,dd) {font-size:14px;line-height:24px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) pre {font-size:14px;line-height:24px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(input,select,textarea) {width:100%;max-width:100%;min-height:44px;border:1px solid #a5b7da;border-radius:10px;padding:10px;background:#fafdff;font-size:15px;line-height:23px;color:#24345f}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) summary {padding:12px 0;color:#334d83}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) dd {margin:4px 0 14px;color:#485d87;overflow-wrap:anywhere}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) dt {font-size:13px;font-weight:600;line-height:22px;color:#293e6c}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) form {padding:14px;border:1px solid #e1e8f8;border-radius:14px;background:#f1f5ff}
+.continuum-shell .memory-card {border-color:#dce5f8;padding:16px 0}
+.continuum-shell .search-hit {border-color:#dce5f8}
+.continuum-shell .change-columns {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.continuum-shell .change-columns section {min-width:0;padding:14px;border:1px solid #e0e8fa;border-radius:14px;background:#f2f6ff}
+.continuum-shell mark {color:#192e5b;background:#dce7ff;border-radius:3px;padding:1px 2px;box-decoration-break:clone}
+/* Desktop context-panel is a direct child of the layout, after chat-workspace.
+   Use one region whose content changes, not nested/stacked modal panels. */
+.continuum-shell:is(.has-context,:has(>.context-panel)) {--sidebar:220px;grid-template-columns:var(--sidebar) minmax(0,1fr) minmax(380px,414px)}
+.continuum-shell.collapsed:is(.has-context,:has(>.context-panel)) {grid-template-columns:minmax(0,1fr) minmax(380px,430px)}
+.continuum-shell:is(.has-context,:has(>.context-panel)) .chat-workspace>main {padding-inline:16px;max-width:none}
+.continuum-shell>.context-panel {position:relative;inset:auto;display:flex;flex-direction:column;gap:0;min-width:0;min-height:0;width:auto;margin:82px 16px 16px 0;padding:20px;background:#fff;border:1px solid #fff;border-radius:24px;box-shadow:var(--continuum-shadow);overflow:auto;overscroll-behavior:contain;color:#253762}
+.continuum-shell .context-panel .panel-header {position:sticky;top:-20px;z-index:1;background:#fff;padding:12px 0;margin-top:-8px}
+.continuum-shell .context-panel :is(.source-list,.source-content,.evidence-list) {min-width:0;max-width:100%}
+.continuum-shell .context-panel .source-list {display:flex;flex-direction:column;gap:10px}
+.continuum-shell .context-panel .source-list>button {text-align:left;min-width:0;white-space:normal;background:#f5f8ff;border:1px solid #e3eafa;border-radius:14px;padding:12px}
+.continuum-shell .context-panel .source-list>button[aria-current=true] {background:#ebf1ff;border-color:#8fa6ed;box-shadow:inset 3px 0 0 #647cf6}
+.continuum-shell .context-panel .source-content {padding:16px;background:#f7faff;border:1px solid #e0e8fa;border-radius:16px}
+.continuum-shell .source-return {min-height:44px;margin-bottom:12px;color:#3654c4;border:1px solid #d9e3fb;border-radius:999px;background:#f6f8ff}
+/* Native SVG derivatives have no event handlers or accessible status role. */
+.continuum-shell .companion {display:inline-flex;align-items:center;justify-content:center;flex:none;max-width:100%;vertical-align:middle;pointer-events:none;user-select:none;contain:layout style}
+.continuum-shell .companion--home {width:330px;height:275px}
+.continuum-shell .companion--mini {width:44px;height:38px}
+.continuum-shell .companion svg {display:block;width:100%;height:100%;overflow:visible}
+.continuum-shell .companion-body {transform-origin:180px 155px}
+.continuum-shell .companion-shadow {transform-origin:179px 268px}
+/* Enhanced translucency is opt-in by feature support; opaque colors above are the baseline. */
+@supports ((backdrop-filter:blur(12px)) or (-webkit-backdrop-filter:blur(12px))) {
+ .continuum-shell #sidebar {background:rgba(230,239,255,.84);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+ .continuum-shell .header-search {background:rgba(249,251,255,.56);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+ .continuum-shell :is(.composer,.assistant-message,.turn-actions,.overlay,.dialog-panel) {background:rgba(255,255,255,.94)}
+ .continuum-shell>.context-panel {background:rgba(255,255,255,.94)}
+ .continuum-shell .home-suggestions :is(button,a) {background:rgba(255,255,255,.68)}
+}
+@media (prefers-reduced-motion:no-preference) {
+ .continuum-shell :is(button,summary,a) {transition:background-color 120ms ease-out,border-color 120ms ease-out,box-shadow 120ms ease-out}
+ .continuum-shell .companion[data-busy=true] .companion-body {animation:continuum-pending-presence 2200ms ease-in-out infinite}
+ .continuum-shell .companion[data-busy=true] .companion-shadow {animation:continuum-pending-shadow 2200ms ease-in-out infinite}
+}
+@keyframes continuum-pending-presence {0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes continuum-pending-shadow {0%,100%{opacity:1;transform:scaleX(1)}50%{opacity:.7;transform:scaleX(.96)}}
+@media (max-width:1279px) {
+ .continuum-shell {--sidebar:208px}
+ .continuum-shell .chat-workspace>header {padding:10px 16px;gap:8px}
+ .continuum-shell .conversation-identity {flex-direction:column;align-items:flex-start;gap:0}
+ .continuum-shell .conversation-identity strong {max-width:210px}
+ .continuum-shell .header-search {max-width:310px;flex-basis:160px}
+ .continuum-shell .environment {max-width:220px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding-top:34px}
+ .continuum-shell .home-stage {min-height:250px;grid-template-columns:minmax(0,1fr) minmax(170px,250px);gap:10px;padding-inline:10px}
+ .continuum-shell .companion--home {width:270px;height:225px}
+ .continuum-shell .home-copy h1 {font-size:36px}
+ .continuum-shell .home-suggestions {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) {--sidebar:176px;grid-template-columns:var(--sidebar) minmax(0,1fr) minmax(340px,380px)}
+ .continuum-shell.collapsed:is(.has-context,:has(>.context-panel)) {grid-template-columns:minmax(0,1fr) minmax(350px,390px)}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) .assistant-message {padding-inline:20px}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) .turn-actions {padding-inline:14px}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) #sidebar {padding-inline:8px}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) .brand {font-size:17px;padding-inline:6px}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) .change-columns {grid-template-columns:1fr}
+}
+@media (max-width:959px) {
+ .continuum-shell,.continuum-shell.collapsed {grid-template-columns:minmax(0,1fr)}
+ .continuum-shell #sidebar {position:fixed;inset:0 auto 0 0;z-index:30;width:min(260px,85vw);padding-top:max(22px,env(safe-area-inset-top));box-shadow:12px 0 40px #45618b22}
+ .continuum-shell .nav-scrim {display:block;position:fixed;inset:0;z-index:29;background:#1e31553d;border-radius:0}
+ .continuum-shell:is(.has-context,:has(>.context-panel)),.continuum-shell.collapsed:is(.has-context,:has(>.context-panel)) {grid-template-columns:minmax(0,1fr) minmax(330px,370px)}
+ .continuum-shell .chat-workspace>header {padding:10px 16px;gap:8px}
+ .continuum-shell .header-search {flex-basis:150px;max-width:300px}
+ .continuum-shell .environment {font-size:12px;line-height:18px;max-width:210px}
+ .continuum-shell .chat-workspace>main {padding-inline:18px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding-top:24px}
+ .continuum-shell .home-copy h1 {font-size:34px}
+ .continuum-shell>.context-panel {margin-top:80px;padding:16px;margin-right:12px}
+ .continuum-shell .context-panel .panel-header {top:-16px}
+}
+@media (max-width:767px) {
+ .continuum-shell:is(.has-context,:has(>.context-panel)),.continuum-shell.collapsed:is(.has-context,:has(>.context-panel)) {grid-template-columns:minmax(0,1fr)}
+ .continuum-shell>.context-panel {position:fixed;inset:0;z-index:24;margin:0;width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0;padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));background:#f8fbff;box-shadow:none}
+ .continuum-shell .context-panel .panel-header {top:calc(-16px - env(safe-area-inset-top));padding-top:calc(12px + env(safe-area-inset-top));background:#f8fbff}
+ .continuum-shell .context-panel .source-content {background:#fff}
+ .continuum-shell .chat-workspace>header {padding:8px 12px;gap:6px;min-height:64px}
+ .continuum-shell .conversation-identity {flex:1 1 170px}
+ .continuum-shell .conversation-identity strong {max-width:none;white-space:normal;overflow-wrap:anywhere;font-size:16px;line-height:23px}
+ .continuum-shell .conversation-identity span {max-width:none;font-size:12px;line-height:19px}
+ .continuum-shell .header-search {order:3;flex:1 1 170px;max-width:none;min-height:44px;font-size:13px}
+ .continuum-shell .environment {order:4;flex:1 1 160px;max-width:none;text-align:left;font-size:12px;line-height:19px}
+ .continuum-shell .chat-workspace>main {padding:6px 12px 0}
+ .continuum-shell .messages {padding-bottom:16px;scrollbar-gutter:auto}
+ .continuum-shell .assistant-message {padding:20px 20px 6px;border-radius:20px 20px 0 0;font-size:16px;line-height:28px}
+ .continuum-shell .turn-actions {padding:6px 12px 12px;border-radius:0 0 20px 20px}
+ .continuum-shell .user-message {max-width:96%;font-size:15px;line-height:26px;padding:12px 14px}
+ .continuum-shell .composer {border-radius:22px;padding:12px 12px 10px}
+ .continuum-shell .composer textarea {font-size:16px;line-height:27px;min-height:58px;padding-inline:2px}
+ .continuum-shell .composer-controls {gap:6px;padding-top:5px}
+ .continuum-shell .composer-controls>button {padding:10px 12px;font-size:13px}
+ .continuum-shell .composer-controls>small {display:block;order:3;flex:1 1 100%;font-size:12px;line-height:18px}
+ .continuum-shell .composer-note {font-size:12px;line-height:18px;margin-bottom:max(10px,env(safe-area-inset-bottom))}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {padding-top:8px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding:8px 0 14px}
+ .continuum-shell .home-stage {min-height:220px;grid-template-columns:minmax(0,1fr) 160px;padding:0 6px;gap:0}
+ .continuum-shell .home-copy h1 {font-size:29px;line-height:1.35;margin-bottom:12px}
+ .continuum-shell .home-copy>small {font-size:13px;margin-bottom:10px}
+ .continuum-shell .home-copy p {font-size:15px;line-height:25px}
+ .continuum-shell .home-companion .companion--home {width:176px;height:150px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .composer {min-height:165px;padding:16px 14px 12px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .composer textarea {font-size:16px;min-height:85px;line-height:27px}
+ .continuum-shell .home-suggestions {margin:16px 2px;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .continuum-shell .home-suggestions :is(button,a) {border-radius:18px;padding:11px 13px;font-size:13px;line-height:21px}
+ .continuum-shell :is(.overlay,.dialog-panel) {position:fixed;inset:0;width:100%;height:100dvh;max-height:100dvh;margin:0;border-radius:0;padding:calc(18px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom));background:#f8fbff}
+}
+@media (max-width:479px) {
+ .continuum-shell .home-stage {grid-template-columns:minmax(0,1fr);position:relative;min-height:0;padding:14px 8px 8px}
+ .continuum-shell .home-copy {padding:0}
+ .continuum-shell .home-copy h1 {font-size:29px;max-width:100%;letter-spacing:-.035em}
+ .continuum-shell .home-copy>small {padding-right:96px}
+ .continuum-shell .home-companion {justify-self:end;grid-row:1;grid-column:1;margin-bottom:6px;align-self:start}
+ .continuum-shell .home-companion .companion--home {width:110px;height:92px}
+ .continuum-shell .home-copy {grid-row:2;grid-column:1}
+ .continuum-shell .home-stage:not(:has(.home-companion .companion)) .home-copy {grid-row:auto}
+ .continuum-shell .home-suggestions {grid-template-columns:minmax(0,1fr)}
+ .continuum-shell .assistant-message {padding:18px 16px 6px}
+ .continuum-shell .markdown h1 {font-size:23px;line-height:33px}
+ .continuum-shell .markdown h2 {font-size:21px;line-height:31px}
+ .continuum-shell .markdown h3 {font-size:19px;line-height:29px}
+ .continuum-shell .markdown blockquote {padding:12px}
+ .continuum-shell :is(th,td) {padding:8px;font-size:14px}
+ .continuum-shell .change-columns {grid-template-columns:1fr}
+ .continuum-shell .answer-identity {gap:7px}
+ .continuum-shell .header-search kbd {display:none}
+ .continuum-shell .composer-controls :is(.send,button:last-child) {min-width:54px}
+}
+/* An explicit fallback can also be selected in a review harness; no theme swap. */
+.continuum-shell[data-transparency=opaque] {background:#edf3fd}
+.continuum-shell[data-transparency=opaque] :is(#sidebar,.header-search,.composer,.assistant-message,.turn-actions,.overlay,.dialog-panel,.context-panel,.home-suggestions button,.home-suggestions a) {backdrop-filter:none;-webkit-backdrop-filter:none;background:#fff}
+.continuum-shell[data-transparency=opaque] #sidebar {background:#e7efff}
+.continuum-shell[data-motion=static] .companion * {animation:none!important;transition:none!important;transform:none!important}
+@media (prefers-reduced-transparency:reduce) {
+ .continuum-shell {background:#edf3fd}
+ .continuum-shell :is(#sidebar,.header-search,.composer,.assistant-message,.turn-actions,.overlay,.dialog-panel,.context-panel,.home-suggestions button,.home-suggestions a) {backdrop-filter:none;-webkit-backdrop-filter:none;background:#fff}
+ .continuum-shell #sidebar {background:#e7efff}
+}
+@media (prefers-reduced-motion:reduce) {
+ .continuum-shell *, .continuum-shell *::before, .continuum-shell *::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}
+ .continuum-shell .companion-body,.continuum-shell .companion-shadow {transform:none!important}
+}
+@media (forced-colors:active) {
+ .continuum-shell {background:Canvas;color:CanvasText}
+ .continuum-shell :is(#sidebar,.composer,.assistant-message,.turn-actions,.overlay,.dialog-panel,.context-panel,.header-search) {background:Canvas;border:1px solid CanvasText;box-shadow:none;backdrop-filter:none}
+ .continuum-shell .companion {visibility:hidden}
+ .continuum-shell :is(button,a,input,textarea,select):focus-visible {outline:3px solid Highlight}
+}
+
+.continuum-shell article.is-context-target .assistant-message {border-color:#b4c5f5;box-shadow:0 0 0 1px #c4d3fb}
+.continuum-shell article.is-context-target .turn-actions {border-color:#b4c5f5;box-shadow:0 1px 0 1px #c4d3fb}
+
+.continuum-shell .file-reference{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid #cbd9f4;background:#f8fbff;max-width:100%;flex-wrap:wrap}.continuum-shell .file-reference span{overflow-wrap:anywhere}
+
+@media(max-width:959px){.continuum-shell .nav-scrim{left:min(260px,85vw);width:auto;right:0}}
+/* Keep a long history inside its own scroller rather than enlarging the grid row. */
+.continuum-shell {grid-template-rows:minmax(0,1fr)}
+.continuum-shell #sidebar {min-height:0;overflow:hidden}
+.continuum-shell #sidebar>nav {flex:1 1 auto;min-height:0;overflow:auto}
+@media(min-width:768px) and (max-width:1023px){
+ .continuum-shell:is(.has-context,:has(>.context-panel)),.continuum-shell.collapsed:is(.has-context,:has(>.context-panel)){grid-template-columns:minmax(0,1fr)}
+ .continuum-shell>.context-panel{position:fixed;inset:0;z-index:24;margin:0;width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0;padding:20px;background:#f8fbff}
+}
+
+.continuum-shell .context-panel button[aria-current=true]{border-color:#8fa6ed;background:#ebf1ff;box-shadow:inset 3px 0 #647cf6}
+@media(prefers-reduced-motion:no-preference){.continuum-shell:not([data-motion=static])>.context-panel[open]{animation:continuum-context-enter 280ms ease-out both}@keyframes continuum-context-enter{from{opacity:.35;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}}
+
+.continuum-shell .context-panel mark{color:#182c61;background:#dce7ff;border-radius:3px}
+
+.continuum-shell .brand{white-space:normal;overflow-wrap:anywhere}
+
+.continuum-shell .home-copy>small,.continuum-shell .home-copy p.muted,.continuum-shell .composer-note,.continuum-shell .composer-controls>small{color:#526080}
+
+.continuum-shell button{min-width:44px}
+
+.continuum-shell .assistive-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
