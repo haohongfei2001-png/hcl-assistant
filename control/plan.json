@@ -374,12 +374,12 @@
     "design_adoption": {
       "id": "CONTINUUM-V1-20261001",
       "owner_decision": "APPROVED_FOR_REPOSITORY_ADOPTION",
-      "repository_status": "ALL_FIVE_ASSETS_PRESENT_READBACK_VERIFIED_FORMALLY_ADOPTED_ON_MAIN_MERGE",
+      "repository_status": "ALL_FIVE_ORIGINAL_PNG_PAYLOADS_VERIFIED_IN_TEXT_ONLY_SVG_PENDING_MAIN_MERGE",
       "document": "docs/design/continuum-v1/README.md",
       "manifest": "docs/design/continuum-v1/asset-manifest.json",
       "reconciled_main": "905ff1fbb3b2264757931e8d9ff5fdff54e7a32f",
       "implementation_status": "NOT_IMPLEMENTED",
-      "asset_and_merge_gate_required": false,
+      "asset_and_merge_gate_required": true,
       "companion_candidates": [
         "M-01",
         "M-02"
@@ -388,7 +388,9 @@
       "companion_selection_blocks_shared_ui": false,
       "change_scope": "DESIGN_ASSETS_SPECIFICATIONS_AND_PLAN_METADATA_ONLY",
       "new_top_level_queue": false,
-      "current_checker_validates_visual_items": false
+      "current_checker_validates_visual_items": false,
+      "asset_storage": "LOSSLESS_BASE64_IN_UTF8_SVG_WRAPPER",
+      "original_payload_verification": "5_OF_5_BYTE_SIZE_SHA256_AND_GIT_BLOB_MATCH"
     }
   },
   "writer": {
