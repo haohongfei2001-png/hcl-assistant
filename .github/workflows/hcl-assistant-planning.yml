@@ -245,7 +245,7 @@ jobs:
           python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-cloud-runtime"
           echo "HCL_DEVELOPMENT_ARTIFACT=$RUNNER_TEMP/hcla-cloud-runtime" >> "$GITHUB_ENV"
       - name: Real Postgres independent-instance and temporary-state regressions
-        run: python3 -m unittest tests.test_cloud tests.test_cloud_postgres -v
+        run: python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres -v
       - name: Shared cloud UI with local injected provider fixture
         run: |
           npm ci --ignore-scripts

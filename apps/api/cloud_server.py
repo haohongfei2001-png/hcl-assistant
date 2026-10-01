@@ -12,6 +12,7 @@ from packages.cloud.config import CloudConfig
 from packages.cloud.postgres import PostgresLedger,TENANT
 from packages.cloud.budget import CloudBudget
 from packages.cloud.lifecycle import Lifecycle,DurableCancellation
+from packages.cloud.diagnostics import StartupCode,StartupDiagnostics,close_after_startup_failure
 
 class CloudStores(Stores):
     def conversation(self,tenant,**kwargs):
@@ -22,20 +23,33 @@ class CloudApplication:
     cloud=True
     request_bound=True
     real_chat=True
-    def __init__(self,config,*,store=None,adapter=None,runtime=None):
+    def __init__(self,config,*,store=None,adapter=None,runtime=None,startup=None):
+        startup=startup or StartupDiagnostics()
         self.cloud_config=config
-        self.stores=CloudStores(store or PostgresLedger(config.database_url))
-        self.development_auth=CloudAuth(self.stores.persistent,config.origin,config.login,config.verifier)
-        self.configuration={'configured':True,'provider_enabled':config.provider is not None}
-        self.development_bridge=RuntimeBridge(Path(runtime).absolute()) if runtime else None
-        self.controllers={};self.lifecycle=Lifecycle(self.stores.persistent)
-        self.lifecycle.recover()
-        self.live_chat_service=None
-        if config.provider:
-            c=config.provider
-            budget=CloudBudget(self.stores.persistent,c)
-            adapter=adapter or DeepSeekAdapter(base_url=c.base_url,model=c.model,api_key=c.api_key,wall_timeout=60)
-            self.live_chat_service=LiveChat(c,budget,adapter,cancellation_factory=lambda identity:DurableCancellation(self.stores.persistent,identity))
+        store=store or PostgresLedger(config.database_url,startup=startup)
+        try:
+            startup.mark(StartupCode.TEMPORARY_STORE)
+            self.stores=CloudStores(store)
+            startup.mark(StartupCode.OWNER_AUTH)
+            self.development_auth=CloudAuth(store,config.origin,config.login,config.verifier)
+            startup.mark(StartupCode.RUNTIME_BRIDGE)
+            self.development_bridge=RuntimeBridge(Path(runtime).absolute()) if runtime else None
+            startup.mark(StartupCode.LIFECYCLE)
+            self.controllers={};self.lifecycle=Lifecycle(store)
+            self.lifecycle.recover()
+            self.live_chat_service=None
+            if config.provider:
+                c=config.provider
+                startup.mark(StartupCode.PROVIDER_BUDGET)
+                budget=CloudBudget(store,c)
+                startup.mark(StartupCode.PROVIDER_ADAPTER)
+                adapter=adapter or DeepSeekAdapter(base_url=c.base_url,model=c.model,api_key=c.api_key,wall_timeout=60)
+                self.live_chat_service=LiveChat(c,budget,adapter,cancellation_factory=lambda identity:DurableCancellation(store,identity))
+            self.configuration={'configured':True,'provider_enabled':config.provider is not None}
+        except Exception:
+            close_after_startup_failure(store)
+            if hasattr(self,'stores'):close_after_startup_failure(self.stores.temporary)
+            raise
     def controller(self,store):
         if store not in self.controllers:
             # Persistent bodies never enter the volatile-only HCL bridge.
@@ -66,11 +80,11 @@ class Unconfigured:
 def application(env=None):
     env=os.environ if env is None else env
     # Fail closed; never select local SQLite/mock on a cloud setup error.
-    store=None
+    startup=StartupDiagnostics()
     try:
+        startup.mark(StartupCode.CONFIG)
         config=CloudConfig.from_env(env)
-        store=PostgresLedger(config.database_url)
-        return CloudApplication(config,store=store,runtime=env.get('HCL_DEVELOPMENT_ARTIFACT','.hcla-runtime'))
+        return CloudApplication(config,runtime=env.get('HCL_DEVELOPMENT_ARTIFACT','.hcla-runtime'),startup=startup)
     except Exception:
-        if store is not None:store.close()
+        startup.report()
         return Unconfigured()
