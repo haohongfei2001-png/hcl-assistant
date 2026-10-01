@@ -45,10 +45,10 @@ L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、
 
 ## Continuum V1 design adoption status
 
-Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 CONTINUUM-V1-20261001，目录见 [Design Adoption](docs/design/continuum-v1/README.md)。五张原PNG已入库并完成GitHub回读，blob identity 与 manifest 全部一致；本采用变更合入 main 后即作为正式视觉基准。**V1 application implementation 仍未完成**，不能把设计采用写成能力或界面已实现。
+Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 CONTINUUM-V1-20261001，目录见 [Design Adoption](docs/design/continuum-v1/README.md)。五张批准 PNG 的原始 payload 已无损嵌入 UTF-8 SVG 文本包装并逐一反解核验，原始 byte size、SHA-256、原 Git blob identity 与 manifest 全部一致；包装 blob identity 也单独记录。本采用变更通过 exact-head/main 核验并合入 main 后即作为正式视觉基准。**V1 application implementation 仍未完成**，不能把设计采用写成能力或界面已实现。
 
 采用变更已与 **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f** 对齐；该 main 已包含 PR10/P1-02 的全部应用、测试和证据。本次不改其代码或回执，也不恢复旧任务。唯一下一项为 P1-03；实现 writer 在本设计采用完成后按现有单 writer 规则认领。
 
-V1 实施增量属于同一 P1-03 的三个顺序交付切片，不另起队列；仅在原图入库与本采用PR的门槛满足后生效。原 P1-03 的 Inspector/Settings/整体synthetic范围和 R17–R20 义务仍保留。两套形象 M-01/M-02 同时保留，selected_companion=null，未选唯一形象不阻塞共同界面。
+V1 实施增量属于同一 P1-03 的三个顺序交付切片，不另起队列；仅在设计资产的无损 text-only 存储与本采用 PR 的门槛满足后生效。原 P1-03 的 Inspector/Settings/整体synthetic范围和 R17–R20 义务仍保留。两套形象 M-01/M-02 同时保留，selected_companion=null，未选唯一形象不阻塞共同界面。
 
 本次相对协调后 main 只改变设计规格、资产清单及计划元数据；合并继承的 P1-02 代码不归功于本次。无应用/测试/workflow/runtime或研究机制修改，无生产/能力启用。原图中的示例文案、数字、引用、文件/工具按钮不成为事实。V01–V10 的实际视觉对照与交互演示均 NOT_IMPLEMENTED / NOT_VERIFIED；旧包 CI 不替代新验收。
