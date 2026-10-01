@@ -3,11 +3,11 @@
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: U1-01_CHAT_INTERFACE_REFINEMENT**
+**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：U1-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-six-point Continuum chat refinement, honest home/history state, compact composer and contextual actions。验收：U01、U02、U03、U04、U05、U06
+当前7包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -28,7 +28,7 @@ six-point Continuum chat refinement, honest home/history state, compact composer
 | D1-01 | development-only DeepSeek chat | P1-02 | COMPLETE |
 | P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | COMPLETE |
 | C1-01 | isolated stateless hosting and offline acceptance | P1-03 | COMPLETE |
-| U1-01 | six-point Continuum chat interface refinement | C1-01 | NEXT_READY |
+| U1-01 | six-point Continuum chat interface refinement | C1-01 | COMPLETE |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
