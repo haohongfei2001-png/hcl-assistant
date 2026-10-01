@@ -61,3 +61,23 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 执行期间另一写入者将PR #6合入main e2a72050。此次在最新main树上仅重新应用文档/计划差异，并把该main作为合并父提交，保留其所有应用、脚本、测试、workflow、C12、runtime维护文档/证据和runtime_sync字段。Stable lock不改。Git compare以e2a72050为新的直接基线；不得将继承的代码归为本次实现。
 
 原始head2cbfc524的通过只属于该head；协调后的新head及最终main必须分别验证。当前唯一下一项仍P0-01，不因为继承维护实现转向repin、L3或Judge。
+
+## 5. Continuum V1 视觉增量的权威与采用门槛
+
+以上第4节的“当前/下一项”只记录 A2 原采用时点；全局下一项始终来自最新 product_development，不恢复 P0-01。此次视觉采用已重新协调到 main `333b39f71cede6b741bfdd3486a66d6958901ce0`：P0-01、P1-01、P1-02 均保持 COMPLETE；D1-01 是当前唯一 NEXT_READY，P1-03 等待其完成。本次只采用设计资产/规格/计划元数据，不接管、改写或越过 D1-01 已采用的实现、writer、预算与证据。
+
+| V1 位置 | 权威范围 |
+|---|---|
+| [Design Adoption](design/continuum-v1/README.md) / [manifest](design/continuum-v1/asset-manifest.json) | Owner 最新批准的五张设计稿、原始 PNG payload 身份/校验值、text-only 存储包装、采用条件和示例语义例外 |
+| UI-01 / UI-02 / UI-03 原稿 | 首页、对话与依据/修订的目标布局、配色、光感和材质；不是能力或事实证据 |
+| M-01 / M-02 原稿 | 两个并存数字形象候选；未选唯一方案，不阻塞共同界面 |
+| [Implementation Spec](design/continuum-v1/IMPLEMENTATION_SPEC.md) | UX/Visual 的组成部分，补齐静态图的组件、响应式、键盘、异常、动效和锚点返回 |
+| [Visual Acceptance](design/continuum-v1/ACCEPTANCE.md) | R19/R20 下 V01–V10 的实际截图/交互演示/偏差记录要求；不伪称已自动验收 |
+
+五张批准稿的原始 PNG payload 必须完整可恢复并与 manifest 身份匹配；仓库既有 boundary checker 禁止 binary payload，因此资产以无损 base64 嵌入的 UTF-8 SVG 文本包装保存。仅有 manifest、文字规范或本地副本不构成仓库资产完成。正式采用仍需最新 main/并行 PR 协调、exact-head 审阅/CI、合入和 exact-main 核验。采用后它们替代冲突的旧暖白灰绿编辑器视觉，旧 visual 原字节保留为历史 baseline，不作为可选方案。
+
+优先级按作用域：产品架构/权限/来源/研究与生产门槛始终高于图内示例；目标外观以五张批准稿和 Visual 为准；静态图未表达的行为以 UX/V1 Implementation 为准；事实只来自 exact-SHA 代码/回执；队列只来自 product_development。图片里的企业、引用、PDF按钮或智能体不是新授权，语义替换须显式记录但不能变成任意换皮。
+
+机器 `product_plan_version` 保持 `1.2/A2-Product`；不为视觉采用修改当前 checker/tests/workflows 已采用的 package identities、依赖或验收数组。三个 V1 交付切片从属既有 P1-03，不持有独立 NEXT_READY 或执行者，不构成第二队列。其原 R17–R20 义务和全部既有回归仍适用，新增 V 验收必须有实际证据。
+
+任何并发 main 前进都需重新基线协调，只在最新树上重放本次资产/规格/计划差异并保留新 main 父历史。不得 force-push、重置已完成状态、覆盖历史证据/固定锁/维护配置或以过期 CI 合并新 head。

@@ -55,3 +55,13 @@ PR #6在本次采用期间已由另一执行者合入 `e2a72050e184e61f45b17de3f
 ## Development-only chat amendment (2026-09-30 23:48 UTC)
 
 User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
+
+## Continuum V1 设计实施增量（不另建队列）
+
+最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。五张批准 PNG 的原始 payload 已按 manifest 无损嵌入 UTF-8 SVG 文本包装并完成反解校验；本采用变更通过 exact-head/main 后成为正式视觉基准。视觉采用不等于实现完成。
+
+本采用重新基于最新 main **333b39f71cede6b741bfdd3486a66d6958901ce0**。保持当前 **D1-01_DEVELOPMENT_DEEPSEEK_CHAT** 为唯一 NEXT_READY 和现有 writer；不把 P1-03 提前、不恢复旧任务。D1-01 完成并按现有规则采用后，P1-03 才按 live queue 进入实现。
+
+Continuum 工作只扩充既有 P1-03 的实施/验收范围，按三个串行切片执行：V1-A 共享外观/Home/长对话/Composer → V1-B 依据/来源/修订/锚点返回 → V1-C 双形象/响应式/motion/Inspector/Settings/整体验收。切片不拥有独立 NEXT_READY、state 或 writer，不构成第二队列。
+
+P1-03 原 R17–R20 义务不减少；V01–V10 从属于其视觉/交互完成条件。实际页面必须与 UI-01/UI-02/UI-03 对照，并提供可播放的来源往返、修订状态和阅读位置恢复证据；无法忠实实现的部分进入偏差登记，不能静默替换为默认组件。M-01/M-02 均保留，未选唯一形象不阻塞共同界面。

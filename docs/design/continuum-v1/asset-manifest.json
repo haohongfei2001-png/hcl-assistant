@@ -1,0 +1,94 @@
+{
+  "design_id": "CONTINUUM-V1-20261001",
+  "product_architecture": "Canonical 1.2 / A2-Product",
+  "owner_decision": "APPROVED_FOR_REPOSITORY_ADOPTION",
+  "repository_asset_status": "ALL_FIVE_ORIGINAL_PNG_PAYLOADS_LOSSLESSLY_EMBEDDED_IN_TEXT_SVG_AND_VERIFIED",
+  "adoption_gate": [
+    "ALL_FIVE_ORIGINAL_PNG_PAYLOADS_MATCH_MANIFEST_SATISFIED",
+    "TEXT_ONLY_REPOSITORY_BOUNDARY_COMPATIBILITY",
+    "LATEST_MAIN_RECONCILED_SATISFIED",
+    "EXACT_HEAD_REVIEW_AND_CI_PASS",
+    "MERGED_MAIN_AND_EXACT_MAIN_CI_PASS"
+  ],
+  "asset_kind": "DESIGN_REFERENCES_NOT_PRODUCT_OR_EFFICACY_EVIDENCE",
+  "image_content_is_fixture_only": true,
+  "selected_companion": null,
+  "companion_candidates": [
+    "M-01",
+    "M-02"
+  ],
+  "companion_selection_blocks_shared_ui": false,
+  "base_main": "333b39f71cede6b741bfdd3486a66d6958901ce0",
+  "assets": [
+    {
+      "id": "UI-01",
+      "role": "首页／初始输入",
+      "path": "assets/01-home.svg",
+      "original_attachment_name": "hcl_assistant_智能工作台.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 1347395,
+      "sha256": "fe67f7c463184604bbc8ead7bc1071df7142480ac4c58cb56adc8710ba38ed37",
+      "transformation": "LOSSLESS_BASE64_EMBEDDING_ONLY_ORIGINAL_PNG_RECOVERABLE_BYTE_FOR_BYTE",
+      "storage_format": "UTF8_SVG_WITH_LOSSLESS_BASE64_EMBEDDED_ORIGINAL_PNG",
+      "wrapper_git_blob_sha1": "6e1f3fc561a2968e9ee9439cacb9f77d84e84922",
+      "original_png_git_blob_sha1": "770dfdc9a48e07b5271f3679999a51f419fef9e0"
+    },
+    {
+      "id": "UI-02",
+      "role": "多轮对话的长回答视口参考",
+      "path": "assets/02-conversation.svg",
+      "original_attachment_name": "hcl智能知识库助手界面.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 1593841,
+      "sha256": "8c9b156da534056bd2784eae59d4aa70093ff4ee3b814c2a62bae123f931a43e",
+      "transformation": "LOSSLESS_BASE64_EMBEDDING_ONLY_ORIGINAL_PNG_RECOVERABLE_BYTE_FOR_BYTE",
+      "storage_format": "UTF8_SVG_WITH_LOSSLESS_BASE64_EMBEDDED_ORIGINAL_PNG",
+      "wrapper_git_blob_sha1": "0c6fa049958719d423c0d89fc88465df63345f32",
+      "original_png_git_blob_sha1": "ceb2f3281a650f630ecfdd0305762b52f4757fa5"
+    },
+    {
+      "id": "UI-03",
+      "role": "依据与修订展开",
+      "path": "assets/03-evidence-revision.svg",
+      "original_attachment_name": "hcl智能助手多源依据工作台.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 1634448,
+      "sha256": "9d71d9b8bb8c7e2ccbb1557e7b2f62edd7a7a8c959db6e3f63abd6596064f974",
+      "transformation": "LOSSLESS_BASE64_EMBEDDING_ONLY_ORIGINAL_PNG_RECOVERABLE_BYTE_FOR_BYTE",
+      "storage_format": "UTF8_SVG_WITH_LOSSLESS_BASE64_EMBEDDED_ORIGINAL_PNG",
+      "wrapper_git_blob_sha1": "fe2387206e51fd65d557c946946c8544d45ba5f3",
+      "original_png_git_blob_sha1": "d6882c7708e4598d9027bdc2e4271db55c3025a8"
+    },
+    {
+      "id": "M-01",
+      "role": "球体／悬浮核心数字形象候选",
+      "path": "assets/04-companion-orb.svg",
+      "original_attachment_name": "hcl_assistant_数字伙伴设计概念板.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 1502019,
+      "sha256": "ea89c4326d0ba739cab760c7f79fe827802f265a90406184b24c98d1c25d6648",
+      "transformation": "LOSSLESS_BASE64_EMBEDDING_ONLY_ORIGINAL_PNG_RECOVERABLE_BYTE_FOR_BYTE",
+      "storage_format": "UTF8_SVG_WITH_LOSSLESS_BASE64_EMBEDDED_ORIGINAL_PNG",
+      "wrapper_git_blob_sha1": "3afe88d7368f5eac9a754a16adb8bc412310de76",
+      "original_png_git_blob_sha1": "ada0ccfe31a835537f7a90b5d7a505e35b44c73e"
+    },
+    {
+      "id": "M-02",
+      "role": "输入／容器／信号接收数字形象候选",
+      "path": "assets/05-companion-receiver.svg",
+      "original_attachment_name": "hcl助手_温柔接住每个想法.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 1369796,
+      "sha256": "c15c106d8d62b5b8aaf33895449530fdcff3c755a775dd9d850a124a76029320",
+      "transformation": "LOSSLESS_BASE64_EMBEDDING_ONLY_ORIGINAL_PNG_RECOVERABLE_BYTE_FOR_BYTE",
+      "storage_format": "UTF8_SVG_WITH_LOSSLESS_BASE64_EMBEDDED_ORIGINAL_PNG",
+      "wrapper_git_blob_sha1": "9969d2922804b9d9597cdb8a258ebddd90fbf966",
+      "original_png_git_blob_sha1": "a2fdbea0519cfb3e13fe73151f38b5f6929dfba9"
+    }
+  ]
+}

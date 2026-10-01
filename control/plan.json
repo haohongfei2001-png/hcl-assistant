@@ -315,7 +315,69 @@
           "R19",
           "R20"
         ],
-        "evidence": "NOT_IMPLEMENTED"
+        "evidence": "NOT_IMPLEMENTED",
+        "design_id": "CONTINUUM-V1-20261001",
+        "delivery_spec": "docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md",
+        "visual_acceptance_spec": "docs/design/continuum-v1/ACCEPTANCE.md",
+        "delivery_slices_are_independent_queue": false,
+        "ordered_delivery_slices": [
+          {
+            "id": "V1-A",
+            "depends_on": "D1-01_COMPLETE_AND_V1_DESIGN_ADOPTION",
+            "scope": "shared surfaces home long conversation and composer",
+            "design_refs": [
+              "UI-01",
+              "UI-02"
+            ],
+            "verification": [
+              "V01",
+              "V02",
+              "V08",
+              "V10"
+            ]
+          },
+          {
+            "id": "V1-B",
+            "depends_on": "V1-A",
+            "scope": "evidence source revision and anchored return",
+            "design_refs": [
+              "UI-02",
+              "UI-03"
+            ],
+            "verification": [
+              "V03",
+              "V04",
+              "V05",
+              "V06",
+              "V07",
+              "V10"
+            ]
+          },
+          {
+            "id": "V1-C",
+            "depends_on": "V1-B",
+            "scope": "both companion candidates off state responsive motion and original P1-03 integrated acceptance",
+            "design_refs": [
+              "UI-01",
+              "UI-02",
+              "UI-03",
+              "M-01",
+              "M-02"
+            ],
+            "verification": [
+              "V01",
+              "V02",
+              "V03",
+              "V04",
+              "V05",
+              "V06",
+              "V07",
+              "V08",
+              "V09",
+              "V10"
+            ]
+          }
+        ]
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -336,6 +398,26 @@
       "bridge_lock_unchanged": true,
       "production_enabled": false,
       "private_data_allowed": false
+    },
+    "design_adoption": {
+      "id": "CONTINUUM-V1-20261001",
+      "owner_decision": "APPROVED_FOR_REPOSITORY_ADOPTION",
+      "repository_status": "ALL_FIVE_ORIGINAL_PNG_PAYLOADS_VERIFIED_IN_TEXT_ONLY_SVG_FORMALLY_ADOPTED_ON_MAIN_MERGE",
+      "document": "docs/design/continuum-v1/README.md",
+      "manifest": "docs/design/continuum-v1/asset-manifest.json",
+      "reconciled_main": "333b39f71cede6b741bfdd3486a66d6958901ce0",
+      "implementation_status": "NOT_IMPLEMENTED",
+      "asset_storage": "LOSSLESS_BASE64_IN_UTF8_SVG_WRAPPER",
+      "original_payload_verification": "5_OF_5_BYTE_SIZE_SHA256_AND_GIT_BLOB_MATCH",
+      "companion_candidates": [
+        "M-01",
+        "M-02"
+      ],
+      "selected_companion": null,
+      "companion_selection_blocks_shared_ui": false,
+      "change_scope": "DESIGN_ASSETS_SPECIFICATIONS_AND_PLAN_METADATA_ONLY",
+      "new_top_level_queue": false,
+      "current_checker_validates_visual_items": false
     }
   },
   "writer": {

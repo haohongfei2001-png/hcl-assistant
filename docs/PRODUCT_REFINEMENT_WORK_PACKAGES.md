@@ -2,7 +2,7 @@
 
 归属：[Master Plan](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX Spec](UX_SPEC.md)、[Visual System](VISUAL_SYSTEM.md)。这是已确认Review的实施分解，不是重新设计。唯一live队列在 [Development Plan](../DEVELOPMENT_PLAN.md) 与 `control/plan.json.product_development`；本文件只定义包。文档采用与后续implementation Work分开；实现必须明确认领。
 
-四包串行；当前状态仅以Development Plan和product_development为准。L0–L2.5历史完成不重开；L3生产激活门槛不变。全部当前整改只用synthetic/provider-free数据，不获得真实用户数据、provider、Judge或agent执行授权。工作包不是PR数量承诺，不扩成通用平台。
+当前状态和依赖仅以 Development Plan 与 product_development 为准；最新 live queue 在 P1-02 与 P1-03 之间包含获准的 D1-01 development-only chat，本文件不另建并行队列。L0–L2.5历史完成不重开；L3生产激活门槛不变。全部当前整改只用synthetic/provider-free数据，不获得真实用户数据、provider、Judge或agent执行授权。工作包不是PR数量承诺，不扩成通用平台。
 
 ## P0-01 — Truthful preview contract repair
 
@@ -15,7 +15,7 @@
 范围：
 - 当前队列消费者/checker/reporting/tests支持 `control/plan.json.product_development`；历史11包与L3安全门槛保持严格校验。输出不能再把legacy阶段停止码称作全局NEXT_READY；拒绝当前多ready/未知依赖/镜像漂移。先完成此适配，才允许自动认领或调度新包。
 - TEMPORARY正文不得进入localStorage或其他持久副本；刷新/重开行为准确。
-- DELETE实际移除受影响正文及run/input/派生副本；STOP_USING实际阻止后续使用。不能只改状态标签；其他独立来源仍有相同内容时明确范围。
+- DELETE实际移除受影响正文及run/input/派生副本；STOP_USING实际阻止后续使用。不能只改状态标签；其他独立来源仍有相同信息时明确范围。
 - 文件在支持限额内完整保留并核对；不能silent slice到1800字符后称完整上传/读取。不能支持完整内容就明确拒绝或要求用户显式选片段。
 - 普通否定句不当作更正；更正对象不按最近记录猜测。只支持明确synthetic场景/目标时如实限制，含糊目标不修改并澄清。
 - 回答/Explain只有实际读取并记录的依据；无相应背景时不得模板声称已参考历史。开放输入保持未覆盖，不扩大关键词脚本冒充一般理解。
@@ -52,7 +52,7 @@
 
 ## P1-03 — Integrated product acceptance and bounded inspection
 
-任务标识：P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE；依赖P1-02；状态见唯一live队列。
+任务标识：P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE；当前 live queue 依赖 D1-01（P1-02 已完成）；状态见唯一 live 队列。
 
 目标：完成A2产品体验的受限synthetic验收，保留可检查性，不扩大Lab为主产品。
 
@@ -61,6 +61,20 @@
 验收：R17–R20及全部R01–R16回归；报告正向可用行为、错误/未覆盖、keyboard/IME、视觉/窄屏、延迟与成本可测范围。不得用节点数/Explain展开率代替任务成功或认知效力。没有provider时费用为明确来源的0，不声称真实模型延迟/成本达标。
 
 完成后：若L3四项门槛未满足，STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED。不造新功能填充等待；保留未来真实日常MVP所需门槛清单。Judge仍LONG_TERM_GOAL_ONLY，Act仍未授权。
+
+### Continuum V1：P1-03 内的三个依赖交付切片
+
+本增量落实已正式采用的 [Continuum V1 五张设计稿](design/continuum-v1/README.md)。不重开已完成的 P1-01/P1-02，沿用其真实修订、来源和数据控制逻辑。父包仍是 P1-03，原 R17–R20 范围和全部既有回归均保留。
+
+| 切片 | 依赖 | 范围及对应设计 | 完成/验收条件 |
+|---|---|---|---|
+| V1-A：共享外观与阅读/输入 | D1-01 完成且 V1 原图/规范已采用（P1-02 已完成） | UI-01、UI-02；共享 frame、轻量导航/顶栏、Home、对话阅读面、文件条、表格/代码、composer；按原图还原配色/光感/材质；保留 A/B/off 插槽契约但不等待形象选择 | V01、V02、相关 V08/V10；实际首页与长回答对照截图，至少3轮长内容，IME/草稿/流式不抢滚动；P0/P1-01 功能不回归 |
+| V1-B：依据/来源/修订的连续展开 | V1-A | UI-02、UI-03；回答级依据层、来源列表/片段/原文、变化比较、未重评/失败/未知、正常关闭与返回原位置；复用 P1-02 记录而非重做语义 | V03–V07、相关 V10；可播放来源往返和修订轨迹，同视口锚点误差目标≤2 CSS px、重排后同段落可见，当前权限下原文不泄露 |
+| V1-C：双形象、全状态与整体验收 | V1-B | M-01、M-02、UI-01/02/03；两套候选和 off，responsive/keyboard/减少动态/低性能fallback；原P1-03的Inspector/Settings/Lab边界；全部原轨迹回归 | V01–V10 和 R01–R20 所需证据齐全；实际页面/原稿对照和操作录像，重大偏差已审阅；两形象并存即可，不要求选唯一品牌 |
+
+三个切片是同一父包的工作分解与交付顺序，不是独立机器队列，不各设 NEXT_READY/state/writer，不按三条并行支线启动。`product_development` 的既有 package identities、D1-01→P1-03 顺序和各自验收数组不因视觉采用改变；P1-03 直到原义务与 V01–V10 均满足才可 COMPLETE。现有 checker 尚不自动验证新 V 项，必须显式审阅实际证据；不得因此削弱既有检查。
+
+每个切片可形成必要审阅检查点，但不能用 PR 数量替代结果。无法忠实实现的布局/材质/动作须在偏差表写清，不静默换成默认组件，不把旧 P1-01 截图当 V1 已实现。完整交付和差异登记格式见 [Visual Acceptance](design/continuum-v1/ACCEPTANCE.md)。
 
 ## 共同交付规则
 

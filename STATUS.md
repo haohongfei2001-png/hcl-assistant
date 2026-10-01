@@ -46,3 +46,13 @@ L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、
 ## Development-only chat amendment (2026-09-30 23:48 UTC)
 
 User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
+
+## Continuum V1 design adoption status
+
+Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 `CONTINUUM-V1-20261001`；五张批准 PNG 的原始 payload 已无损嵌入 UTF-8 SVG 文本包装并逐一反解核验，原始 byte size、SHA-256 与 Git blob identity 均与 manifest 一致。这是仓库存储适配，不改变像素内容；本采用变更通过 exact-head/main 核验并合入 main 后即成为正式视觉基准。**V1 application implementation 仍未完成**。
+
+本采用已协调到最新 main `333b39f71cede6b741bfdd3486a66d6958901ce0`。该 main 已包含 D1-01 development-only DeepSeek chat 的已审阅代码与 continuation 状态；本次不修改或归功这些实现，不改变 D1-01 的授权、预算、writer 或完成门槛。当前唯一 NEXT_READY 仍为 D1-01；P1-03 继续等待 D1-01，不能因视觉采用越过依赖。
+
+Continuum 实施增量仍只属于 P1-03：V1-A 共享视觉/Home/长内容/Composer → V1-B 依据/来源/修订/阅读锚点返回 → V1-C 双 companion/off、响应式/motion、Inspector/Settings 和整体验收。两套形象 M-01/M-02 同时保留，`selected_companion=null`，不阻塞共同界面。
+
+本次只改变设计资产、规格和计划元数据；无应用/测试/workflow/runtime lock/capability manifest/研究机制变更，无生产或 Judge/Act 激活。原图示例文案、数据、引用和未实现按钮不成为事实。V01–V10 的实际页面截图、交互演示与偏差登记仍为 NOT_IMPLEMENTED / NOT_VERIFIED。

@@ -154,3 +154,17 @@ STOP_USING 阻止未来上下文与派生复活；DELETE 清理受影响的原�
 验收分三条互不替代的线：产品可用性；理解/修订/数据控制正确性；相对强模型与良好通用上下文的 HCL 增量价值。节点数、拒答数、答案长度或偏好单项不是效力证据。
 
 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md) 区分原始已执行证据与本次新增待实现义务；[Review Adoption](docs/PRODUCT_REVIEW_ADOPTION.md) 记录基线缺陷和整改，不声称本次已修代码。后续 Work 只执行当前唯一 NEXT_READY，不从历史包、旧研究产品目录、截图或尚未合并 PR 恢复第二套产品方案。
+
+## 13. Continuum V1 视觉采用与实施增量
+
+Owner 已确认最新一轮三张无实物背景产品状态稿与两张数字形象稿。采用身份为 **CONTINUUM-V1-20261001**，不改 Canonical 1.2 / A2-Product 的产品架构和机器版本。五张批准 PNG 的原始 payload 已按仓库 text-only 边界无损嵌入 UTF-8 SVG 包装，并逐一反解核验原始 byte size、SHA-256 与 Git blob identity；这是存储适配而非视觉变换。完整目录、五稿映射、原图校验值和示例语义处置见 [Design Adoption](docs/design/continuum-v1/README.md)。本采用变更合入 main 后正式生效；实现仍须通过后续 P1-03 的实际页面与交互验收。
+
+视觉探索结束：保留本轮布局、浅蓝紫色系、柔和光感、半透明材质和整体气质。背景不放风景或物品，不退回旧的灰绿编辑器界面。Continuum 的同一工作面、对象原位展开、输入/上下文连续与真实修订保持不变。静态图没有表达的响应式、键盘、长内容、加载/异常、动效与阅读位置保持由 [Implementation Spec](docs/design/continuum-v1/IMPLEMENTATION_SPEC.md) 补齐，不再扩展产品战略。
+
+M-01 悬浮核心与 M-02 输入/容器/信号接收两候选并存，最终选择为空；共同界面先行，可关闭插槽和 A/B 核对状态不依赖唯一选择。图中 HCL Technologies、示例文件/数据/引用/能力按钮不成为本项目事实或授权；按真实支持范围与原创 synthetic fixtures 替换语义，记录差异，不借此重设计外观。
+
+已完成 P0-01、P1-01、P1-02 及历史回执不重开。最新 live queue 已在 P1-02 与 P1-03 之间插入获准的 D1-01 development-only chat；本视觉采用不改变该顺序、writer、预算或完成门槛。Continuum 实施与对照验收仍纳入 P1-03 的三个串行交付切片，并在 D1-01 完成后按唯一 product_development 队列进入。详见 [Development Plan](DEVELOPMENT_PLAN.md) 和 [Work Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。
+
+视觉还原是完成条件：实际首页、三轮长内容、依据/来源、修订变化及返回原位置截图必须与对应原稿对照，并提供实际可播放交互记录；两套形象和关闭状态、响应式及异常状态均验证。缺失、重大偏差或默认组件替代必须显式记录，不能只因“按钮能点”填 PASS。V1 的 V01–V10 是 R19/R20 下新增验收义务，设计采用和旧 CI 不代表这些义务已经通过。
+
+本次范围只限资产、规格文档和计划元数据。应用/测试/检查器/workflow/runtime lock/capability manifest、研究机制、I02–I06 和全部数据/执行/评估门槛不修改；Judge 与 Act 不因视觉稿出现而启用。
