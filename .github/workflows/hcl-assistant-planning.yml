@@ -16,7 +16,9 @@ concurrency:
 jobs:
   planning:
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    # Browser installation plus the full visual evidence upload exceeded 8m;
+    # keep all assertions and artifacts, with a bounded infrastructure margin.
+    timeout-minutes: 12
     env:
       PRODUCT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       PRODUCT_REPOSITORY: ${{ github.repository }}
