@@ -1,6 +1,6 @@
 # Visual System — Canonical A2 / Continuum V1
 
-产品架构仍为 [Product Master Plan 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md) / A2-Product；交互语义见 [UX](UX_SPEC.md)。本次是 Owner 已批准的视觉稿正式采用，不重开产品定位。五张原始 PNG 已按 [manifest](design/continuum-v1/asset-manifest.json) 入库并回读核验；本变更合入 main 后 `CONTINUUM-V1-20261001` 即为唯一当前视觉基准。
+产品架构仍为 [Product Master Plan 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md) / A2-Product；交互语义见 [UX](UX_SPEC.md)。本次是 Owner 已批准的视觉稿正式采用，不重开产品定位。五张批准设计稿已按 [manifest](design/continuum-v1/asset-manifest.json) 以无损文本封装入库，原始 PNG 可逐字节恢复；这是仓库存储适配，不改变像素内容。本变更通过 exact-head/main 核验并合入后，`CONTINUUM-V1-20261001` 即为唯一当前视觉基准。
 
 ## 1. 唯一视觉基准
 
