@@ -68,13 +68,13 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 
 | V1 位置 | 权威范围 |
 |---|---|
-| [Design Adoption](design/continuum-v1/README.md) / [manifest](design/continuum-v1/asset-manifest.json) | Owner 最新批准的五张原图、原始身份/校验值、采用条件和示例语义例外 |
+| [Design Adoption](design/continuum-v1/README.md) / [manifest](design/continuum-v1/asset-manifest.json) | Owner 最新批准的五张设计稿、原始 PNG payload 身份/校验值、text-only 存储包装、采用条件和示例语义例外 |
 | UI-01 / UI-02 / UI-03 原稿 | 首页、对话与依据/修订的目标布局、配色、光感和材质；不是能力或事实证据 |
 | M-01 / M-02 原稿 | 两个并存数字形象候选；未选唯一方案，不阻塞共同界面 |
 | [Implementation Spec](design/continuum-v1/IMPLEMENTATION_SPEC.md) | UX/Visual 的组成部分，补齐静态图的组件、响应式、键盘、异常、动效和锚点返回 |
 | [Visual Acceptance](design/continuum-v1/ACCEPTANCE.md) | R19/R20 下 V01–V10 的实际截图/交互演示/偏差记录要求；不伪称已自动验收 |
 
-五张原图未完整入库核验时，PR 保持草稿且不可合并；仅有 manifest、文字规范或本地副本不构成仓库资产完成。正式采用需所有原图与 manifest 匹配、最新 main/并行 PR 协调、exact-head 审阅/CI、合入和 exact-main 核验。采用后它们替代冲突的旧暖白灰绿编辑器视觉，旧 visual 原字节保留为历史 baseline，不作为可选方案。
+五张批准稿的原始 PNG payload 必须完整可恢复并与 manifest 身份匹配；仓库既有 boundary checker 禁止 binary payload，因此资产以无损 base64 嵌入的 UTF-8 SVG 文本包装保存。仅有 manifest、文字规范或本地副本不构成仓库资产完成。正式采用仍需最新 main/并行 PR 协调、exact-head 审阅/CI、合入和 exact-main 核验。采用后它们替代冲突的旧暖白灰绿编辑器视觉，旧 visual 原字节保留为历史 baseline，不作为可选方案。
 
 优先级按作用域：产品架构/权限/来源/研究与生产门槛始终高于图内示例；目标外观以五张批准稿和 Visual 为准；静态图未表达的行为以 UX/V1 Implementation 为准；事实只来自 exact-SHA 代码/回执；队列只来自 product_development。图片里的企业、引用、PDF按钮或智能体不是新授权，语义替换须显式记录但不能变成任意换皮。
 
