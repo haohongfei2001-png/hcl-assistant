@@ -7,7 +7,9 @@ used, so Supabase transaction pooling is supported. No schema is created here.
 """
 from contextlib import contextmanager
 import re
+import ssl
 import threading
+from packages.cloud.diagnostics import StartupCode, StartupDiagnostics, close_after_startup_failure
 from packages.store.ledger import Ledger, Fault
 
 SCHEMA = 'hcla'
@@ -81,20 +83,34 @@ class Guard:
         finally: self.mutex.release()
 
 class PostgresLedger(Ledger):
-    def __init__(self, dsn, *, connection=None, tenant=TENANT):
+    def __init__(self, dsn, *, connection=None, tenant=TENANT, startup=None):
+        startup = startup or StartupDiagnostics()
+        startup.mark(StartupCode.DATABASE_ROLE)
         if tenant != TENANT: raise Fault(403,'Cloud owner identity required')
         if connection is None:
+            startup.mark(StartupCode.DATABASE_DRIVER)
             import psycopg
             from psycopg.rows import dict_row
-            connection=psycopg.connect(dsn,sslrootcert="system",autocommit=True,prepare_threshold=None,row_factory=dict_row,connect_timeout=5)
+            startup.mark(StartupCode.DATABASE_CONNECT)
+            try:
+                connection=psycopg.connect(dsn,sslrootcert="system",autocommit=True,prepare_threshold=None,row_factory=dict_row,connect_timeout=5)
+            except ssl.SSLError:
+                startup.mark(StartupCode.DATABASE_TLS)
+                raise
         self.connection=connection; self.tenant=tenant; self.volatile=False
-        role=connection.execute("SELECT rolsuper,rolbypassrls,pg_has_role(current_user,'hcla_app','member') AS member FROM pg_roles WHERE rolname=current_user").fetchone()
-        if role is None or role['rolsuper'] or role['rolbypassrls'] or not role['member']:
-            connection.close();raise Fault(503,'Restricted cloud database role required')
-        self.fence=None; self.lock=Guard(self); self.db=Driver(self)
-        with self.lock:
-            row=self.connection.execute('SELECT version FROM schema_version WHERE singleton=1').fetchone()
-            if row is None or row['version'] != 1: raise Fault(503,'Cloud schema migration required')
+        try:
+            startup.mark(StartupCode.DATABASE_ROLE)
+            role=connection.execute("SELECT rolsuper,rolbypassrls,pg_has_role(current_user,'hcla_app','member') AS member FROM pg_roles WHERE rolname=current_user").fetchone()
+            if role is None or role['rolsuper'] or role['rolbypassrls'] or not role['member']:
+                raise Fault(503,'Restricted cloud database role required')
+            self.fence=None; self.lock=Guard(self); self.db=Driver(self)
+            startup.mark(StartupCode.DATABASE_SCHEMA)
+            with self.lock:
+                row=self.connection.execute('SELECT version FROM schema_version WHERE singleton=1').fetchone()
+                if row is None or row['version'] != 1: raise Fault(503,'Cloud schema migration required')
+        except Exception:
+            close_after_startup_failure(connection)
+            raise
     def check_fence(self):
         if self.fence is None: return
         run_id, owner=self.fence

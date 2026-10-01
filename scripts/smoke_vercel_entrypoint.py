@@ -49,6 +49,10 @@ def main():
             '__VC_HANDLER_ENTRYPOINT': 'api/index.py',
             '__VC_HANDLER_ENTRYPOINT_ABS': str(ROOT / 'api/index.py'),
             '__VC_HANDLER_VARIABLE_NAME': 'handler',
+            # Synthetic invalid values exercise real startup-log redaction.
+            'HCLA_DATABASE_URL': 'PRIVATE_SETUP_CANARY',
+            'HCLA_PUBLIC_ORIGIN': 'PRIVATE_SETUP_CANARY',
+            'HCLA_OWNER_CONFIG': 'PRIVATE_SETUP_CANARY',
         }
         process = subprocess.Popen(
             [sys.executable, '-c', 'import vercel_runtime.vc_init'],
@@ -56,6 +60,7 @@ def main():
         )
         connection = None
         messages, pending = [], b''
+        decoded_logs = []
 
         def receive_until(predicate):
             nonlocal pending
@@ -112,7 +117,9 @@ def main():
             for message in messages:
                 if message['type'] == 'log':
                     decoded = base64.b64decode(message['payload']['message']).decode('utf-8')
+                    decoded_logs.append(decoded)
                     assert 'PRIVATE_QUERY_CANARY' not in decoded
+                    assert 'PRIVATE_SETUP_CANARY' not in decoded
         finally:
             process.terminate()
             try: out, err = process.communicate(timeout=5)
@@ -122,9 +129,14 @@ def main():
             if connection is not None: connection.close()
             listener.close()
         assert b'PRIVATE_QUERY_CANARY' not in out + err
+        assert b'PRIVATE_SETUP_CANARY' not in out + err
+        logs = ''.join(decoded_logs) + (out + err).decode('utf-8')
+        assert 'HCLA_STARTUP_FAILED code=CONFIG' in logs
+        assert 'Traceback' not in logs
         print(json.dumps({'runtime': 'vercel-runtime==0.22.1', 'readiness': 'PASS',
                           'unconfigured_status': 'PASS', 'private_route_denial': 'PASS',
                           'lifecycle_ipc': 'PASS', 'request_url_redaction': 'PASS',
+                          'startup_code_redaction': 'PASS',
                           'provider_calls': 0, 'database_connections': 0}))
 
 
