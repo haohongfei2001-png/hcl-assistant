@@ -234,6 +234,10 @@ jobs:
           persist-credentials: false
       - name: Install pinned cloud database client
         run: python3 -m pip install -r requirements.lock
+      - name: Exercise actual Vercel Python streaming entrypoint without configuration
+        run: |
+          python3 -m pip install vercel-runtime==0.22.1
+          python3 scripts/smoke_vercel_entrypoint.py
       - name: Acquire only reviewed provider-free runtime
         run: |
           python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-cloud-runtime"

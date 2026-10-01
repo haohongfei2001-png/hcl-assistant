@@ -16,7 +16,11 @@ Authorized engineering amendment: 2026-10-01 08:36 UTC. This is a Vercel deploym
 
 ## One-time setup and activation gates
 
-No hosted endpoint has been verified. Repository readiness is not a live website.
+The first Vercel bootstrap at `96fc1d237b8da51555897f6d93390c00c4134c8c` served static assets, but `/v1/development/status` failed with `FUNCTION_INVOCATION_FAILED`. Vercel discovered the imported internal `application` factory instead of the HTTP handler. Hosted usability is not yet verified; an unconfigured deployment must return a truthful status, never bypass setup or authentication.
+
+The entrypoint correction keeps only the explicit HTTP `handler` export, retains the same handler instance under Vercel's request wrapper, and opens/closes application resources inside each GET/POST dispatch. Readiness pings do not create an application. Access-log suppression remains below the host's `log_message` override. Existing owner, database, provider-budget, synthetic-only and production gates are unchanged.
+
+Verification adds `tests/test_vercel_entrypoint.py` for wrapper dispatch, cleanup, isolation and streaming, plus `scripts/smoke_vercel_entrypoint.py` against the actual pinned `vercel-runtime==0.22.1` streaming/IPC runtime in CI. The smoke runs with no inherited app configuration, checks readiness, HTTP 200 unconfigured status, private-route denial, one start/end pair per request and URL-log redaction. The cloud workspace blocks local socket creation, including an elevated retry; local unit checks do not substitute for that hosted-runtime test or the post-merge public endpoint check. No credentials, database provisioning or provider calls are part of this fix.
 
 The normal setup has **three sensitive entries**, all personally controlled by the owner. Model names, rates, output limit and build defaults are versioned in `control/cloud-profile.json` and `vercel.json`; they are not a user form. No model grant is enabled by default.
 

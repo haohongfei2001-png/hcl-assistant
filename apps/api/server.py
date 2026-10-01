@@ -50,13 +50,15 @@ class Application:
 
 def handler(application):
     class Handler(BaseHTTPRequestHandler):
+        def log_request(self, *args): pass  # Vercel wraps log_message; suppress URL access logs here.
+        def log_error(self, *args): pass  # Malformed request lines can also contain private URLs.
         def log_message(self, *args): pass  # Never log user bodies or request URLs.
 
         def tenant(self):
-            if application.real_chat:
-                if application.development_auth is None:raise Fault(503,'Development configuration required')
-                application.development_auth.boundary(self,mutation=self.command=='POST')
-                return application.development_auth.require(self.headers.get('Cookie'))
+            if self.application.real_chat:
+                if self.application.development_auth is None:raise Fault(503,'Development configuration required')
+                self.application.development_auth.boundary(self,mutation=self.command=='POST')
+                return self.application.development_auth.require(self.headers.get('Cookie'))
             origin=self.headers.get('Origin')
             if origin and origin not in {'http://127.0.0.1:5173','http://localhost:5173','http://127.0.0.1:'+str(self.server.server_port),'http://localhost:'+str(self.server.server_port)}: raise Fault(403,'Synthetic API accepts only loopback app origins')
             identity=self.headers.get('X-Synthetic-Identity','demo-a')
@@ -65,7 +67,7 @@ def handler(application):
 
         def body(self):
             length=int(self.headers.get('Content-Length','0'))
-            if length<0 or length>(1048576 if getattr(application,'cloud',False) and urlparse(self.path).path=='/v1/temporary/execute' else 262144): raise Fault(413,'Request too large')
+            if length<0 or length>(1048576 if getattr(self.application,'cloud',False) and urlparse(self.path).path=='/v1/temporary/execute' else 262144): raise Fault(413,'Request too large')
             try: obj=json.loads(self.rfile.read(length))
             except (ValueError,UnicodeError): raise Fault(400,'Invalid complete JSON')
             if not isinstance(obj,dict): raise Fault(400,'JSON object required')
@@ -80,41 +82,41 @@ def handler(application):
         def do_POST(self):
             try:
                 path=urlparse(self.path).path
-                if path=='/v1/development/login' and application.real_chat:
-                    if application.development_auth is None:raise Fault(503,'Development configuration required')
-                    application.development_auth.boundary(self,mutation=True)
+                if path=='/v1/development/login' and self.application.real_chat:
+                    if self.application.development_auth is None:raise Fault(503,'Development configuration required')
+                    self.application.development_auth.boundary(self,mutation=True)
                     credentials=self.body()
-                    session=application.development_auth.login(credentials if getattr(application,'cloud',False) else credentials.get('access_token'))
-                    cookie=application.development_auth.cookie(session) if getattr(application,'cloud',False) else 'hcla_development='+session+'; HttpOnly; SameSite=Strict; Path=/v1; Max-Age=3600'
+                    session=self.application.development_auth.login(credentials if getattr(self.application,'cloud',False) else credentials.get('access_token'))
+                    cookie=self.application.development_auth.cookie(session) if getattr(self.application,'cloud',False) else 'hcla_development='+session+'; HttpOnly; SameSite=Strict; Path=/v1; Max-Age=3600'
                     self.json(200,{'authenticated':True},cookie);return
                 tenant=self.tenant(); data=self.body(); parts=path.strip('/').split('/')
-                if getattr(application,'cloud',False):
+                if getattr(self.application,'cloud',False):
                     if path=='/v1/development/logout':
-                        application.development_auth.logout(self.headers.get('Cookie'));self.json(200,{'authenticated':False},'__Host-hcla=; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return
+                        self.application.development_auth.logout(self.headers.get('Cookie'));self.json(200,{'authenticated':False},'__Host-hcla=; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return
                     if path=='/v1/temporary/execute':
                         from packages.cloud.temporary import execute
-                        execute(application,self,data);return
+                        execute(self.application,self,data);return
                     if path=='/v1/temporary/cancel':
-                        application.lifecycle.cancel_temporary(data.get('request_id'));self.json(200,{'cancel_requested':True});return
+                        self.application.lifecycle.cancel_temporary(data.get('request_id'));self.json(200,{'cancel_requested':True});return
                     if len(parts)==4 and parts[:2]==['v1','runs'] and parts[3]=='execute':
-                        self.json(200,application.execute(tenant,parts[2]));return
+                        self.json(200,self.application.execute(tenant,parts[2]));return
                     if path=='/v1/sources' or (len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events'):
-                        if data.get('event',{}).get('type','message') in {'message','upload'} and application.live_chat_service is None:raise Fault(503,'模型服务尚未启用，请联系管理员；无需在网页填写密钥')
-                if path=='/v1/topics': result=application.stores.persistent.topic(tenant,data.get('title','Topic'))
-                elif path=='/v1/conversations': result=application.stores.conversation(tenant,title=data.get('title','新对话'),topic_id=data.get('topic_id'),memory=data.get('memory','CONVERSATION'))
+                        if data.get('event',{}).get('type','message') in {'message','upload'} and self.application.live_chat_service is None:raise Fault(503,'模型服务尚未启用，请联系管理员；无需在网页填写密钥')
+                if path=='/v1/topics': result=self.application.stores.persistent.topic(tenant,data.get('title','Topic'))
+                elif path=='/v1/conversations': result=self.application.stores.conversation(tenant,title=data.get('title','新对话'),topic_id=data.get('topic_id'),memory=data.get('memory','CONVERSATION'))
                 elif len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events':
-                    store=application.stores.for_conversation(tenant,parts[2]); ctrl=application.controller(store)
+                    store=self.application.stores.for_conversation(tenant,parts[2]); ctrl=self.application.controller(store)
                     data.setdefault('scope',{})['conversation_id']=parts[2]
-                    if application.real_chat and data.get('event',{}).get('type','message') in {'message','upload'}:data['development_chat']=True
-                    result=application.start(ctrl,tenant,ctrl.handle_interaction(tenant,data,defer=True))
+                    if self.application.real_chat and data.get('event',{}).get('type','message') in {'message','upload'}:data['development_chat']=True
+                    result=self.application.start(ctrl,tenant,ctrl.handle_interaction(tenant,data,defer=True))
                 elif path=='/v1/sources':
-                    conversation=data['scope']['conversation_id']; store=application.stores.for_conversation(tenant,conversation); ctrl=application.controller(store)
+                    conversation=data['scope']['conversation_id']; store=self.application.stores.for_conversation(tenant,conversation); ctrl=self.application.controller(store)
                     data.setdefault('event',{})['type']='upload'
-                    if application.real_chat:data['development_chat']=True
-                    result=application.start(ctrl,tenant,ctrl.handle_interaction(tenant,data,defer=True))
+                    if self.application.real_chat:data['development_chat']=True
+                    result=self.application.start(ctrl,tenant,ctrl.handle_interaction(tenant,data,defer=True))
                 elif len(parts)==4 and parts[:2]==['v1','runs'] and parts[3] in {'cancel','retry'}:
-                    ctrl=application.controller(application.stores.for_run(tenant,parts[2]))
-                    result=ctrl.cancel(tenant,parts[2]) if parts[3]=='cancel' else application.start(ctrl,tenant,ctrl.retry(tenant,parts[2],data['idempotency_key'],defer=True))
+                    ctrl=self.application.controller(self.application.stores.for_run(tenant,parts[2]))
+                    result=ctrl.cancel(tenant,parts[2]) if parts[3]=='cancel' else self.application.start(ctrl,tenant,ctrl.retry(tenant,parts[2],data['idempotency_key'],defer=True))
                 else: raise Fault(404,'Unknown API route')
                 self.json(200,result)
             except Fault as exc: self.json(exc.status,{'error':str(exc)})
@@ -125,27 +127,27 @@ def handler(application):
             try:
                 if urlparse(self.path).path=='/v1/development/status':
                     authenticated=False
-                    if application.real_chat and application.development_auth:
-                        application.development_auth.boundary(self)
-                        try:application.development_auth.require(self.headers.get('Cookie'));authenticated=True
+                    if self.application.real_chat and self.application.development_auth:
+                        self.application.development_auth.boundary(self)
+                        try:self.application.development_auth.require(self.headers.get('Cookie'));authenticated=True
                         except Fault:pass
-                    self.json(200,{'enabled':application.real_chat,'authenticated':authenticated,'configuration':application.configuration,'production_enabled':False,'cloud':getattr(application,'cloud',False),'request_bound':getattr(application,'request_bound',False)});return
+                    self.json(200,{'enabled':self.application.real_chat,'authenticated':authenticated,'configuration':self.application.configuration,'production_enabled':False,'cloud':getattr(self.application,'cloud',False),'request_bound':getattr(self.application,'request_bound',False)});return
                 tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); path=parsed.path; parts=path.strip('/').split('/')
                 if path=='/v1/development/runtime':
-                    result=application.development_bridge.handshake() if application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}
-                elif path=='/v1/conversations': result=application.stores.conversations(tenant)
-                elif path=='/v1/topics': result=application.stores.persistent.list(tenant,'topic')
-                elif path=='/v1/history/search': result=history_search(application,tenant,query.get('q',[''])[0])
+                    result=self.application.development_bridge.handshake() if self.application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}
+                elif path=='/v1/conversations': result=self.application.stores.conversations(tenant)
+                elif path=='/v1/topics': result=self.application.stores.persistent.list(tenant,'topic')
+                elif path=='/v1/history/search': result=history_search(self.application,tenant,query.get('q',[''])[0])
                 elif len(parts)==3 and parts[:2]==['v1','conversations']:
-                    store=application.stores.for_conversation(tenant,parts[2]); c=store.get(tenant,'conversation',parts[2]); ctrl=application.controller(store)
+                    store=self.application.stores.for_conversation(tenant,parts[2]); c=store.get(tenant,'conversation',parts[2]); ctrl=self.application.controller(store)
                     result=conversation_view(ctrl,tenant,c['id'])
                 elif len(parts)==3 and parts[:2]==['v1','runs']:
-                    ctrl=application.controller(application.stores.for_run(tenant,parts[2])); result=ctrl.read(tenant,parts[2])
+                    ctrl=self.application.controller(self.application.stores.for_run(tenant,parts[2])); result=ctrl.read(tenant,parts[2])
                 elif len(parts)==4 and parts[:2]==['v1','runs'] and parts[3]=='events':
-                    ctrl=application.controller(application.stores.for_run(tenant,parts[2])); ctrl.read(tenant,parts[2])
+                    ctrl=self.application.controller(self.application.stores.for_run(tenant,parts[2])); ctrl.read(tenant,parts[2])
                     after=int(self.headers.get('Last-Event-ID',query.get('after',['0'])[0]))
                     self.send_response(200); self.send_header('Content-Type','text/event-stream'); self.send_header('Cache-Control','no-store'); self.end_headers()
-                    deadline=time.monotonic()+(50 if application.real_chat else 10)
+                    deadline=time.monotonic()+(50 if self.application.real_chat else 10)
                     try:
                         while time.monotonic()<deadline:
                             for event in ctrl.events(tenant,parts[2],after):
@@ -155,19 +157,19 @@ def handler(application):
                     except (BrokenPipeError,ConnectionResetError): pass
                     return
                 elif len(parts)==4 and parts[:2]==['v1','lab'] and parts[2] in {'runs','export'}:
-                    ctrl=application.controller(application.stores.for_run(tenant,parts[3])); result=inspect(ctrl,tenant,parts[3])
+                    ctrl=self.application.controller(self.application.stores.for_run(tenant,parts[3])); result=inspect(ctrl,tenant,parts[3])
                 elif len(parts)==4 and parts[:2]==['v1','answers'] and parts[3]=='explain':
                     result=None
-                    for store in [application.stores.persistent,application.stores.temporary]:
-                        ctrl=application.controller(store)
+                    for store in [self.application.stores.persistent,self.application.stores.temporary]:
+                        ctrl=self.application.controller(store)
                         for r in store.list(tenant,'run'):
                             identity=r.get('answer_identity') or r.get('answer') or {}
                             if identity.get('answer_id')==parts[2]:
                                 result=project(ctrl.read(tenant,r['id']))
                     if result is None: result={'redactions':['UNAVAILABLE'],'judgment_basis':[],'source_links':[]}
                 elif path=='/v1/context':
-                    conversation=query['conversation_id'][0]; store=application.stores.for_conversation(tenant,conversation); c=store.get(tenant,'conversation',conversation)
-                    context=application.controller(store).context
+                    conversation=query['conversation_id'][0]; store=self.application.stores.for_conversation(tenant,conversation); c=store.get(tenant,'conversation',conversation)
+                    context=self.application.controller(store).context
                     result=context.selection(tenant,conversation,c['topic_id'])
                     if query.get('manage')==['1']:
                         managed=[]
@@ -182,16 +184,17 @@ def handler(application):
                             if source['conversation_id']==conversation and not source['deleted']: sources[source['id']]=source
                         result['managed_sources']=list(sources.values())
                 elif len(parts)==3 and parts[:2]==['v1','sources']:
-                    conversation=query['conversation_id'][0]; store=application.stores.for_conversation(tenant,conversation); c=store.get(tenant,'conversation',conversation)
+                    conversation=query['conversation_id'][0]; store=self.application.stores.for_conversation(tenant,conversation); c=store.get(tenant,'conversation',conversation)
                     ref={'source_id':parts[2],'version':int(query['version'][0]),'sha256':query['sha256'][0]}; result=store.source(tenant,ref,conversation,c['topic_id'],allow_stopped=True)
                 else: raise Fault(404,'Unknown API route')
                 if 'limit' in query and path in {'/v1/conversations','/v1/topics'}:
-                    account=application.stores.persistent.account(tenant)
+                    account=self.application.stores.persistent.account(tenant)
                     result=page(result,tenant,account['version'],account['policy'],int(query['limit'][0]),query.get('cursor',[None])[0],path)
                 self.json(200,result)
             except Fault as exc: self.json(exc.status,{'error':str(exc)})
             except (KeyError,TypeError,ValueError): self.json(400,{'error':'Malformed query'})
             except Exception: self.json(500,{'error':'Internal failure'})
+    Handler.application=application
     return Handler
 
 
