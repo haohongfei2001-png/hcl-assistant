@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "grant_closed": true,
+  "grant": "hcla-20261001-six-requests-usd10",
+  "initial_run_id": 36797830169,
+  "continuation_run_id": 36799956194,
+  "continuation_source_commit": "333b39f71cede6b741bfdd3486a66d6958901ce0",
+  "continuation_artifact_id": 11135163495,
+  "continuation_artifact_sha256": "b60f753f0c71e13f79451c600b3f184a1d97758e6ee16c35f97b84ed0596eb84",
+  "status": "VERIFIED_DEVELOPMENT_CHAIN_ONLY",
+  "aggregate_calls": 6,
+  "aggregate_reserved_usd": "8.42637312",
+  "combined_usage_priced_upper_bound_usd": "0.01411212",
+  "actual_provider_cost_usd": null,
+  "requested_model": "deepseek-v4-pro",
+  "actual_model": "deepseek-v4-pro",
+  "thinking": "enabled",
+  "reasoning_effort": "high",
+  "verified_live_cases": [
+    "ordinary_chinese",
+    "same_conversation_followup",
+    "explicit_correction",
+    "stop_using_withdrawal",
+    "pinned_belief_interpretation_output_bound_in_answer"
+  ],
+  "initial_failed_attempt_preserved": "correction length/empty_answer at2048 completion tokens",
+  "hcl_scope": "PINNED_SYNTHETIC_BELIEF_INTERPRETATION_ONLY",
+  "runtime_source_sha": "a8229fcf22eccb851c58502a09ae7cecb346faf5",
+  "real_ui_plus_live_provider_end_to_end": "NOT_RUN; UI/server/controller wiring exercised separately with fake provider",
+  "mac_installation": "NOT_VERIFIED",
+  "public_https_url": "NOT_VERIFIED; ONLINE_HOSTING_PAUSED_BY_USER",
+  "efficacy": "NOT_TESTED"
+}

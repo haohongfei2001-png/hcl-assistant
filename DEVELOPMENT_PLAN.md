@@ -3,11 +3,11 @@
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
+**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
 
-development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
+bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -25,8 +25,8 @@ development-only same-Controller DeepSeek chat, valid context, truthful HCL and 
 | P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | COMPLETE |
 | P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | COMPLETE |
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | COMPLETE |
-| D1-01 | development-only DeepSeek chat | P1-02 | NEXT_READY |
-| P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | WAITING_DEPENDENCY |
+| D1-01 | development-only DeepSeek chat | P1-02 | COMPLETE |
+| P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | NEXT_READY |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 

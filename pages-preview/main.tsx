@@ -1,3 +1,5 @@
+import {InspectionView} from '../apps/web/src/InspectionView';
+import {previewInspection} from './inspection';
 import React,{useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {AssistantShell} from '../apps/web/src/AssistantShell';
@@ -38,7 +40,7 @@ function App(){
    {panel.kind==='source'&&found&&<><h2>当时的输入原文</h2><pre>{found.input}</pre><p>登记不代表语义理解</p></>}
    {panel.kind==='record-source'&&<><button className="source-return" onClick={()=>{const id=panel.recordId;setPanel({kind:panel.returnKind||'memory',runId:panel.runId});if(id)requestAnimationFrame(()=>document.querySelector<HTMLElement>('[data-source="'+CSS.escape(id)+'"]')?.focus())}}>{panel.returnKind==='evidence'?'返回依据':'返回记忆'}</button><h2>当时登记的原文</h2>{sourceRecord&&sourceRecord.status!=='DELETED'?<><small>版本{sourceRecord.version} · {sourceRecord.status}</small><pre>{sourceRecord.content}</pre></>:<p>原文已删除或不可访问</p>}<p>来源定位不证明语义支持；假设不会写回实际背景。</p></>}
    {panel.kind==='change'&&found?.revision&&<><h2>{found.revision.type==='GUESS'?'降回猜测':found.revision.type==='SUPERSEDE'?'从现在变化':found.revision.type==='HYPOTHETICAL_BRANCH'?'隔离假设':'更正旧信息'}</h2><div className="change-columns"><section><strong>旧依据</strong>{resolveBasis(c,found).map(ref=><p key={ref.recordId}>{ref.kind}：{ref.content||'当前不可用'}</p>)}</section><section><strong>新信息</strong><p>{allRecords.find((r:any)=>r.id===found.revision.newRecordId)?.content||'当前不可用'}</p></section></div><p>{found.change}</p><p>未重新评估：{found.revision.notReevaluatedRunIds?.length||0}；没有自动证明替代解释。事件时间与人物获知时间：未知。</p>{found.revision.effectiveTime&&<p>从本次提交起生效：{found.revision.effectiveTime}</p>}<button onClick={()=>setPanel({kind:'evidence',runId:found.id})}>查看依据</button></>}
-   {panel.kind==='lab'&&found&&<><h2>只读静态演示记录</h2><p>未接入真实 HCL；成功运行不代表效力。Provider calls:0。</p><dl><dt>Route</dt><dd>{found.route}</dd><dt>状态</dt><dd>{found.status||'LEGACY_UNVERIFIED'}</dd><dt>版本</dt><dd>{found.version}</dd></dl><pre>{JSON.stringify({basis:resolveBasis(c,found),capabilities:found.caps,uncertainty:found.uncertainty},null,2)}</pre><p>Compare尚未获准，不执行或伪造比较。</p></>}
+   {panel.kind==='lab'&&found&&<InspectionView value={previewInspection(c,found)}/>}
   </ProductDialog>}/>
 }
 createRoot(document.getElementById('root')!).render(<App/>);

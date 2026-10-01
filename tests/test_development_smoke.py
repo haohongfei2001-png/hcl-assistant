@@ -158,3 +158,16 @@ class ArtifactRedirectTests(unittest.TestCase):
         with patch('urllib.request.build_opener',return_value=Opener()),patch('urllib.request.urlopen',side_effect=blob),patch('scripts.smoke_development_chat.verify_checkpoint',return_value=frozen) as verify:
             result=download_checkpoint('https://api.github.com/repos/haohongfei2001-png/hcl-assistant','original-offline-token',lambda _:meta)
             self.assertEqual(result,frozen);verify.assert_called_once_with(b'original-offline-zip')
+
+class ExhaustedGrantTests(unittest.TestCase):
+    def test_closed_grant_refuses_before_network_or_provider_configuration(self):
+        import os,tempfile
+        from unittest.mock import patch
+        from scripts.smoke_development_chat import main
+        previous=os.getcwd()
+        with tempfile.TemporaryDirectory() as d:
+            try:
+                os.chdir(d)
+                with patch('urllib.request.urlopen',side_effect=AssertionError('network forbidden')) as network,patch('scripts.smoke_development_chat.application',side_effect=AssertionError('provider configuration forbidden')) as app:
+                    self.assertEqual(main(),1);network.assert_not_called();app.assert_not_called()
+            finally:os.chdir(previous)

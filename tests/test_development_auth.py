@@ -20,3 +20,17 @@ class AuthTests(unittest.TestCase):
     def test_new_process_does_not_inherit_sessions(self):
         session=self.auth.login('synthetic-test-token-only-123456')
         with self.assertRaises(Fault):DevelopmentAuth('synthetic-test-token-only-123456').require('hcla_development='+session)
+
+class LocalGrantIsolationTests(unittest.TestCase):
+    def test_consumed_cloud_grant_cannot_create_fresh_local_budget(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from apps.api.development_server import application
+        from tests.test_development_budget import fake_env
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/'budget.sqlite'
+            env=fake_env(HCLA_DEV_BUDGET_ID='hcla-20261001-six-requests-usd10')
+            with patch('apps.api.development_server.DeepSeekAdapter') as provider:
+                with self.assertRaisesRegex(ValueError,'Consumed cloud-smoke grant'):application(':memory:',str(path),env=env)
+                provider.assert_not_called();self.assertFalse(path.exists())
