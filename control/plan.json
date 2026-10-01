@@ -217,9 +217,9 @@
     "authority": "SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE",
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
-    "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
-    "next_ready": "U2-01_CONSUMER_ACCOUNT_ENTRY_AND_FIRST_CHAT",
-    "next_package_id": "U2-01",
+    "phase": "ASSISTANT_FIRST_REFINEMENT_COMPLETE",
+    "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
+    "next_package_id": null,
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
     "current_request_scope": "AUTHORIZED_CONSUMER_PRODUCT_JOURNEYS_ZERO_PROVIDER",
     "current_executor_stop_after": "U2-01_EXACT_MAIN_VERIFIED",
@@ -439,7 +439,7 @@
         "depends_on": [
           "M1-01"
         ],
-        "state": "NEXT_READY",
+        "state": "COMPLETE",
         "delta": "移动端账号入口、连接与登录恢复、内联使用确认、不可用状态与草稿保留",
         "acceptance": [
           "U07",
@@ -447,7 +447,7 @@
           "U09",
           "U10"
         ],
-        "evidence": "docs/U2_01_EVIDENCE.md"
+        "evidence": "docs/U2_01_EVIDENCE.md; reviewed source 0f69943; final exact-head/main checks required"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -510,7 +510,7 @@
   "writer": {
     "branch": "product/u2-01-consumer-entry",
     "scope": "U2-01_CONSUMER_ACCOUNT_ENTRY_AND_FIRST_CHAT",
-    "status": "IN_PROGRESS"
+    "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {

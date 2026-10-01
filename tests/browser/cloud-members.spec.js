@@ -20,13 +20,13 @@ test('registration requires confirmation and exposes no server credential',async
  await page.goto('/');await page.getByRole('button',{name:'没有账号，注册'}).click();await page.getByLabel('用户邮箱').fill('new@example.test');await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'注册账号',exact:true}).click();
  await expect(page.getByRole('status')).toContainText('邮箱');await expect(page.getByLabel('消息',{exact:true})).toHaveCount(0);await expect(page.getByLabel('用户密码')).toHaveValue('');
  expect(await page.evaluate(()=>JSON.stringify({local:localStorage,session:sessionStorage,cookie:document.cookie}))).not.toContain('offline member password');
- await page.screenshot({path:info.outputPath('member-confirmation-entry.png'),fullPage:true});
+ await page.screenshot({path:info.outputPath('member-confirmation-entry.png'),fullPage:true,animations:'disabled'});
 });
 
 test('ordinary account entry remains usable on a narrow phone screen',async({page},info)=>{
  await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.getByLabel('用户邮箱')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- await page.screenshot({path:info.outputPath('member-mobile-entry.png'),fullPage:true});
+ await page.screenshot({path:info.outputPath('member-mobile-entry.png'),fullPage:true,animations:'disabled'});
  await expect(page.getByLabel('用户密码',{exact:true})).toHaveAttribute('type','password');await page.getByRole('button',{name:'显示密码',exact:true}).click();await expect(page.getByLabel('用户密码',{exact:true})).toHaveAttribute('type','text');await page.getByRole('button',{name:'隐藏密码',exact:true}).click();
  await page.getByLabel('用户邮箱').fill('a@example.test');await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  expect((await browserRead(page,'/v1/account/status')).body.account_scope).toBe(expectedScope('a'));
@@ -35,7 +35,7 @@ test('ordinary account entry remains usable on a narrow phone screen',async({pag
 test('account connection failure has an explicit retry and preserves entered email',async({page},info)=>{
  await page.route('**/v1/account/status',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Injected account outage'})}));
  await page.goto('/');await expect(page.getByRole('button',{name:'重新检查连接'})).toBeVisible();await expect(page.getByRole('alert')).toContainText('连接不上账号服务');
- await expect(page.getByRole('button',{name:'没有账号，注册'})).toHaveCount(0);await page.screenshot({path:info.outputPath('member-connection-retry.png'),fullPage:true});
+ await expect(page.getByRole('button',{name:'没有账号，注册'})).toHaveCount(0);await page.screenshot({path:info.outputPath('member-connection-retry.png'),fullPage:true,animations:'disabled'});
  await page.unroute('**/v1/account/status');await page.getByRole('button',{name:'重新检查连接'}).click();await expect(page.getByLabel('用户邮箱')).toBeVisible();await expect(page.getByRole('alert')).toHaveCount(0);
  await page.getByLabel('用户邮箱').fill('a@example.test');await page.getByLabel('用户密码').fill('incorrect password fixture');await page.getByRole('button',{name:'登录账号',exact:true}).click();
  await expect(page.getByRole('alert')).toContainText('登录未完成');await expect(page.getByLabel('用户邮箱')).toHaveValue('a@example.test');await expect(page.getByLabel('用户密码')).toHaveValue('');
@@ -56,7 +56,7 @@ test('first member message needs no Settings visit and cannot bypass inline cons
  await page.getByLabel('消息',{exact:true}).fill('原创合成：FIRST_MESSAGE_PHONE');let events=0;page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.endsWith('/events'))events++});
  await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();await page.getByLabel('消息',{exact:true}).press('Enter');expect(events).toBe(0);await expect(page.getByLabel('消息',{exact:true})).toHaveValue('原创合成：FIRST_MESSAGE_PHONE');
  const consent=page.getByLabel('本次仅使用原创合成内容，并使用账号可用额度');await expect(consent).toBeVisible();await consent.check();await expect(page.getByRole('button',{name:'发送',exact:true})).toBeEnabled();
- expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('member-mobile-first-message.png'),fullPage:true});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('member-mobile-first-message.png'),fullPage:true,animations:'disabled'});
  await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('.assistant-message').last()).toContainText('原创离线自然语言');expect(events).toBe(1);
 });
 
@@ -74,7 +74,7 @@ test('two member browsers have separate history and cannot use owner routes',asy
  expect((await page.request.get('/v1/conversations')).status()).toBe(401);expect(paths.filter(p=>p==='/v1/conversations'||p==='/v1/topics'||p==='/v1/history/search')).toEqual([]);
  const other=await browser.newContext();const b=await other.newPage();await b.goto('http://127.0.0.1:5173/');await b.getByLabel('用户邮箱').fill('b@example.test');await b.getByLabel('用户密码').fill('offline member password');await b.getByRole('button',{name:'登录账号',exact:true}).click();await expect(b.getByLabel('消息',{exact:true})).toBeVisible();
  await expect(b.locator('body')).not.toContainText('MEMBER_A_PRIVATE_CANARY');const identity=await browserRead(b,'/v1/account/status');expect(identity.status).toBe(200);expect(identity.body.authenticated).toBe(true);expect(identity.body.account_scope).toBe(expectedScope('b'));expect((await browserRead(b,'/v1/member/conversations/'+id)).status).toBe(403);
- await page.screenshot({path:info.outputPath('member-shared-chat.png'),fullPage:true});await other.close();
+ await page.screenshot({path:info.outputPath('member-shared-chat.png'),fullPage:true,animations:'disabled'});await other.close();
 });
 
 test('logout and account switch clear drafts and previous account UI',async({page})=>{

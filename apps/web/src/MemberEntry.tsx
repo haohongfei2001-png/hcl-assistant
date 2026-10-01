@@ -22,12 +22,12 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
    }
    if(!live.current||epoch!==revision.current)return;
    if(!next.authenticated||next.account_scope!==scope.current)clearTemporary();
-   if(next.authenticated)setError('');else setError(value=>value==='暂时连接不上账号服务，你填写的邮箱仍保留，请重新检查连接'?'':value);
+   if(next.authenticated)setError('');else setError(value=>value==='暂时连接不上账号服务，请重新检查连接'?'':value);
    configureCloud(true,false,next.authenticated);setRenewing(false);setServiceError(false);scope.current=next.account_scope||'';setStatus(next);
   }catch(error){if(live.current&&epoch===revision.current){
    if(/Error: (401|403):/.test(String(error))){clear();setStatus({available:true,authenticated:false});setServiceError(false);setError('登录已结束，请重新登录')}
    else if(scope.current){suspend();setError('连接暂不可用，正在恢复登录；当前内容暂时只读')}
-   else{clear();setStatus({available:false,authenticated:false});setServiceError(true);setError('暂时连接不上账号服务，你填写的邮箱仍保留，请重新检查连接')}
+   else{clear();setStatus({available:false,authenticated:false});setServiceError(true);setError('暂时连接不上账号服务，请重新检查连接')}
   }}finally{clearTimeout(timeout)}})();
   flight.current={epoch,promise:task,controller};try{await task}finally{if(flight.current?.promise===task)flight.current=null}
  }
@@ -60,7 +60,7 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
  return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="account-heading"><div className="account-brand">HCL <span>Assistant</span></div>{extra}
   <h1 id="account-heading">{register?'创建你的账号':'继续你的对话'}</h1><p className="account-intro">登录后，在你的设备上继续自己的对话。当前仅开放合成内容体验，请勿输入真实私密资料。</p>
   {error&&<p className="account-feedback" role="alert">{error}</p>}{message&&<p className="account-feedback" role="status">{message}</p>}
-  {!status?<p role="status">正在检查账号服务…</p>:!status.available?<div className="account-unavailable"><p>{serviceError?'账号服务暂时连接不上':'普通账号服务暂未开放，请稍后再来'}</p><button className="account-secondary" disabled={busy} onClick={()=>void refresh()}>重新检查连接</button></div>:<form onSubmit={event=>void submit(event)}>
+  {!status?<p role="status">正在检查账号服务…</p>:!status.available?<div className="account-unavailable">{!serviceError&&<p>普通账号服务暂未开放，请稍后再来</p>}<button className="account-secondary" disabled={busy} onClick={()=>void refresh()}>重新检查连接</button></div>:<form onSubmit={event=>void submit(event)}>
    <label>用户邮箱<input type="email" autoComplete="username" value={email} onChange={event=>setEmail(event.target.value)} maxLength={254} disabled={busy} required/></label>
    <div className="account-password-field"><label htmlFor="member-password">用户密码</label><span className="account-password"><input id="member-password" type={showPassword?'text':'password'} autoComplete={register?'new-password':'current-password'} minLength={12} maxLength={1024} value={password} onChange={event=>setPassword(event.target.value)} disabled={busy} required/><button type="button" className="password-visibility" aria-label={showPassword?'隐藏密码':'显示密码'} aria-pressed={showPassword} disabled={busy} onClick={()=>setShowPassword(!showPassword)}>{showPassword?'隐藏':'显示'}</button></span></div>
    <p className="account-hint">{register?'至少 12 个字符。完成邮箱确认后即可登录。':'使用期间会自动保持登录，最长 12 小时。退出会清空临时对话。'}</p>
