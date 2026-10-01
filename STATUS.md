@@ -5,11 +5,11 @@
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03尚未实现。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
+**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
 
-bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
+development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -43,12 +43,6 @@ L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、
 
 既有upstream候选测试/lock-only审阅维护继续按 [原契约](docs/RUNTIME_UPSTREAM_SYNC.md) 执行；它不是另一个feature-development NEXT_READY，不覆盖当前writer或A2方案。此文档不改变其workflow设置或生产门槛。
 
-## Continuum V1 design adoption status
+## Development-only chat amendment (2026-09-30 23:48 UTC)
 
-Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 CONTINUUM-V1-20261001，目录见 [Design Adoption](docs/design/continuum-v1/README.md)。五张批准 PNG 的原始 payload 已无损嵌入 UTF-8 SVG 文本包装并逐一反解核验，原始 byte size、SHA-256、原 Git blob identity 与 manifest 全部一致；包装 blob identity 也单独记录。本采用变更通过 exact-head/main 核验并合入 main 后即作为正式视觉基准。**V1 application implementation 仍未完成**，不能把设计采用写成能力或界面已实现。
-
-采用变更已与 **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f** 对齐；该 main 已包含 PR10/P1-02 的全部应用、测试和证据。本次不改其代码或回执，也不恢复旧任务。唯一下一项为 P1-03；实现 writer 在本设计采用完成后按现有单 writer 规则认领。
-
-V1 实施增量属于同一 P1-03 的三个顺序交付切片，不另起队列；仅在设计资产的无损 text-only 存储与本采用 PR 的门槛满足后生效。原 P1-03 的 Inspector/Settings/整体synthetic范围和 R17–R20 义务仍保留。两套形象 M-01/M-02 同时保留，selected_companion=null，未选唯一形象不阻塞共同界面。
-
-本次相对协调后 main 只改变设计规格、资产清单及计划元数据；合并继承的 P1-02 代码不归功于本次。无应用/测试/workflow/runtime或研究机制修改，无生产/能力启用。原图中的示例文案、数字、引用、文件/工具按钮不成为事实。V01–V10 的实际视觉对照与交互演示均 NOT_IMPLEMENTED / NOT_VERIFIED；旧包 CI 不替代新验收。
+User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.

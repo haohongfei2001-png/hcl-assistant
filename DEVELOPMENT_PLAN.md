@@ -3,11 +3,11 @@
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
+**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
 
-bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
+development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -25,7 +25,8 @@ bounded inspect/settings and integrated original synthetic acceptance。验收�
 | P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | COMPLETE |
 | P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | COMPLETE |
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | COMPLETE |
-| P1-03 | bounded Inspect/Settings、Continuum V1视觉还原与整体synthetic验收 | P1-02 | NEXT_READY |
+| D1-01 | development-only DeepSeek chat | P1-02 | NEXT_READY |
+| P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | WAITING_DEPENDENCY |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
@@ -51,14 +52,6 @@ PR #6在本次采用期间已由另一执行者合入 `e2a72050e184e61f45b17de3f
 
 每个实施包提供实际delta、正负/修订/持久化/browser证据、exact-head CI；合并后检查exact-main，再同步Status、此文件与product_development。代码、权限或实测未支持的内容保留未实现，不用描述代替验证。本次文档执行者在合并核验后停止。
 
-## 6. Continuum V1 增量，不另建队列
+## Development-only chat amendment (2026-09-30 23:48 UTC)
 
-最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。五张批准 PNG 的原始 payload 已按 manifest 无损嵌入 UTF-8 SVG 文本包装，并以原始 byte size、SHA-256 与 Git blob identity 完成反解核验；exact-head/main 通过并合入后成为正式视觉基准。视觉采用不等于 P1-03 实现完成。
-
-本采用变更直接基于并已协调 main **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f**，保留其全部 P1-02 代码、回执和 COMPLETE 状态。唯一 NEXT_READY 为 P1-03；本次文档/资产采用不实现应用代码，P1-03 implementation writer 由后续实现工作按单 writer 规则认领。
-
-新视觉工作归入仍未完成的 **P1-03**，按 V1-A 共享外观/首页/长对话 → V1-B 依据/来源/修订/锚点返回 → V1-C 双形象/响应式/Inspector与Settings/整体截图及交互验收推进。三切片范围、参考图和验收条件在 [P1-03包定义](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md#continuum-v1p1-03-内的三个依赖交付切片) 中；切片不是另外的 NEXT_READY、独立队列或并行 writer。
-
-P1-03 原 R17–R20 义务不减少，新增 V01–V10 从属于 R19/R20。原四包任务ID、依赖、验收数组、机器 product_plan_version 和 L3 停止条件保持不变，避免本次文档变更要求修改 checker/tests/workflow。当前delta摘要保留 main 文案，详细交付切片由其同一包定义/元数据补充。checker 的通过不证明视觉还原：实际页面与五张原稿对照、关键操作录像、偏差登记仍须逐项审阅。
-
-两形象 M-01/M-02 均保留，未定唯一品牌不阻塞共同界面。图稿中的示例事实、引用、文件/搜索/模型/agent按钮不能增加当前能力。所有阶段维持 synthetic/provider-free/no-private-data 边界；完成视觉不自动进入 L3。
+User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.

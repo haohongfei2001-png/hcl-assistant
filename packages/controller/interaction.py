@@ -9,12 +9,13 @@ from packages.adapter.mock import MockAdapter
 from packages.mock_runtime.scripted import extract
 from packages.synthesis.answer import synthesize
 from packages.explain.projection import claim_source_links
-from packages.controller import development
+from packages.controller import development, live_chat
 
 
 class Controller:
-    def __init__(self, store, adapter=None, development_bridge=None):
+    def __init__(self, store, adapter=None, development_bridge=None, live_chat_service=None):
         self.store=store; self.context=PolicyContext(store); self.adapter=adapter or MockAdapter()
+        self.live_chat=live_chat_service; self.live_cancellations={}
         self.development_bridge=development_bridge; self.development_cancellations={}
 
     def handle_interaction(self, tenant, request, defer=False):
@@ -22,10 +23,13 @@ class Controller:
         obj=self.store.scope(tenant,conversation,topic)
         if scope.get('tenant_id',tenant)!=tenant: raise Fault(403,'Server owns tenant identity')
         development_spec=development.validate(self,tenant,req,obj)
+        live=live_chat.validate(self,req,obj)
         memory=req.get('allowed_memory_scope',obj['memory'])
         if memory!=obj['memory']: raise Fault(403,'Memory scope must match conversation membership')
-        budget=req.get('model_resource_policy',{})
-        if budget.get('max_provider_calls',0)!=0 or budget.get('adapter','MOCK')!='MOCK': raise Fault(403,'L1/L2 has no provider transport')
+        budget=req.get('model_resource_policy',{'adapter':'DEEPSEEK','max_provider_calls':1,'max_adapter_calls':1} if live else {})
+        if live:
+            if budget.get('adapter')!='DEEPSEEK' or budget.get('max_provider_calls')!=1:raise Fault(403,'Development chat requires one explicitly permitted provider attempt')
+        elif budget.get('max_provider_calls',0)!=0 or budget.get('adapter','MOCK')!='MOCK': raise Fault(403,'L1/L2 has no provider transport')
         if not 0<=budget.get('max_adapter_calls',1)<=1: raise Fault(400,'At most one mock adapter call per attempt')
         event=req.get('event',{}); text=event.get('text','')
         if not isinstance(text,str): raise Fault(400,'Text required')
@@ -79,10 +83,16 @@ class Controller:
                 result['selected_capability_ids']=['competing_explanations']
                 operation={'operation_id':uid(),'capability_id':'competing_explanations','input_versions':selected['source_versions'],'read_dependencies':selected['record_ids'],'output_ids':[r['record_id'] for r in selected['records'] if r['kind']=='SYSTEM_INTERPRETATION'],'status':'MOCK_AUTHORED_OUTPUT','cache_status':'NOT_REUSED','model_calls':0,'usage_refs':[],'selected':True,'executed':True,'result_produced':True,'used_in_answer':True,'cache_reused':False}
                 result['operation_receipts']=[operation]; result['run_receipt']['operations']=[operation]; result['run_receipt']['capabilities']=result['selected_capability_ids']
+            if live: live_chat.initialize(result)
             self.emit(result,'run.accepted',{})
             self.emit(result,'state.committed',{'accepted_change_ids':changes})
             return self.store.put(tenant,'run',result)
         result=self.store.atomic(tenant,conversation,req.get('idempotency_key'),req,req.get('expected_state_version'),commit)
+        for other_id,signal in list(self.live_cancellations.items()):
+            if other_id!=result['run_id']:
+                try:self.store.get(tenant,'run',other_id)
+                except Fault:continue
+                signal.set()
         run=self.read(tenant,result['run_id'])
         if not defer and run['pending']: self.finish(tenant,run['run_id'])
         return self.read(tenant,run['run_id'])
@@ -119,6 +129,8 @@ class Controller:
         return answer,prep
 
     def finish(self, tenant, run_id, delay=0):
+        if self.store.get(tenant,'run',run_id).get('live_chat'):
+            return self.live_chat.finish(self,tenant,run_id)
         if self.store.get(tenant,'run',run_id).get('development_request'):
             return development.finish(self,tenant,run_id)
         with self.store.transaction():
@@ -179,7 +191,11 @@ class Controller:
         with self.store.transaction():
             run=self.store.get(tenant,'run',run_id)
             if run['pending']:
-                if run.get('development_request'):
+                if run.get('live_chat'):
+                    signal=self.live_cancellations.get(run_id)
+                    if signal is not None: signal.set()
+                    run['stream']=[e for e in run['stream'] if not e['type'].startswith('answer.')]
+                if run.get('development_request') and not run.get('live_chat'):
                     signal=self.development_cancellations.get(run_id)
                     if signal is not None: signal.set()
                     for op in run['operation_receipts']:op.update(status='CANCELLED',executed=None if run.get('executing') else False)
@@ -190,6 +206,7 @@ class Controller:
     def retry(self, tenant, run_id, key, defer=False):
         with self.store.transaction():
             old=self.store.get(tenant,'run',run_id)
+            if old.get('live_chat'):raise Fault(409,'Paid attempts are never retried automatically; send a new explicitly confirmed message')
             if old['run_receipt']['outcome'] not in {'FAILED','CANCELLED'} or old['pending'] or old.get('redacted'):
                 raise Fault(409,'Explicit retry requires a failed or cancelled available attempt')
             if self.store.version(tenant)!=old['state_version_after']: raise Fault(409,'Re-analyze changed state in a new run')

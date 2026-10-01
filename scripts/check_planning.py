@@ -143,6 +143,7 @@ CURRENT_PACKAGES = (
     ('P0-01', 'P0-01_TRUTHFUL_PREVIEW_CONTRACT_REPAIR', list(range(1, 8))),
     ('P1-01', 'P1-01_ASSISTANT_FIRST_SHARED_SHELL', list(range(8, 13))),
     ('P1-02', 'P1-02_REVISION_EVIDENCE_MEMORY_LOOP', list(range(13, 17))),
+    ('D1-01', 'D1-01_DEVELOPMENT_DEEPSEEK_CHAT', list(range(1, 7))),
     ('P1-03', 'P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE', list(range(17, 21))),
 )
 L3_STOP = 'STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED'
@@ -159,8 +160,11 @@ def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
     require(q.get('schema_version') == '1.0' and q.get('authority') == 'SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE', 'current queue version/authority')
     require(q.get('canonical_document') == 'DEVELOPMENT_PLAN.md' and q.get('product_plan_version') == '1.2/A2-Product', 'current queue canonical plan')
     require(q.get('automatic_queue_consumers') == 'CURRENT_PRODUCT_QUEUE_VALIDATED', 'current consumer contract')
-    require(q.get('execution_scope') == 'SYNTHETIC_PROVIDER_FREE_PRODUCT_REFINEMENT_ONLY', 'refinement execution boundary')
+    require(q.get('execution_scope') == 'SYNTHETIC_PRODUCT_REFINEMENT_AND_GATED_DEVELOPMENT_CHAT', 'refinement execution boundary')
     require(type(q.get('max_provider_calls')) is int and q['max_provider_calls'] == 0, 'refinement provider budget must be zero')
+    dev = q.get('development_chat', {})
+    require(dev.get('provider_default') == 'DISABLED' and dev.get('live_requires_explicit_product_budget') is True, 'development provider must fail closed without explicit budget')
+    require(dev.get('research_budget_reuse_allowed') is False and dev.get('bridge_lock_unchanged') is True and dev.get('production_enabled') is False and dev.get('private_data_allowed') is False, 'development boundary cannot open research or production')
     for key in ('real_private_data_allowed', 'production_activation_allowed', 'judge_implementation_authorized', 'agent_execution_authorized'):
         require(q.get(key) is False, f'forbidden refinement authority: {key}')
     require(q.get('judge_status') == 'LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED', 'Judge is not implemented')
@@ -172,7 +176,7 @@ def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
     for index, (row, expected) in enumerate(zip(rows, CURRENT_PACKAGES)):
         require(row.get('task') == expected[1], 'refinement task identity')
         require(row.get('depends_on') == ([] if index == 0 else [CURRENT_PACKAGES[index - 1][0]]), 'unknown/changed refinement dependency')
-        require(row.get('acceptance') == [f'R{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
+        require(row.get('acceptance') == [f'{"D" if expected[0] == "D1-01" else "R"}{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
         require(row.get('state') in {'COMPLETE', 'NEXT_READY', 'WAITING_DEPENDENCY'}, 'unknown refinement state')
         require(bool(row.get('delta')), 'refinement delta required')
         if row['state'] == 'COMPLETE':

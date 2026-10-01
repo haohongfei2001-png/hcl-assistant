@@ -218,14 +218,14 @@
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
     "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
-    "next_ready": "P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE",
-    "next_package_id": "P1-03",
+    "next_ready": "D1-01_DEVELOPMENT_DEEPSEEK_CHAT",
+    "next_package_id": "D1-01",
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
-    "current_request_scope": "AUTHORIZED_SYNTHETIC_PROVIDER_FREE_IMPLEMENTATION",
+    "current_request_scope": "AUTHORIZED_DEVELOPMENT_CHAT_CODE_OFFLINE_AND_EXPLICIT_BUDGET_ONLY",
     "current_executor_stop_after": "P1-03_OR_L3_GATE",
     "implementation_started": true,
     "implementation_requires_separate_work": false,
-    "execution_scope": "SYNTHETIC_PROVIDER_FREE_PRODUCT_REFINEMENT_ONLY",
+    "execution_scope": "SYNTHETIC_PRODUCT_REFINEMENT_AND_GATED_DEVELOPMENT_CHAT",
     "max_provider_calls": 0,
     "real_private_data_allowed": false,
     "production_activation_allowed": false,
@@ -284,12 +284,30 @@
         "evidence": "docs/P1_02_EVIDENCE.md"
       },
       {
-        "id": "P1-03",
-        "task": "P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE",
+        "id": "D1-01",
+        "task": "D1-01_DEVELOPMENT_DEEPSEEK_CHAT",
         "depends_on": [
           "P1-02"
         ],
         "state": "NEXT_READY",
+        "delta": "development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup",
+        "acceptance": [
+          "D01",
+          "D02",
+          "D03",
+          "D04",
+          "D05",
+          "D06"
+        ],
+        "evidence": "NOT_IMPLEMENTED"
+      },
+      {
+        "id": "P1-03",
+        "task": "P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE",
+        "depends_on": [
+          "D1-01"
+        ],
+        "state": "WAITING_DEPENDENCY",
         "delta": "bounded inspect/settings and integrated original synthetic acceptance",
         "acceptance": [
           "R17",
@@ -297,69 +315,7 @@
           "R19",
           "R20"
         ],
-        "evidence": "NOT_IMPLEMENTED",
-        "design_id": "CONTINUUM-V1-20261001",
-        "delivery_spec": "docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md",
-        "visual_acceptance_spec": "docs/design/continuum-v1/ACCEPTANCE.md",
-        "delivery_slices_are_independent_queue": false,
-        "ordered_delivery_slices": [
-          {
-            "id": "V1-A",
-            "depends_on": "P1-02_AND_V1_DESIGN_ADOPTION",
-            "scope": "shared surfaces home long conversation and composer",
-            "design_refs": [
-              "UI-01",
-              "UI-02"
-            ],
-            "verification": [
-              "V01",
-              "V02",
-              "V08",
-              "V10"
-            ]
-          },
-          {
-            "id": "V1-B",
-            "depends_on": "V1-A",
-            "scope": "evidence source revision and anchored return",
-            "design_refs": [
-              "UI-02",
-              "UI-03"
-            ],
-            "verification": [
-              "V03",
-              "V04",
-              "V05",
-              "V06",
-              "V07",
-              "V10"
-            ]
-          },
-          {
-            "id": "V1-C",
-            "depends_on": "V1-B",
-            "scope": "both companion candidates off state responsive motion and original P1-03 integrated acceptance",
-            "design_refs": [
-              "UI-01",
-              "UI-02",
-              "UI-03",
-              "M-01",
-              "M-02"
-            ],
-            "verification": [
-              "V01",
-              "V02",
-              "V03",
-              "V04",
-              "V05",
-              "V06",
-              "V07",
-              "V08",
-              "V09",
-              "V10"
-            ]
-          }
-        ]
+        "evidence": "NOT_IMPLEMENTED"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -371,33 +327,21 @@
       "Act"
     ],
     "judge_status": "LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED",
-    "design_adoption": {
-      "id": "CONTINUUM-V1-20261001",
-      "owner_decision": "APPROVED_FOR_REPOSITORY_ADOPTION",
-      "repository_status": "ALL_FIVE_ASSETS_PRESENT_AS_LOSSLESS_TEXT_WRAPPERS_READBACK_VERIFIED_FORMALLY_ADOPTED_ON_MAIN_MERGE",
-      "document": "docs/design/continuum-v1/README.md",
-      "manifest": "docs/design/continuum-v1/asset-manifest.json",
-      "reconciled_main": "905ff1fbb3b2264757931e8d9ff5fdff54e7a32f",
-      "implementation_status": "NOT_IMPLEMENTED",
-      "asset_and_merge_gate_required": true,
-      "companion_candidates": [
-        "M-01",
-        "M-02"
-      ],
-      "selected_companion": null,
-      "companion_selection_blocks_shared_ui": false,
-      "change_scope": "DESIGN_ASSETS_SPECIFICATIONS_AND_PLAN_METADATA_ONLY",
-      "new_top_level_queue": false,
-      "current_checker_validates_visual_items": false,
-      "asset_storage": "LOSSLESS_BASE64_IN_UTF8_SVG_WRAPPER",
-      "original_payload_verification": "5_OF_5_BYTE_SIZE_SHA256_AND_GIT_BLOB_MATCH",
-      "storage_format": "UTF8_SVG_WITH_LOSSLESS_EMBEDDED_ORIGINAL_PNG"
+    "development_chat": {
+      "authorized_by": "USER_REQUEST_2026_09_30_2348_UTC",
+      "provider_default": "DISABLED",
+      "live_requires_explicit_product_budget": true,
+      "research_budget_reuse_allowed": false,
+      "ordinary_chinese_fallback": "CONTROLLER_NO_TREATMENT",
+      "bridge_lock_unchanged": true,
+      "production_enabled": false,
+      "private_data_allowed": false
     }
   },
   "writer": {
-    "branch": null,
-    "scope": "P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE",
-    "status": "UNCLAIMED_NEXT_READY_AFTER_CONTINUUM_V1_ADOPTION"
+    "branch": "product/d1-01-live-continuation",
+    "scope": "D1-01_DEVELOPMENT_DEEPSEEK_CHAT",
+    "status": "CORE_ADOPTED_LIVE_CHINESE_FOLLOWUP_VERIFIED_REMAINING_THREE_CALL_CONTINUATION"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {

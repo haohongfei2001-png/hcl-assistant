@@ -9,11 +9,11 @@
 开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前队列如下：
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
+**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
 
-bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
+development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -67,3 +67,7 @@ python3 scripts/smoke_development_bridge.py "$HCL_DEVELOPMENT_ARTIFACT"
 P0-01已迁移root checker/报告/advance消费者到唯一product_development队列，继续独立验证旧11包及L3边界。队列通过不等于界面验收通过。Hosted exact-head/main CI记录实际SHA与结果；通过不等于生产隐私、语义泛化、Judge或效力证明。
 
 L3仍需I06处置、固定获准production artifact/interface、产品adapter scope验证、明确执行/数据授权。受限development接口与版本见 [Experimental Runtime Bridge](docs/EXPERIMENTAL_RUNTIME_BRIDGE.md)。不得为终局目标自动开放provider、研究数据或agent。
+
+## Development-only chat amendment (2026-09-30 23:48 UTC)
+
+User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
