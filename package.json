@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build && vite build --config vite.pages.config.js && python3 scripts/check_preview_bundle.py",
+    "build": "tsc --noEmit && vite build && vite build --config vite.pages.config.js && python3 scripts/check_preview_bundle.py && npm run test:views",
     "test:browser": "playwright test",
     "build:preview": "tsc --noEmit && vite build --config vite.pages.config.js",
-    "chat": "python3 scripts/start_development_chat.py"
+    "chat": "python3 scripts/start_development_chat.py",
+    "test:views": "node --test tests/javascript/inspection-view.test.js tests/javascript/lab-lifecycle.test.js"
   },
   "dependencies": {
     "react": "19.2.0",

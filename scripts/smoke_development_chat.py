@@ -132,10 +132,12 @@ def main():
         with urllib.request.urlopen(request,timeout=20) as response:return json.load(response)
     executing=False
     try:
+        closed=CHECKPOINT.with_name('DEVELOPMENT_CHAT_LIVE_RESULT.json')
+        if closed.exists() and json.loads(closed.read_text()).get('grant_closed') is True:raise ValueError('six_call_grant_exhausted')
         event=json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text()) if os.environ.get('GITHUB_EVENT_PATH') else None
         verify_single_hosted_attempt(os.environ,get_json,event)
         checkpoint=download_checkpoint(root,os.environ['GITHUB_TOKEN'],get_json) if os.environ.get('HCLA_SMOKE_PROFILE')=='continuation' else None
-        app=application(':memory:','.local/hosted-smoke-budget.sqlite',os.environ.get('HCL_DEVELOPMENT_ARTIFACT'))
+        app=application(':memory:','.local/hosted-smoke-budget.sqlite',os.environ.get('HCL_DEVELOPMENT_ARTIFACT'),allow_smoke_grant=True)
         executing=True
         result=smoke(app,checkpoint)
     except Exception:

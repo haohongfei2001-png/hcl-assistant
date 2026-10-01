@@ -1,11 +1,49 @@
-import React,{useEffect,useState} from 'react';
-import {api} from './api';
+import React,{useEffect,useRef,useState} from 'react';
 import {Dialog} from './panels';
+import {InspectionView} from './InspectionView';
+import {projectLocalInspection,type InspectionViewModel} from './inspection-model';
 
-type Inspection={mode:string;read_only:boolean;compare_enabled:boolean;compare_gate:string[];run:{run_id:string;state_version_before:number;state_version_after:number;route:string;selected_capability_ids:string[];operation_receipts:unknown[];run_receipt:{mode:string;outcome:string;usage:unknown;errors:string[];bridge_provenance?:unknown;actual_treatment?:string;development_only?:boolean};selected_context:unknown;errors:string[]};usage_scope:string;efficacy:string};
+type LoadedInspection={raw:unknown;view:InspectionViewModel};
+async function readInspection(path:string,runId:string,signal:AbortSignal):Promise<LoadedInspection>{
+ const response=await fetch(path,{method:'GET',cache:'no-store',headers:{'Content-Type':'application/json'},signal});
+ const raw:unknown=await response.json();
+ if(!response.ok)throw new Error(`检查记录读取失败（HTTP ${response.status}）；未使用缓存导出`);
+ return {raw,view:projectLocalInspection(raw,runId)};
+}
 export function Lab({runId,onClose}:{runId:string;onClose:()=>void}){
- const [value,setValue]=useState<Inspection|null>(null),[error,setError]=useState('');
- useEffect(()=>{void api<Inspection>(`/v1/lab/runs/${runId}`).then(setValue).catch(e=>setError(String(e)));},[runId]);
- async function download(){try{const latest=await api<Inspection>(`/v1/lab/export/${runId}`);setValue(latest);const url=URL.createObjectURL(new Blob([JSON.stringify(latest,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=`${latest.mode.toLowerCase()}-run-${runId}.json`;link.click();URL.revokeObjectURL(url);}catch(e){setError(String(e));}}
- return <Dialog label="HCL Lab" onClose={onClose}><h2>HCL Lab · {value?.mode==='EXPERIMENTAL'?'只读实验记录':'只读模拟记录'}</h2><p>{value?.mode==='EXPERIMENTAL'?'固定开发运行时，生产禁用；':'未接入真实 HCL；'}运行成功不代表认知效力。</p><button disabled>Base Compare（L3 后另需许可）</button>{error&&<p role="alert">{error}</p>}{value&&<><dl><dt>模式</dt><dd>{value.mode}</dd><dt>路由</dt><dd>{value.run.route==='CONTEXT_ASSISTED'?'CONTEXT_ASSISTED · generic':value.run.route}</dd><dt>结果</dt><dd>{value.run.run_receipt.outcome}</dd><dt>状态版本</dt><dd>{value.run.state_version_before} → {value.run.state_version_after}</dd><dt>能力</dt><dd>{value.run.selected_capability_ids.join(', ')||'无专门操作'}</dd></dl>{value.mode==='EXPERIMENTAL'&&<><p>实际处理：{value.run.run_receipt.actual_treatment}</p><h3>固定运行时来源</h3><pre>{JSON.stringify(value.run.run_receipt.bridge_provenance,null,2)}</pre></>}<h3>Usage（每 attempt）</h3><p>{value.usage_scope}</p><pre>{JSON.stringify(value.run.run_receipt.usage,null,2)}</pre><h3>显式 operation receipts</h3><pre>{JSON.stringify(value.run.operation_receipts,null,2)}</pre><h3>当前权限下的 context/snapshot</h3><pre>{JSON.stringify(value.run.selected_context,null,2)}</pre>{value.run.errors.length>0&&<p>Errors: {value.run.errors.join(', ')}</p>}<button onClick={()=>void download()}>导出当前权限下的 {value.mode==='EXPERIMENTAL'?'experimental':'mock'} 记录</button><p>L3 gate: {value.compare_gate.join(' / ')}</p></>}</Dialog>;
+ const [loaded,setLoaded]=useState<LoadedInspection|null>(null),[error,setError]=useState(''),[exporting,setExporting]=useState(false);
+ const current=useRef(runId),generation=useRef(0),loadRequest=useRef<AbortController|null>(null),exportRequest=useRef<AbortController|null>(null);
+ current.current=runId;
+ useEffect(()=>{
+  const token=++generation.current,request=new AbortController();loadRequest.current=request;exportRequest.current?.abort();exportRequest.current=null;
+  setLoaded(null);setError('');setExporting(false);
+  void readInspection(`/v1/lab/runs/${encodeURIComponent(runId)}`,runId,request.signal).then(value=>{if(!request.signal.aborted&&token===generation.current&&current.current===runId)setLoaded(value)}).catch(e=>{if(!request.signal.aborted&&token===generation.current&&current.current===runId)setError(String(e))});
+  return()=>{generation.current++;request.abort();exportRequest.current?.abort();exportRequest.current=null};
+ },[runId]);
+ function close(){generation.current++;loadRequest.current?.abort();exportRequest.current?.abort();exportRequest.current=null;onClose()}
+ function cancelExport(){exportRequest.current?.abort();exportRequest.current=null;setExporting(false);setError('导出已取消，未生成文件。关闭后可重新检查当前权限下的记录。')}
+ async function download(){
+  if(exportRequest.current)return;
+  const target=runId,token=generation.current,request=new AbortController();exportRequest.current=request;setExporting(true);setError('');
+  // Invalidate the displayed copy while permissions are being rechecked; never export the earlier response.
+  setLoaded(null);loadRequest.current?.abort();
+  try{
+   const latest=await readInspection(`/v1/lab/export/${encodeURIComponent(target)}`,target,request.signal);
+   if(request.signal.aborted||token!==generation.current||current.current!==target)return;
+   setLoaded(latest);
+   const url=URL.createObjectURL(new Blob([JSON.stringify(latest.raw,null,2)],{type:'application/json'}));
+   const link=document.createElement('a');link.href=url;link.download=`${latest.view.mode.toLowerCase()}-run-${target}.json`;
+   document.body.appendChild(link);
+   try{link.click()}finally{link.remove();window.setTimeout(()=>URL.revokeObjectURL(url),0)}
+  }catch(e){if(!request.signal.aborted&&token===generation.current&&current.current===target){setLoaded(null);setError(String(e))}}
+  finally{if(exportRequest.current===request){exportRequest.current=null;if(token===generation.current&&current.current===target)setExporting(false)}}
+ }
+ const value=loaded?.view.runId===runId?loaded.view:null;
+ return <Dialog label="HCL Lab" onClose={close}>
+  {error&&<p role="alert">{error}</p>}
+  {value?<InspectionView value={value}/>:<p role="status">{exporting?'正在按当前权限读取可导出的记录…':error?'记录当前不可用。关闭后可重新检查；不会显示先前缓存。':'正在读取所选运行的记录…'}</p>}
+  <button disabled={!value||exporting} onClick={()=>void download()}>导出当前权限下的 {value?.mode==='DEVELOPMENT_CHAT'?'development':value?.mode==='EXPERIMENTAL'?'experimental':value?.mode==='MOCK'?'mock':'只读'} 记录</button>
+  {exporting&&<button onClick={cancelExport}>取消导出</button>}
+  {!value&&!exporting&&!error&&<p>关闭检查即可取消读取；不会取消或重新执行原运行。</p>}
+ </Dialog>;
 }

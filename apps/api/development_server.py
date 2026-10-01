@@ -9,11 +9,12 @@ from packages.adapter.deepseek import DeepSeekAdapter
 from packages.controller.live_chat import LiveChat
 
 
-def application(database, budget_database, runtime=None, env=None):
+def application(database, budget_database, runtime=None, env=None, allow_smoke_grant=False):
     env=os.environ if env is None else env
     status=configuration_status(env);service=None;auth=None
     if status['configured']:
         config=DevelopmentConfig.from_env(env)
+        if not allow_smoke_grant and config.budget_id in {'hcla-20261001-six-requests-usd10','hcla-development-20261001-initial-six'}:raise ValueError('Consumed cloud-smoke grant cannot initialize a fresh local budget')
         from decimal import Decimal
         rates={'deepseek-v4-pro':('1.32','3.96'),'deepseek-flash':('0.30','1.20')}
         if config.model not in rates:raise ValueError('Explicit currently supported model required')

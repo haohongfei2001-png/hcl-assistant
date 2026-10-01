@@ -5,11 +5,11 @@
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03尚未实现。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
+**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
 
-development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
+bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->

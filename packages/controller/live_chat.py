@@ -12,6 +12,13 @@ from packages.store.ledger import Fault, now, uid
 from packages.runtime_bridge.contract import fingerprint
 
 
+def citation_markers(text):
+    # Explicit model references may use Markdown brackets or Chinese punctuation.
+    # Bind only known IDs later; never infer support from ordinary prose.
+    groups=re.findall(r'\[(S\d+|HCL\d+)\]|\((S\d+|HCL\d+)\)|（(S\d+|HCL\d+)）',text)
+    return list(dict.fromkeys(next(value for value in group if value) for group in groups))
+
+
 def validate(controller, request, conversation):
     if not request.get('development_chat'): return False
     service=controller.live_chat
@@ -149,7 +156,7 @@ class LiveChat:
                     if receipt['outcome']!='CANCELLED':receipt['outcome']='UNKNOWN' if not result.transport_stopped else result.outcome if allowed else 'CANCELLED' if cancel.is_set() else 'PARTIAL'
                     controller.emit(current,'run.failed',{'reason':current['errors'][0]})
                 else:
-                    claims=[copy.deepcopy(bindings[m]) for m in dict.fromkeys(re.findall(r'\[(S\d+|HCL\d+)\]',result.content)) if m in bindings]
+                    claims=[copy.deepcopy(bindings[m]) for m in citation_markers(result.content) if m in bindings]
                     links=[]
                     for claim in claims:
                         for ref in claim['source_refs']:

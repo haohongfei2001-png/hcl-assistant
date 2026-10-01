@@ -40,6 +40,12 @@ class LiveChatTests(unittest.TestCase):
         self.assertEqual(run['run_receipt']['provider']['actual_model'],self.adapter.model)
         self.assertIsNone(run['run_receipt']['usage']['cost']['amount']);self.assertEqual(run['run_receipt']['usage']['provider_calls'],1)
         self.assertEqual(project(run)['source_links'],[]);self.assertEqual(len(self.budget.calls),1);self.assertEqual(run['budget']['max_provider_calls'],1)
+    def test_explicit_chinese_citation_punctuation_binds_only_known_records(self):
+        self.say('报告[原创人]：纸灯周五开放',live=False)
+        self.adapter.answer='当前有效记录显示周五开放（S1）。未知引用（S999）不增加来源。'
+        run=self.say('哪天开放？')
+        self.assertEqual(len(run['answer']['claim_bindings']),1)
+        self.assertEqual(len(project(run)['source_links']),1)
     def test_followup_uses_permitted_original_input_not_generated_memory(self):
         first=self.say('虚构活动的纸灯是蓝色')
         second=self.say('刚才说的纸灯是什么颜色？')
