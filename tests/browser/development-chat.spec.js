@@ -4,7 +4,7 @@ const token='original-offline-browser-token-123456';
 async function enter(page){
  await page.route('**/v1/**',async route=>{const request=route.request();const response=await route.fetch({url:request.url().replace('127.0.0.1:5173','127.0.0.1:8770')});await route.fulfill({response})});
  await page.goto('/');
- if(await page.getByLabel('本地开发访问口令').isVisible()){await page.getByLabel('本地开发访问口令').fill(token);await page.getByRole('button',{name:'打开聊天',exact:true}).click()}
+ await expect(page.getByLabel('本地开发访问口令')).toBeVisible();await page.getByLabel('本地开发访问口令').fill(token);await page.getByRole('button',{name:'打开聊天',exact:true}).click();
  await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('本次仅使用原创合成输入，并使用服务器已批准额度').check();
 }
