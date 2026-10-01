@@ -7,11 +7,11 @@
 先读README、STATUS、DEVELOPMENT_PLAN、Master Plan1.2、docs/DOCUMENT_AUTHORITY.md、UX_SPEC、VISUAL_SYSTEM、contracts、PRODUCT_REFINEMENT_WORK_PACKAGES和ACCEPTANCE_MATRIX；再核对remote main、open PR和writer。普通用户先聊天；Explain/Inspector按需，Lab是高级研究环境。
 
 当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。<!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
+**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
 
-bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
+development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。
@@ -48,3 +48,7 @@ PR记录范围、actual tests、限制与唯一NEXT_READY。exact-head通过后�
 后续implementation Work只能在其明确范围内按唯一队列推进。真实权限、费用、许可、数据或生产门槛保持阻塞，不制造filler。P1-03完成但L3四门槛未具备则停止交接；物理分仓不能再次当作未完成blocker。
 
 旧L0–L2.5规格/closure为历史证据，旧研究产品目录已退役；不维护双队列。当前状态以STATUS和exact-main为准，架构/交互以Master1.2及其UX/Visual规范为准。
+
+## Development-only chat amendment (2026-09-30 23:48 UTC)
+
+User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
