@@ -6,6 +6,8 @@ including reads spanning several queries. No session lock/prepared statement is
 used, so Supabase transaction pooling is supported. No schema is created here.
 """
 from contextlib import contextmanager
+from pathlib import Path
+import os
 import re
 import ssl
 import threading
@@ -14,6 +16,24 @@ from packages.store.ledger import Ledger, Fault
 
 SCHEMA = 'hcla'
 TENANT = 'hcla-owner'
+
+
+def system_root_cert():
+    """Use the host Python trust bundle, not the wheel's build-machine path.
+
+    psycopg-binary ships a separate OpenSSL whose `system` trust paths may not
+    exist in the function image. This keeps full chain/hostname verification.
+    No certificate or plaintext fallback is allowed when a bundle is absent.
+    """
+    path = ssl.get_default_verify_paths().cafile
+    if path is not None and Path(path).is_file():return path
+    # Standalone Python may have a build-time default absent from Amazon Linux.
+    # Only existing platform CA bundles qualify, never a custom/downloaded CA.
+    # An explicit broken override remains an error rather than being ignored.
+    if 'SSL_CERT_FILE' not in os.environ:
+        for candidate in ('/etc/pki/tls/certs/ca-bundle.crt','/etc/ssl/certs/ca-certificates.crt'):
+            if Path(candidate).is_file():return candidate
+    raise Fault(503, 'System certificate bundle unavailable')
 
 class Row(dict):
     def __getitem__(self, key):
@@ -91,9 +111,11 @@ class PostgresLedger(Ledger):
             startup.mark(StartupCode.DATABASE_DRIVER)
             import psycopg
             from psycopg.rows import dict_row
+            startup.mark(StartupCode.DATABASE_TLS)
+            root_cert=system_root_cert()
             startup.mark(StartupCode.DATABASE_CONNECT)
             try:
-                connection=psycopg.connect(dsn,sslrootcert="system",autocommit=True,prepare_threshold=None,row_factory=dict_row,connect_timeout=5)
+                connection=psycopg.connect(dsn,sslmode='verify-full',sslrootcert=root_cert,autocommit=True,prepare_threshold=None,row_factory=dict_row,connect_timeout=5)
             except ssl.SSLError:
                 startup.mark(StartupCode.DATABASE_TLS)
                 raise
