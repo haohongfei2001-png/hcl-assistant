@@ -186,3 +186,16 @@ jobs:
             product-export/test-results/continuum-visual-pages*/**/*.json
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Pair unchanged references with actual Continuum captures
+        if: always()
+        run: python3 product-export/scripts/compare_continuum_captures.py
+
+      - name: Retain unedited reference comparisons
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: continuum-reference-comparisons
+          path: product-export/.tmp/continuum-comparisons
+          retention-days: 7
+          if-no-files-found: ignore

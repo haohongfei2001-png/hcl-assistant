@@ -321,3 +321,5 @@
 @media(prefers-reduced-motion:no-preference){.continuum-shell:not([data-motion=static])>.context-panel[open]{animation:continuum-context-enter 280ms ease-out both}@keyframes continuum-context-enter{from{opacity:.35;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}}
 
 .continuum-shell .context-panel mark{color:#182c61;background:#dce7ff;border-radius:3px}
+
+.continuum-shell .brand{white-space:normal;overflow-wrap:anywhere}
