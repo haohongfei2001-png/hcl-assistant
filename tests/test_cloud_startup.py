@@ -201,6 +201,22 @@ class CloudStartupTests(unittest.TestCase):
         self.check_unconfigured(cloud_server.application({}))
         store.close.assert_called_once(); temporary.close.assert_called_once(); self.check_record('LIFECYCLE')
 
+    def test_member_schema_and_auth_startup_failures_are_redacted_and_closed(self):
+        for phase in ['MEMBER_SCHEMA','MEMBER_AUTH']:
+            with self.subTest(phase=phase):
+                self.capture.seek(0);self.capture.truncate()
+                store,temporary,stack=self.application_patches()
+                self.config.member_provider=SimpleNamespace(url='https://abcdefghijklmnopqrst.supabase.co',publishable_key=SENTINEL)
+                schema=stack.enter_context(patch.object(cloud_server,'verify_member_schema'))
+                auth=stack.enter_context(patch('packages.cloud.member_auth.MemberAuth'))
+                if phase=='MEMBER_SCHEMA':schema.side_effect=SecretFailure(SENTINEL)
+                else:auth.side_effect=SecretFailure(SENTINEL)
+                self.check_unconfigured(cloud_server.application({}))
+                store.close.assert_called_once();temporary.close.assert_called_once();self.check_record(phase)
+                if phase=='MEMBER_SCHEMA':auth.assert_not_called()
+                del self.config.member_provider
+                stack.close()
+
     def test_no_grant_never_constructs_provider_or_budget(self):
         store, temporary, _ = self.application_patches()
         app = cloud_server.application({})

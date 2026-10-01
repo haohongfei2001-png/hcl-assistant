@@ -57,8 +57,20 @@ test('automatic renewal keeps the current temporary packet without asking for lo
 test('absolute expiry clears temporary content and failed logout is visible',async({page})=>{
  await enter(page);await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('记忆范围').selectOption('TEMPORARY');await page.getByRole('button',{name:'关闭设置'}).click();await send(page,'原创合成：EXPIRY_MEMBER_CANARY');
  await page.route('**/v1/account/logout',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Injected temporary failure'})}));
- await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByRole('button',{name:'退出登录',exact:true}).click();await page.getByRole('button',{name:'关闭设置'}).click();await expect(page.getByRole('alert')).toContainText('退出未完成');
+ await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByRole('button',{name:'退出登录',exact:true}).click();await expect(page.getByRole('dialog',{name:'设置'})).toContainText('退出未完成');await page.getByRole('button',{name:'关闭设置'}).click();await expect(page.getByRole('alert')).toContainText('退出未完成');
  await page.request.post('/v1/fixture/member-expire');await expect(page.getByLabel('用户邮箱')).toBeVisible({timeout:15000});await expect(page.locator('body')).not.toContainText('EXPIRY_MEMBER_CANARY');
+});
+
+test('a stalled member logout times out, keeps the draft and permits retry',async({page})=>{
+ await enter(page);await page.getByLabel('消息',{exact:true}).fill('LOGOUT_RETRY_DRAFT');await page.getByRole('button',{name:'设置',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'设置'});let release;const held=new Promise(resolve=>release=resolve);
+ await page.route('**/v1/account/logout',async route=>{await held;await route.abort().catch(()=>{})});
+ try{
+  await dialog.getByRole('button',{name:'退出登录',exact:true}).click();await expect(dialog.getByRole('button',{name:'正在退出…',exact:true})).toBeDisabled();
+  await expect(dialog).toContainText('退出未完成，请重试',{timeout:17000});await expect(dialog.getByRole('button',{name:'退出登录',exact:true})).toBeEnabled();
+  await expect(page.getByLabel('消息',{exact:true})).toHaveValue('LOGOUT_RETRY_DRAFT');
+ }finally{release();await page.unroute('**/v1/account/logout')}
+ await dialog.getByRole('button',{name:'退出登录',exact:true}).click();await expect(page.getByLabel('用户邮箱')).toBeVisible();await expect(page.locator('body')).not.toContainText('LOGOUT_RETRY_DRAFT');
 });
 
 test('an export response accepted before logout cannot download after account teardown',async({page})=>{

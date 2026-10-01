@@ -141,6 +141,20 @@ class MemberPostgresTests(unittest.TestCase):
         unbound=self.store();self.assertEqual(unbound.db.execute('SELECT * FROM member_sessions').fetchall(),[])
         self.admin.execute("UPDATE hcla.member_sessions SET expires_at=clock_timestamp()-interval '1 second' WHERE tenant=%s",(b_tenant,))
         with self.assertRaises(Fault):self.app().member_auth.require(b_cookie)
+
+    def test_missing_member_schema_cannot_advertise_account_readiness(self):
+        from packages.cloud.diagnostics import StartupCode,StartupDiagnostics
+        # This is the explicitly disposable localhost database. Restore the
+        # column even on failure; no live migration or account is touched.
+        self.admin.execute('ALTER TABLE hcla.member_sessions RENAME COLUMN auth_epoch TO incomplete_epoch')
+        try:
+            startup=StartupDiagnostics()
+            cfg=CloudConfig('','https://hcla.example.test','owner',self.verifier,'1'*64,self.config)
+            with patch('packages.cloud.member_auth.MemberAuth') as auth:
+                with self.assertRaises(Exception):CloudApplication(cfg,store=self.store(),member_provider=FakeMemberProvider(),startup=startup)
+                auth.assert_not_called()
+            self.assertIs(startup.code,StartupCode.MEMBER_SCHEMA)
+        finally:self.admin.execute('ALTER TABLE hcla.member_sessions RENAME COLUMN incomplete_epoch TO auth_epoch')
     def test_upstream_expiry_caps_local_session_and_session_swap_is_refused(self):
         class Short(FakeMemberProvider):
             def login(self,*args):
