@@ -38,7 +38,7 @@ async function settle(page){await page.evaluate(()=>document.fonts.ready);await 
 async function measuredA11y(page){return page.evaluate(()=>{
  const rgba=value=>{const n=value.match(/[\d.]+/g)?.map(Number)||[0,0,0,0];return [n[0],n[1],n[2],n.length>3?n[3]:1]};
  const blend=(front,back)=>front.slice(0,3).map((v,i)=>v*front[3]+back[i]*(1-front[3]));
- const lum=c=>c.map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+ const lum=c=>c.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
  const ratio=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
  function background(el){const chain=[];for(let node=el;node;node=node.parentElement)chain.push(node);let value=[220,232,252];for(const node of chain.reverse()){const style=getComputedStyle(node);if(node.matches('.continuum-shell'))continue;value=blend(rgba(style.backgroundColor),value)}return value}
  const samples=[];for(const selector of ['.home-copy>p','.home-copy>small','.composer-note','.composer-controls>small','.markdown p','.context-panel p','.environment','.error','.send']){for(const node of [...document.querySelectorAll(selector)].slice(0,8)){const box=node.getBoundingClientRect();if(!box.width||!box.height)continue;const style=getComputedStyle(node),bg=background(node),fg=blend(rgba(style.color),bg);samples.push({selector,foreground:fg,compositedBackground:bg,contrast:ratio(fg,bg),disabled:node.matches(':disabled'),fontSize:parseFloat(style.fontSize)})}}
