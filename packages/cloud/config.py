@@ -46,6 +46,8 @@ class CloudConfig:
     verifier:str=field(repr=False)
     state_key:str=field(repr=False)
     provider:DevelopmentConfig|None=field(repr=False)
+    trial:object|None=field(default=None,repr=False)
+    cloud_api_key:str=field(default='',repr=False)
     @classmethod
     def from_env(cls,env):
         if not env.get('HCLA_DATABASE_URL') or not env.get('HCLA_PUBLIC_ORIGIN'):raise ValueError('Cloud setup incomplete')
@@ -78,4 +80,9 @@ class CloudConfig:
             if provider.model!='deepseek-v4-pro':raise ValueError('Requested deepseek-v4-pro required')
             from decimal import Decimal
             if provider.input_usd_per_million<Decimal('1.32') or provider.output_usd_per_million<Decimal('3.96'):raise ValueError('Configured peak rates required')
-        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider)
+        trial=None
+        if 'HCLA_TRIAL_WINDOW' in env:
+            from packages.cloud.trial import TrialWindow
+            trial=TrialWindow.from_value(strict_json(env['HCLA_TRIAL_WINDOW']))
+            if provider is None:raise ValueError('Trial requires a new explicit model grant')
+        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider,trial,env.get('HCLA_DEEPSEEK_API_KEY',''))

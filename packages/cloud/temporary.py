@@ -67,14 +67,20 @@ def projections(ctrl,conversation):
             'explains':{r['answer']['answer_id']:project(r) for r in view['runs'] if r.get('answer')},
             'inspections':{r['run_id']:inspect(ctrl,tenant,r['run_id']) for r in view['runs']}}
 
-def execute(application,handler,data):
+def execute(application,handler,data,*,guest_session=None):
     # The outer API has already authenticated HTTPS owner identity and CSRF.
-    auth=application.development_auth
-    auth.require(handler.headers.get('Cookie'))
-    session=auth.key(handler.headers.get('Cookie'))
+    if guest_session is None:
+        if getattr(application,'trial_auth',None) is not None:raise Fault(403,'Trial requires the isolated guest temporary route')
+        auth=application.development_auth
+        auth.require(handler.headers.get('Cookie'))
+        session=auth.key(handler.headers.get('Cookie'))
+    else:
+        session=application.trial_auth.require(handler.headers.get('Cookie'))
+        if session!=guest_session:raise Fault(403,'Temporary trial session changed')
     conversation=data.get('conversation_id');request_id=data.get('request_id');request=data.get('request')
     if not isinstance(conversation,str) or not re.fullmatch(r'temp-[a-f0-9-]{36}',conversation): raise Fault(400,'Temporary conversation identifier required')
     if not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9-]{36}',request_id): raise Fault(400,'Request identifier required')
+    if guest_session is not None:request_id=application.trial_auth.execution_key(session,request_id)
     if not isinstance(request,dict): raise Fault(400,'Temporary request required')
     if request.get('scope',{}).get('conversation_id')!=conversation or request.get('scope',{}).get('topic_id') is not None or request.get('allowed_memory_scope')!='TEMPORARY': raise Fault(403,'Temporary scope mismatch')
     if request.get('development_execution') and application.development_bridge is None: raise Fault(503,'Reviewed development bridge unavailable')
@@ -89,6 +95,9 @@ def execute(application,handler,data):
                 store.account(SYNTHETIC_TENANT)
                 store.put(SYNTHETIC_TENANT,'conversation',{'id':conversation,'title':'临时对话','topic_id':None,'memory':'TEMPORARY'})
         cancellation=DurableCancellation(persistent,request_id,temporary=True)
+        if guest_session is not None:
+            from packages.cloud.trial import TrialCancellation
+            cancellation=TrialCancellation(cancellation,application.trial_auth.budget)
         service=application.live_chat_service
         live=LiveChat(service.config,service.budget,service.adapter,cancellation_factory=lambda _:cancellation) if service else None
         ctrl=Controller(store,development_bridge=application.development_bridge,live_chat_service=live)
@@ -110,6 +119,9 @@ def execute(application,handler,data):
         def send(typ,payload):
             nonlocal disconnected
             if disconnected:return
+            if guest_session is not None and cancellation.is_set() and typ!='cloud.error':
+                disconnected=True
+                return
             try:
                 handler.wfile.write(('data: '+json.dumps({'type':typ,'payload':payload},ensure_ascii=False)+'\n\n').encode());handler.wfile.flush()
             except (BrokenPipeError,ConnectionResetError):
@@ -123,6 +135,7 @@ def execute(application,handler,data):
         store.put=put
         try:
             ctrl.finish(SYNTHETIC_TENANT,run['run_id'])
+            if guest_session is not None:application.trial_auth.budget.require_active()
             next_snapshot=pack(store,key,session,conversation,revision)
             with persistent.transaction():
                 persistent.db.execute('UPDATE temporary_heads SET snapshot_hash=? WHERE conversation_key=? AND revision=?',(digest(canonical(next_snapshot)),head_key,revision))

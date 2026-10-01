@@ -38,14 +38,23 @@ class CloudApplication:
             self.controllers={};self.lifecycle=Lifecycle(store)
             self.lifecycle.recover()
             self.live_chat_service=None
+            self.trial_auth=None
+            from packages.cloud.trial import from_database_policy
+            startup.mark(StartupCode.PROVIDER_BUDGET)
+            config=from_database_policy(store,config)
+            self.cloud_config=config
             if config.provider:
                 c=config.provider
                 startup.mark(StartupCode.PROVIDER_BUDGET)
-                budget=CloudBudget(store,c)
+                from packages.cloud.trial import TrialBudget,TrialAuth,TrialCancellation
+                trial=getattr(config,'trial',None)
+                budget=TrialBudget(store,c,trial) if trial else CloudBudget(store,c)
+                if trial:self.trial_auth=TrialAuth(config.origin,config.state_key,budget)
                 startup.mark(StartupCode.PROVIDER_ADAPTER)
                 adapter=adapter or DeepSeekAdapter(base_url=c.base_url,model=c.model,api_key=c.api_key,wall_timeout=60)
-                self.live_chat_service=LiveChat(c,budget,adapter,cancellation_factory=lambda identity:DurableCancellation(store,identity))
+                self.live_chat_service=LiveChat(c,budget,adapter,cancellation_factory=lambda identity:TrialCancellation(DurableCancellation(store,identity),budget) if trial else DurableCancellation(store,identity))
             self.configuration={'configured':True,'provider_enabled':config.provider is not None}
+            if self.trial_auth:self.configuration['temporary_trial']=True
         except Exception:
             close_after_startup_failure(store)
             if hasattr(self,'stores'):close_after_startup_failure(self.stores.temporary)
@@ -53,10 +62,11 @@ class CloudApplication:
     def controller(self,store):
         if store not in self.controllers:
             # Persistent bodies never enter the volatile-only HCL bridge.
-            self.controllers[store]=Controller(store,live_chat_service=self.live_chat_service)
+            self.controllers[store]=Controller(store,live_chat_service=None if self.trial_auth else self.live_chat_service)
         return self.controllers[store]
     def start(self,ctrl,tenant,run): return run
     def execute(self,tenant,run_id):
+        if self.trial_auth:raise Fault(403,'Trial grant supports only temporary request-bound conversations')
         store=self.stores.persistent;ctrl=self.controller(store)
         with store.transaction():
             run=ctrl.read(tenant,run_id)

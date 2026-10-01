@@ -1,6 +1,6 @@
 import {temporaryApi,temporaryStream,setCloudTemporary} from './cloud-temporary';
 let requestBound=false;
-export function configureCloud(value:boolean){requestBound=value;setCloudTemporary(value)}
+export function configureCloud(value:boolean,trial=false){requestBound=value;setCloudTemporary(value,trial)}
 export type Conversation={id:string; title:string; topic_id:string|null; memory:string};
 export type Ref={source_id:string; version:number; sha256:string; span?:number[]};
 export type Change={action:string;old:{record_id:string;content:string;kind:string;source_refs:Ref[]}[];new:{record_id:string;content:string;kind:string;source_refs:Ref[]}[];impact:string;actual_changed:boolean;not_reevaluated_count:number;invalidated_count:number};

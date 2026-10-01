@@ -173,6 +173,15 @@ class LiveChat:
                     current['explain_projection']={**current['answer_identity'],'judgment_basis':claims,'source_links':links,'redactions':[],'recorded_at':now()}
                     receipt['outcome']='COMPLETED';controller.emit(current,'answer.completed',current['answer'])
                 current['pending']=False;receipt['finished_at']=now();store.put(tenant,'run',current)
+                settle=getattr(self.budget,'reconcile_completed',None)
+                usage=result.usage
+                if (settle and getattr(result,'usage_consistent',False) and receipt['outcome']=='COMPLETED' and result.transport_stopped and result.send_state=='sent'
+                        and all(type(usage.get(k)) is int and usage[k]>0 for k in ('prompt_tokens','completion_tokens','total_tokens'))
+                        and usage['total_tokens']==usage['prompt_tokens']+usage['completion_tokens']
+                        and usage['prompt_tokens']<=1048576 and usage['completion_tokens']<=self.config.max_output_tokens
+                        and (usage.get('reasoning_tokens') is None or type(usage['reasoning_tokens']) is int and 0<=usage['reasoning_tokens']<=usage['completion_tokens'])
+                        and not cancel.is_set() and valid(controller,tenant,run)):
+                    settle(run_id,run['run_receipt']['attempt_id'])
         except Exception as exc:
             # Without a returned transport-stop handshake, retain the active lock.
             # Restart may recover it only once no live transport owner remains.

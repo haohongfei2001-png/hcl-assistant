@@ -467,9 +467,9 @@
     }
   },
   "writer": {
-    "branch": "fix/supabase-verified-ca",
-    "scope": "C1-01_SUPABASE_VERIFIED_CA_MAINTENANCE",
-    "status": "COMPLETE"
+    "branch": "feature/bounded-temporary-trial",
+    "scope": "C1-01_BOUNDED_TEMPORARY_GUEST_TRIAL",
+    "status": "IN_PROGRESS"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {

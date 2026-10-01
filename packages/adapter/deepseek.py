@@ -44,6 +44,7 @@ class DeepSeekResult:
     request_id: str | None = None
     finish_reason: str | None = None
     usage: dict[str, int] = field(default_factory=dict)
+    usage_consistent: bool = False
     cost: None = None
     send_state: str = "not_sent"
     error_code: str | None = None
@@ -189,6 +190,22 @@ def _usage(value: object) -> dict[str, int]:
     return result
 
 
+def _consistent_usage(value):
+    """Strict numeric accounting evidence, separate from answer validity."""
+    if not isinstance(value,dict):return False
+    required=('prompt_tokens','completion_tokens','total_tokens')
+    if not all(type(value.get(k)) is int and value[k]>0 for k in required):return False
+    if value['total_tokens']!=value['prompt_tokens']+value['completion_tokens']:return False
+    if any(name in value and (type(value[name]) is not int or value[name]<0) for name in _USAGE_FIELDS):return False
+    for container,key,ceiling in (('prompt_tokens_details','cached_tokens','prompt_tokens'),
+                                  ('completion_tokens_details','reasoning_tokens','completion_tokens')):
+        details=value.get(container)
+        if details is not None:
+            if not isinstance(details,dict):return False
+            if key in details and (type(details[key]) is not int or not 0<=details[key]<=value[ceiling]):return False
+    return True
+
+
 class DeepSeekAdapter:
     def __init__(self, *, base_url: str, model: str, api_key: str,
                  connect_timeout: float = 10.0, wall_timeout: float = 120.0,
@@ -233,6 +250,8 @@ class DeepSeekAdapter:
         content: list[str] = []
         actual_model = request_id = finish_reason = None
         usage: dict[str, int] = {}
+        complete_usage = None
+        usage_invalid = False
         http_status = None
         transport = None
         stop = threading.Event()
@@ -270,6 +289,7 @@ class DeepSeekAdapter:
                                   requested_model=self.model, actual_model=actual_model,
                                   request_id=request_id, finish_reason=finish_reason,
                                   usage=dict(usage), send_state=state,
+                                  usage_consistent=complete_usage is not None and not usage_invalid,
                                   error_code=error, http_status=http_status,
                                   transport_stopped=transport_stopped)
 
@@ -413,7 +433,16 @@ class DeepSeekAdapter:
                     if not isinstance(chunk, dict):
                         raise _ProtocolError("invalid_chunk")
                     # Extract only allowlisted public metadata and numeric usage.
-                    usage.update(_usage(chunk.pop("usage", None)))
+                    raw_usage=chunk.pop("usage",None)
+                    if raw_usage is not None:
+                        parsed_usage=_usage(raw_usage)
+                        consistent=_consistent_usage(raw_usage)
+                        if not consistent or complete_usage is not None and parsed_usage!=complete_usage:usage_invalid=True
+                        if consistent:complete_usage=parsed_usage
+                        # Replace rather than preserve stale numbers when a later
+                        # usage record is incomplete/malformed. No raw values kept.
+                        usage=parsed_usage
+                    del raw_usage
                     model = chunk.pop("model", None)
                     if model is not None:
                         model = metadata(model)
