@@ -64,7 +64,7 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 
 ## 5. Continuum V1 视觉增量的权威与采用门槛
 
-以上第4节的“当前/下一项”只记录 A2 原采用时点；全局下一项始终来自最新 product_development，不恢复 P0-01。此次视觉采用读取基线为 main `fa2cd0bfac7cc392fb886544acfdc95038d9d678`：P0-01/P1-01 已完成，P1-02 有独立 writer 的 PR #10；本次不覆盖该 writer、不接管其代码、不将未合入实现写成完成。
+以上第4节的“当前/下一项”只记录 A2 原采用时点；全局下一项始终来自最新 product_development，不恢复 P0-01。此次视觉采用已协调到 main `905ff1fbb3b2264757931e8d9ff5fdff54e7a32f`：P0-01、P1-01、P1-02 均保持 COMPLETE，P1-03 是唯一 NEXT_READY。本次只采用设计资产/规格/计划元数据，不接管或改写已合入实现与证据。
 
 | V1 位置 | 权威范围 |
 |---|---|
