@@ -23,4 +23,4 @@ After separate approval, operators must verify the dedicated Supabase project's 
 
 ## Primary references
 
-[Supabase identity verification](https://supabase.com/docs/guides/auth/jwts), [session limits and logout caveats](https://supabase.com/docs/guides/auth/sessions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [AES-GCM](https://cryptography.io/en/latest/hazmat/primitives/aead/), [HKDF](https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#hkdf). Checked 2026-10-01. No shared signing secret or user_metadata authorization is used.
+[Supabase identity verification](https://supabase.com/docs/guides/auth/jwts), [session limits and logout caveats](https://supabase.com/docs/guides/auth/sessions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [AES-GCM](https://cryptography.io/en/latest/hazmat/primitives/aead/), [HKDF](https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#hkdf). Checked 2026-10-01. The Supabase shared JWT-signing secret is never configured or used; user_metadata never authorizes access.

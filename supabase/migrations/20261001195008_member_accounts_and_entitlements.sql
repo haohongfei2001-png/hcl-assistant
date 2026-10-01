@@ -3,7 +3,7 @@
 BEGIN;
 SET LOCAL search_path = hcla, pg_catalog;
 CREATE TABLE member_sessions(
- session_key text PRIMARY KEY, tenant text NOT NULL, issuer text NOT NULL,
+ session_key text PRIMARY KEY, tenant text NOT NULL, issuer text NOT NULL,auth_epoch text NOT NULL,
  subject uuid NOT NULL, expires_at timestamptz NOT NULL,absolute_expires_at timestamptz NOT NULL,
  refresh_ciphertext text NOT NULL,refresh_state text NOT NULL DEFAULT 'idle' CHECK(refresh_state IN ('idle','inflight')),
  refresh_owner text,refresh_started_at timestamptz,

@@ -176,9 +176,16 @@ class MemberPostgresTests(unittest.TestCase):
         self.assertEqual(self.http(b,'/v1/member/temporary/cancel',cookie=cb,body={'request_id':request_id})[0],200)
         self.assertFalse(self.admin.execute('SELECT cancelled FROM hcla.execution WHERE run_id=%s',(key_a,)).fetchone()['cancelled'])
         self.assertEqual(b.stores.persistent.db.execute('SELECT * FROM execution').fetchall(),[])
-        conv='temp-'+str(uuid.uuid4());data={'conversation_id':conv,'request_id':str(uuid.uuid4()),'snapshot':None,'request':self.request({'id':conv,'memory':'TEMPORARY'},'MEMBER_TEMP_BODY_CANARY')}
+        from packages.runtime_bridge.bridge import RuntimeBridge
+        import os
+        runtime=os.environ.get('HCL_DEVELOPMENT_ARTIFACT');self.assertTrue(runtime,'Reviewed runtime is mandatory in cloud CI')
+        a.development_bridge=RuntimeBridge(runtime)
+        conv='temp-'+str(uuid.uuid4());request=self.request({'id':conv,'memory':'TEMPORARY'},'Ada said, "I believe that MEMBER_TEMP_BODY_CANARY starts Friday."')
+        request['development_execution']={'schema_version':'1.0','capability_id':'belief_interpretation','query':'What does Ada believe?','input_class':'SYNTHETIC_NON_CONFIRMATION','fixture_family':'ORIGINAL_PRODUCT_SYNTHETIC','purpose':'DEVELOPMENT_INTEGRATION_ONLY','timeout_ms':3000}
+        data={'conversation_id':conv,'request_id':str(uuid.uuid4()),'snapshot':None,'request':request}
         status,payload=self.http(a,'/v1/member/temporary/execute',cookie=ca,body=data);self.assertEqual(status,200,payload)
         messages=[json.loads(line[6:]) for line in payload.decode().splitlines() if line.startswith('data: ')];self.assertEqual(messages[-1]['type'],'cloud.completed',messages)
+        self.assertEqual(messages[-1]['payload']['view']['runs'][-1]['run_receipt']['actual_treatment'],'EXECUTED')
         data['snapshot']=messages[-1]['payload']['snapshot'];data['request_id']=str(uuid.uuid4())
         self.assertEqual(self.http(b,'/v1/member/temporary/execute',cookie=cb,body=data)[0],403)
         for row in self.admin.execute("SELECT tablename FROM pg_tables WHERE schemaname='hcla'").fetchall():self.assertNotIn('MEMBER_TEMP_BODY_CANARY',str(self.admin.execute('SELECT * FROM hcla.'+row['tablename']).fetchall()))
@@ -230,6 +237,22 @@ class MemberPostgresTests(unittest.TestCase):
         self.assertEqual(ended.exception.status,401)
         with self.assertRaises(Fault):self.app().member_auth.require(cookie)
 
+    def test_signing_key_rotation_invalidates_member_sessions_before_decryption(self):
+        app,cookie,tenant=self.login();store=self.store()
+        changed=MemberAuth(store,'https://hcla.example.test','2'*64,FakeMemberProvider())
+        with self.assertRaises(Fault):changed.require(cookie)
+        self.assertFalse(changed.renewable(cookie))
+        with self.assertRaises(Fault):changed.refresh(cookie)
+
+    def test_near_absolute_deadline_renewal_cannot_extend_it(self):
+        app,cookie,tenant=self.login();key=app.member_auth.key(cookie)
+        row=self.admin.execute('SELECT * FROM hcla.member_sessions').fetchone();absolute=int(time.time())+30
+        token='offline-refresh-'+str(row['subject'])
+        encrypted=app.member_auth.vault.seal(token,row['issuer'],str(row['subject']),key,absolute)
+        self.admin.execute("UPDATE hcla.member_sessions SET absolute_expires_at=to_timestamp(%s),expires_at=clock_timestamp()+interval '1 second',refresh_ciphertext=%s",(absolute,encrypted))
+        cold=self.app();cold.member_auth.refresh(cookie)
+        self.assertEqual(cold.member_auth.require(cookie).expires_at,absolute)
+
     def test_logout_during_refresh_cannot_resurrect_session(self):
         app,cookie,tenant=self.login();self.make_refresh_due(tenant)
         started=threading.Event();release=threading.Event();errors=[]
@@ -265,6 +288,15 @@ class MemberPostgresTests(unittest.TestCase):
         a.live_chat_service.budget.finish('a','attempt','unknown')
         with self.assertRaises(BudgetError):b.live_chat_service.budget.reserve('b','attempt',128)
         self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.member_budget_attempts WHERE tenant=%s',(tb,)).fetchone()['n'],0)
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.budget_attempts').fetchone()['n'],1)
+
+    def test_usage_snapshot_is_current_grant_only_without_resetting_operator_history(self):
+        app,_,tenant=self.login();budget=app.live_chat_service.budget
+        budget.reserve('old','attempt',128);budget.finish('old','attempt','unknown')
+        self.admin.execute('UPDATE hcla.member_entitlements SET enabled=false WHERE tenant=%s',(tenant,))
+        self.admin.execute("INSERT INTO hcla.member_entitlements(tenant,grant_id,enabled,starts_at,expires_at,temporary_enabled,persistent_enabled,max_requests,max_cost_usd) VALUES(%s,'offline-next-grant',true,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour',true,true,2,3)",(tenant,))
+        self.assertEqual(budget.snapshot()['request_count'],0);self.assertEqual(budget.snapshot()['max_requests'],2)
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.member_budget_attempts').fetchone()['n'],1)
         self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.budget_attempts').fetchone()['n'],1)
 
     def test_concurrent_account_admission_has_one_global_owner(self):

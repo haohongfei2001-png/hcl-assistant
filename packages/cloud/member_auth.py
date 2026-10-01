@@ -127,6 +127,7 @@ class MemberAuth:
         from urllib.parse import urlsplit
         self.store=store; self.origin=origin; self.host=urlsplit(origin).netloc
         self.provider=provider; self._key=bytes.fromhex(state_key)
+        self.epoch=hmac.new(self._key,b'hcla-member-session-epoch-v1',hashlib.sha256).hexdigest()
         from packages.cloud.session_vault import SessionVault
         self.vault=SessionVault(state_key)
 
@@ -170,7 +171,7 @@ class MemberAuth:
         with self.store.transaction():
             absolute=int(self.clock())+ABSOLUTE_SECONDS
             encrypted=self.vault.seal(verified.refresh_token,principal.issuer,principal.subject,session_key,absolute)
-            row=self.store.db.execute("INSERT INTO member_sessions(session_key,tenant,issuer,subject,expires_at,absolute_expires_at,refresh_ciphertext) VALUES(?,?,?,?,LEAST(to_timestamp(?),clock_timestamp()+interval '15 minutes'),to_timestamp(?),?) RETURNING FLOOR(EXTRACT(EPOCH FROM expires_at))::bigint AS expires",(session_key,principal.tenant,principal.issuer,principal.subject,principal.expires_at,absolute,encrypted)).fetchone()
+            row=self.store.db.execute("INSERT INTO member_sessions(session_key,tenant,issuer,subject,auth_epoch,expires_at,absolute_expires_at,refresh_ciphertext) VALUES(?,?,?,?,?,LEAST(to_timestamp(?),clock_timestamp()+interval '15 minutes'),to_timestamp(?),?) RETURNING FLOOR(EXTRACT(EPOCH FROM expires_at))::bigint AS expires",(session_key,principal.tenant,principal.issuer,principal.subject,self.epoch,principal.expires_at,absolute,encrypted)).fetchone()
             if row['expires']<=self.clock(): raise Fault(401,'Account session expired')
         return token,row['expires']
 
@@ -188,7 +189,7 @@ class MemberAuth:
     def require(self, cookie):
         key=self.key(cookie); self.store.member_session_key=key
         with self.store.transaction():
-            row=self.store.db.execute("SELECT tenant,issuer,subject,FLOOR(EXTRACT(EPOCH FROM expires_at))::bigint AS expires FROM member_sessions WHERE session_key=? AND issuer=? AND expires_at>clock_timestamp() AND absolute_expires_at>clock_timestamp() AND (refresh_state='idle' OR refresh_started_at>clock_timestamp()-interval '20 seconds')",(key,self.provider.issuer)).fetchone()
+            row=self.store.db.execute("SELECT tenant,issuer,subject,FLOOR(EXTRACT(EPOCH FROM expires_at))::bigint AS expires FROM member_sessions WHERE session_key=? AND issuer=? AND auth_epoch=? AND expires_at>clock_timestamp() AND absolute_expires_at>clock_timestamp() AND (refresh_state='idle' OR refresh_started_at>clock_timestamp()-interval '20 seconds')",(key,self.provider.issuer,self.epoch)).fetchone()
         if row is None: raise Fault(401,'Account sign-in required')
         principal=VerifiedPrincipal(row['issuer'],str(row['subject']),row['expires'])
         if principal.tenant!=row['tenant']: raise Fault(401,'Account sign-in required')
@@ -197,25 +198,25 @@ class MemberAuth:
 
     def active(self, key):
         with self.store.transaction():
-            return self.store.db.execute("SELECT 1 FROM member_sessions WHERE session_key=? AND tenant=? AND issuer=? AND expires_at>clock_timestamp() AND absolute_expires_at>clock_timestamp() AND (refresh_state='idle' OR refresh_started_at>clock_timestamp()-interval '20 seconds')",(key,self.store.tenant,self.provider.issuer)).fetchone() is not None
+            return self.store.db.execute("SELECT 1 FROM member_sessions WHERE session_key=? AND tenant=? AND issuer=? AND auth_epoch=? AND expires_at>clock_timestamp() AND absolute_expires_at>clock_timestamp() AND (refresh_state='idle' OR refresh_started_at>clock_timestamp()-interval '20 seconds')",(key,self.store.tenant,self.provider.issuer,self.epoch)).fetchone() is not None
 
     def renewable(self,cookie):
         try:key=self.key(cookie)
         except Fault:return False
         self.store.member_session_key=key
         with self.store.transaction():
-            return self.store.db.execute("SELECT 1 FROM member_sessions WHERE session_key=? AND issuer=? AND absolute_expires_at>clock_timestamp() AND (refresh_state='idle' OR refresh_started_at>clock_timestamp()-interval '20 seconds')",(key,self.provider.issuer)).fetchone() is not None
+            return self.store.db.execute("SELECT 1 FROM member_sessions WHERE session_key=? AND issuer=? AND auth_epoch=? AND absolute_expires_at>clock_timestamp() AND (refresh_state='idle' OR refresh_started_at>clock_timestamp()-interval '20 seconds')",(key,self.provider.issuer,self.epoch)).fetchone() is not None
 
     def refresh(self,cookie):
         key=self.key(cookie);self.store.member_session_key=key;owner=secrets.token_hex(16)
         with self.store.transaction():
-            identity=self.store.db.execute('SELECT tenant,issuer,subject,FLOOR(EXTRACT(EPOCH FROM absolute_expires_at))::bigint AS absolute FROM member_sessions WHERE session_key=? AND issuer=? AND absolute_expires_at>clock_timestamp()',(key,self.provider.issuer)).fetchone()
+            identity=self.store.db.execute('SELECT tenant,issuer,subject,FLOOR(EXTRACT(EPOCH FROM absolute_expires_at))::bigint AS absolute FROM member_sessions WHERE session_key=? AND issuer=? AND auth_epoch=? AND absolute_expires_at>clock_timestamp()',(key,self.provider.issuer,self.epoch)).fetchone()
         if identity is None:raise Fault(401,'Account sign-in required')
         principal=VerifiedPrincipal(identity['issuer'],str(identity['subject']),identity['absolute'])
         if principal.tenant!=identity['tenant']:raise Fault(401,'Account sign-in required')
         self.store.bind_member(principal)
         with self.store.transaction():
-            row=self.store.db.execute("SELECT *,FLOOR(EXTRACT(EPOCH FROM absolute_expires_at))::bigint AS absolute,expires_at>clock_timestamp()+interval '60 seconds' AS fresh,refresh_started_at>clock_timestamp()-interval '20 seconds' AS recent FROM member_sessions WHERE session_key=? AND issuer=? AND absolute_expires_at>clock_timestamp()",(key,self.provider.issuer)).fetchone()
+            row=self.store.db.execute("SELECT *,FLOOR(EXTRACT(EPOCH FROM absolute_expires_at))::bigint AS absolute,expires_at>clock_timestamp()+interval '60 seconds' AS fresh,refresh_started_at>clock_timestamp()-interval '20 seconds' AS recent FROM member_sessions WHERE session_key=? AND issuer=? AND auth_epoch=? AND absolute_expires_at>clock_timestamp()",(key,self.provider.issuer,self.epoch)).fetchone()
             if row is None:raise Fault(401,'Account sign-in required')
             if row['refresh_state']!='idle':
                 if row['recent']:raise Fault(409,'Account renewal is already in progress')

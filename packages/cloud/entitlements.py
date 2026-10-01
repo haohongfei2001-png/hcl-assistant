@@ -73,7 +73,7 @@ class MemberBudget:
     def snapshot(self):
         with self.store.transaction():
             grant=self.entitlements.current()
-            rows=self.store.db.execute('SELECT charged_usd,outcome FROM member_budget_attempts WHERE tenant=?',(self.store.tenant,)).fetchall()
+            rows=self.store.db.execute('SELECT charged_usd,outcome FROM member_budget_attempts WHERE tenant=? AND grant_id=?',(self.store.tenant,grant['grant_id'] if grant else '')).fetchall()
         return {'request_count':len(rows),'active_requests':sum(row['outcome']=='active' for row in rows),
                 'charged_cost_usd':_money(sum((Decimal(row['charged_usd']) for row in rows),Decimal(0))),
                 'max_requests':grant['max_requests'] if grant else 0,
