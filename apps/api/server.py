@@ -67,7 +67,7 @@ def handler(application):
 
         def body(self):
             length=int(self.headers.get('Content-Length','0'))
-            if length<0 or length>(1048576 if getattr(self.application,'cloud',False) and urlparse(self.path).path=='/v1/temporary/execute' else 262144): raise Fault(413,'Request too large')
+            if length<0 or length>(1048576 if getattr(self.application,'cloud',False) and urlparse(self.path).path in {'/v1/temporary/execute','/v1/trial/execute'} else 262144): raise Fault(413,'Request too large')
             try: obj=json.loads(self.rfile.read(length))
             except (ValueError,UnicodeError): raise Fault(400,'Invalid complete JSON')
             if not isinstance(obj,dict): raise Fault(400,'JSON object required')
@@ -82,6 +82,20 @@ def handler(application):
         def do_POST(self):
             try:
                 path=urlparse(self.path).path
+                if path.startswith('/v1/trial/'):
+                    trial=getattr(self.application,'trial_auth',None)
+                    if trial is None:raise Fault(503,'Temporary trial is not available')
+                    trial.boundary(self,mutation=True)
+                    if path=='/v1/trial/start':
+                        self.body()
+                        self.json(200,{'authenticated':True,'expires_at':trial.budget.window.expires_at},trial.issue(self.headers.get('Cookie')));return
+                    if path not in {'/v1/trial/execute','/v1/trial/cancel'}:raise Fault(404,'Unknown trial route')
+                    session=trial.require(self.headers.get('Cookie'));data=self.body()
+                    if path=='/v1/trial/cancel':
+                        self.application.lifecycle.cancel_temporary(trial.execution_key(session,data.get('request_id')))
+                        self.json(200,{'cancel_requested':True});return
+                    from packages.cloud.temporary import execute
+                    execute(self.application,self,data,guest_session=session);return
                 if path=='/v1/development/login' and self.application.real_chat:
                     if self.application.development_auth is None:raise Fault(503,'Development configuration required')
                     self.application.development_auth.boundary(self,mutation=True)
@@ -125,6 +139,12 @@ def handler(application):
 
         def do_GET(self):
             try:
+                if urlparse(self.path).path.startswith('/v1/trial/'):
+                    if urlparse(self.path).path!='/v1/trial/status':raise Fault(404,'Unknown trial route')
+                    trial=getattr(self.application,'trial_auth',None)
+                    if trial is None:self.json(200,{'available':False,'authenticated':False,'temporary_only':True});return
+                    trial.boundary(self)
+                    self.json(200,trial.status(self.headers.get('Cookie')));return
                 if urlparse(self.path).path=='/v1/development/status':
                     authenticated=False
                     if self.application.real_chat and self.application.development_auth:

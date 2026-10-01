@@ -6,7 +6,8 @@ const entries=new Map<string,Entry>();
 const runOwners=new Map<string,string>();
 let epoch=0;
 let enabled=false;
-export function setCloudTemporary(value:boolean){enabled=value}
+let trial=false;
+export function setCloudTemporary(value:boolean,guest=false){if(enabled!==value||trial!==guest)clearTemporary();enabled=value;trial=guest}
 function entryForRun(id:string){const conversation=runOwners.get(id);return conversation?entries.get(conversation):undefined}
 export function clearTemporary(){epoch++;for(const entry of entries.values())entry.controller?.abort();entries.clear();runOwners.clear()}
 function notify(entry:Entry){for(const listener of entry.listeners)listener()}
@@ -19,7 +20,7 @@ async function execute(entry:Entry,request:unknown){
  entry.done=(async()=>{
   let wasAccepted=false;
   try{
-   const response=await fetch('/v1/temporary/execute',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json','X-HCLA-Request':'1'},body:JSON.stringify({conversation_id:entry.conversation.id,request_id:requestId,request,snapshot:entry.packet.snapshot})});
+   const response=await fetch(trial?'/v1/trial/execute':'/v1/temporary/execute',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json','X-HCLA-Request':'1'},body:JSON.stringify({conversation_id:entry.conversation.id,request_id:requestId,request,snapshot:entry.packet.snapshot})});
    if(!response.ok){const value=await response.json();if(response.status===409&&/Temporary (state changed|request already consumed|conversation already started|conversation expired)/.test(value.error||''))entry.unavailable=true;throw new Error(`${response.status}: ${value.error}`)}
    const reader=response.body!.getReader(),decoder=new TextDecoder();let buffer='';let complete=false;
    while(true){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let boundary;
@@ -53,8 +54,9 @@ export async function temporaryApi(path:string,body:unknown,raw:(path:string,bod
  if(!enabled)return {handled:false};
  const url=new URL(path,window.location.origin),parts=url.pathname.split('/').filter(Boolean);
  if(path==='/v1/conversations'){
-  if(body===undefined)return {handled:true,value:[...await raw(path) as Conversation[],...[...entries.values()].map(e=>e.conversation)]};
+  if(body===undefined)return {handled:true,value:[...(trial?[]:await raw(path) as Conversation[]),...[...entries.values()].map(e=>e.conversation)]};
   const data=body as {memory?:string;topic_id?:string;title?:string};
+  if(trial&&(data.memory!=='TEMPORARY'||data.topic_id))throw new Error('403: 试用仅支持当前标签页临时对话');
   if(data.memory==='TEMPORARY'){
    if(data.topic_id)throw new Error('403: 临时对话不能加入项目');
    const conversation={id:'temp-'+crypto.randomUUID(),title:data.title||'临时对话',memory:'TEMPORARY',topic_id:null};
@@ -76,7 +78,7 @@ export async function temporaryApi(path:string,body:unknown,raw:(path:string,bod
  if(parts[1]==='runs'){
   const owner=entryForRun(parts[2]);if(owner){
    if(parts[3]==='cancel'){
-    if(owner.requestId)await raw('/v1/temporary/cancel',{request_id:owner.requestId});
+    if(owner.requestId)await raw(trial?'/v1/trial/cancel':'/v1/temporary/cancel',{request_id:owner.requestId});
     const run=owner.packet.view.runs.find(r=>r.run_id===parts[2])!;return {handled:true,value:structuredClone(run)};
    }
    if(parts.length===3){if(owner.unavailable)throw new Error('409: 临时对话已中断，内容已清理');return {handled:true,value:structuredClone(owner.packet.view.runs.find(r=>r.run_id===parts[2]))}};
@@ -85,9 +87,13 @@ export async function temporaryApi(path:string,body:unknown,raw:(path:string,bod
  if(parts[1]==='answers'&&parts[3]==='explain')for(const item of entries.values())if(parts[2] in item.packet.explains)return {handled:true,value:structuredClone(item.packet.explains[parts[2]])};
  if(parts[1]==='lab')for(const item of entries.values())if(parts[3] in item.packet.inspections)return {handled:true,value:structuredClone(item.packet.inspections[parts[3]])};
  if(parts[1]==='history'&&parts[2]==='search'){
-  const query=(url.searchParams.get('q')||'').toLocaleLowerCase();const results=await raw(path) as unknown[];
+  const query=(url.searchParams.get('q')||'').toLocaleLowerCase();const results=trial?[]:await raw(path) as unknown[];
   for(const item of entries.values())for(const run of item.packet.view.runs)if(!run.redacted){const text=(run.input_text||'')+'\n'+(run.answer?.text||'');if(text.toLocaleLowerCase().includes(query))results.push({conversation_id:item.conversation.id,title:item.conversation.title,run_id:run.run_id,snippet:text.slice(0,180),historical:run.outdated,related_changes:run.changes||[],scope:'TEMPORARY',source:'CURRENT_TAB_MEMORY'})}
   return {handled:true,value:results};
+ }
+ if(trial){
+  if(path==='/v1/topics'&&body===undefined)return {handled:true,value:[]};
+  if(!['/v1/trial/status','/v1/trial/start','/v1/development/status'].includes(url.pathname))throw new Error('403: 临时试用不能访问持久会话或其他用户内容');
  }
  return {handled:false};
 }

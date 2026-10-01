@@ -60,3 +60,7 @@ Owner approved C1-01 engineering adaptation after P1-03 for isolated Vercel/Post
 ## Six-point chat refinement amendment (2026-10-01)
 
 Owner approved U1-01 following the screenshot review: compact growing composer, tighter Home, correct cleared-history state, one search and on-demand background/attachment details, three supported contextual actions, and neutral readable surfaces within Continuum V1. This is the sole implementation writer; accepted digital-being assets, provider/Bridge/security and production gates stay unchanged. Verification and bounded scope: [U1-01 evidence](docs/U1_01_EVIDENCE.md).
+
+## Bounded temporary trial amendment (2026-10-01)
+
+Owner requested an at-most-four-hour, shared USD10, no-login temporary synthetic trial. The sole writer may implement isolated guest routes and a new explicit versioned budget policy; no full membership system, owner-route bypass, historical budget reset, production HCL activation or real-private-data permission is included. Offline CI remains zero provider calls. Live key entry and matching bounded activation are separate steps. Contract: [temporary trial](docs/TEMPORARY_TRIAL.md).
