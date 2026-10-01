@@ -16,3 +16,7 @@ The prior screenshots established concrete gaps: bare account controls unlike th
 ## Live status remains separate
 
 No live Auth/email settings, account, entitlement, key, model call or guest window is activated. Public registration delivery, password recovery, billing and real-private-data use remain incomplete capabilities. Passing these injected-provider journeys does not establish a live consumer-ready service.
+
+## History recovery follow-up
+
+A failed initial list read must remain distinct from an empty account. The follow-up bounds concurrent conversation/project reads to15 seconds, aborts the sibling when either read fails, rejects stale/unmounted completions, and provides an explicit read-only retry that retains the draft. A successful conversation creation remains selected even if its subsequent list refresh fails. Browser cases require zero mutations on list retry, exactly one create/event in the accepted-create case, and actual settlement of a held companion fetch before its test hold is released. Real CI evidence is required before this follow-up is adopted; no backend or account authority changes.
