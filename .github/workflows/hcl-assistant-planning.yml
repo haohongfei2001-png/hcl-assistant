@@ -165,7 +165,7 @@ jobs:
           name: continuum-local-visual-captures
           path: |
             product-export/test-results/continuum-visual-local*/**/*.png
-            product-export/test-results/**/*.json
+            product-export/test-results/continuum-visual-local*/**/*.json
           retention-days: 7
           if-no-files-found: ignore
 
