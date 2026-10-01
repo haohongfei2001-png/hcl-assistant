@@ -2,19 +2,19 @@
 
 Design ID: `CONTINUUM-V1-20261001`. Product architecture remains **Canonical 1.2 / A2-Product**. This is an appearance/interaction implementation amendment, not a new product strategy.
 
-**Repository adoption is now complete at the asset/specification level once this change is on `main`.** The Owner approved these five designs; all five original PNGs are stored below and have been read back from GitHub with Git blob identities matching the manifest. They are the canonical Continuum V1 visual references. This does not mean the application implements them: implementation and visual acceptance remain P1-03 work, and exact-head plus exact-main CI remain required for this adoption change.
+**Repository adoption is complete at the asset/specification level once this change is on `main`.** The Owner approved these five designs. The repository's canonical boundary check intentionally rejects binary payload files, so each approved PNG is stored as a UTF-8 SVG wrapper containing the exact original PNG payload losslessly in base64. Decoding the embedded payload reproduces the approved PNG byte-for-byte; the manifest retains original byte size, SHA-256 and original Git blob identity plus the wrapper blob identity. These five wrappers are the canonical Continuum V1 visual references. This does not mean the application implements them: implementation and visual acceptance remain P1-03 work, and exact-head plus exact-main CI remain required for this adoption change.
 
 ## Approved source set
 
-All references are 1448 × 1086 PNG. Preserve the original bytes, without crops, recompression, replacement screenshots, or regenerated lookalikes. [Asset manifest](asset-manifest.json) records attachment identity, size, SHA-256, and Git blob identity.
+All references originate from 1448 × 1086 PNGs. Preserve the embedded original payload without crops, recompression, replacement screenshots or regenerated lookalikes. The text-only SVG container is a repository-storage adaptation only, not a visual transformation. [Asset manifest](asset-manifest.json) records original attachment identity, byte size, SHA-256, original Git blob identity and wrapper blob identity.
 
 | ID | Required repository path | Meaning |
 |---|---|---|
-| UI-01 | `assets/01-home.png` | Home / initial input; approved navigation, header, composer, surface and spacing family |
-| UI-02 | `assets/02-conversation.png` | Conversation / long-answer viewport, attached files, table, answer-level evidence layer |
-| UI-03 | `assets/03-evidence-revision.png` | Evidence list, selected excerpt, revision comparison, return to answer |
-| M-01 | `assets/04-companion-orb.png` | Floating-core / asymmetric-shell companion candidate |
-| M-02 | `assets/05-companion-receiver.png` | Input / container / signal-receiver companion candidate |
+| UI-01 | `assets/01-home.svg` | Home / initial input; approved navigation, header, composer, surface and spacing family |
+| UI-02 | `assets/02-conversation.svg` | Conversation / long-answer viewport, attached files, table, answer-level evidence layer |
+| UI-03 | `assets/03-evidence-revision.svg` | Evidence list, selected excerpt, revision comparison, return to answer |
+| M-01 | `assets/04-companion-orb.svg` | Floating-core / asymmetric-shell companion candidate |
+| M-02 | `assets/05-companion-receiver.svg` | Input / container / signal-receiver companion candidate |
 
 UI-02 is a static long-answer viewport. It is not evidence that a three-turn conversation or a file-reading flow has been implemented. The two companion sheets are design references, not actual animations or proof of listening/understanding.
 
@@ -52,4 +52,4 @@ This change may contain only design assets, specifications and plan metadata. It
 
 Existing P0-01 and P1-01 completion/evidence remain historical facts. P1-02 work in PR #10 is not taken over. V1 implementation is assigned to three dependent delivery slices **inside the existing pending P1-03 package**; these are not additional scheduler tasks. The checker currently fixes the four parent identities and version `1.2/A2-Product`; no checker/test/workflow is changed to manufacture compatibility. See Development Plan and the refinement work-package definition.
 
-This adoption was reconciled against main `905ff1fbb3b2264757931e8d9ff5fdff54e7a32f`, after P1-02 merged. The five image blobs are present and verified; the change remains limited to design assets, specifications and plan metadata. Existing CI does not automatically validate future V01–V10 implementation evidence, so P1-03 must still supply the visual comparisons and playable journeys defined here.
+This adoption was reconciled against main `905ff1fbb3b2264757931e8d9ff5fdff54e7a32f`, after P1-02 merged. The five approved image payloads are stored through lossless text-only SVG wrappers; final wrapper readback and CI complete the storage verification. The change remains limited to design assets, specifications and plan metadata. Existing CI does not automatically validate future V01–V10 implementation evidence, so P1-03 must still supply the visual comparisons and playable journeys defined here.
