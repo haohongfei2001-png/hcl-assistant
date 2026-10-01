@@ -3,6 +3,7 @@ import argparse
 import base64
 import json
 import os
+import re
 from pathlib import Path
 import threading
 import time
@@ -55,6 +56,7 @@ def handler(application):
         def log_message(self, *args): pass  # Never log user bodies or request URLs.
 
         def tenant(self):
+            if hasattr(self,'member_tenant'):return self.member_tenant
             if self.application.real_chat:
                 if self.application.development_auth is None:raise Fault(503,'Development configuration required')
                 self.application.development_auth.boundary(self,mutation=self.command=='POST')
@@ -65,9 +67,20 @@ def handler(application):
             if identity not in {'demo-a','demo-b'}: raise Fault(401,'Synthetic test identity required')
             return 'synthetic-'+identity
 
+        def request_path(self):
+            path=urlparse(self.path).path
+            if not path.startswith('/v1/member/'):return path
+            if not getattr(self.application,'cloud',False):raise Fault(404,'Unknown API route')
+            if getattr(self.application,'member_auth',None) is None:raise Fault(503,'普通账号服务尚未启用')
+            canonical='/v1/'+path[len('/v1/member/'):]
+            if not re.fullmatch(r'/v1/(?:conversations(?:/[^/]+(?:/events)?)?|topics|history/search|runs/[^/]+(?:/(?:events|execute|cancel|retry))?|context|sources(?:/[^/]+)?|answers/[^/]+/explain|lab/(?:runs|export)/[^/]+|temporary/(?:execute|cancel))',canonical):
+                raise Fault(404,'Unknown account route')
+            self.member_tenant=self.application.authenticate_member(self)
+            return canonical
+
         def body(self):
             length=int(self.headers.get('Content-Length','0'))
-            if length<0 or length>(1048576 if getattr(self.application,'cloud',False) and urlparse(self.path).path in {'/v1/temporary/execute','/v1/trial/execute'} else 262144): raise Fault(413,'Request too large')
+            if length<0 or length>(1048576 if getattr(self.application,'cloud',False) and urlparse(self.path).path in {'/v1/temporary/execute','/v1/trial/execute','/v1/member/temporary/execute'} else 262144): raise Fault(413,'Request too large')
             try: obj=json.loads(self.rfile.read(length))
             except (ValueError,UnicodeError): raise Fault(400,'Invalid complete JSON')
             if not isinstance(obj,dict): raise Fault(400,'JSON object required')
@@ -81,7 +94,24 @@ def handler(application):
 
         def do_POST(self):
             try:
-                path=urlparse(self.path).path
+                path=self.request_path()
+                if path.startswith('/v1/account/'):
+                    auth=getattr(self.application,'member_auth',None)
+                    if auth is None:raise Fault(503,'普通账号服务尚未启用')
+                    auth.boundary(self,mutation=True)
+                    data=self.body()
+                    if path=='/v1/account/register':self.json(202,auth.register(data));return
+                    if path=='/v1/account/login':
+                        token,expiry=auth.login(data,self.headers.get('Cookie'))
+                        self.json(200,{'authenticated':True,'expires_at':expiry},auth.cookie(token));return
+                    if path=='/v1/account/refresh':
+                        if data:raise Fault(400,'No client session claims accepted')
+                        auth.refresh(self.headers.get('Cookie'))
+                        self.json(200,self.application.member_status(self.headers.get('Cookie')));return
+                    if path=='/v1/account/logout':
+                        auth.logout(self.headers.get('Cookie'))
+                        self.json(200,{'authenticated':False},auth.clear_cookie());return
+                    raise Fault(404,'Unknown account route')
                 if path.startswith('/v1/trial/'):
                     trial=getattr(self.application,'trial_auth',None)
                     if trial is None:raise Fault(503,'Temporary trial is not available')
@@ -104,6 +134,11 @@ def handler(application):
                     cookie=self.application.development_auth.cookie(session) if getattr(self.application,'cloud',False) else 'hcla_development='+session+'; HttpOnly; SameSite=Strict; Path=/v1; Max-Age=3600'
                     self.json(200,{'authenticated':True},cookie);return
                 tenant=self.tenant(); data=self.body(); parts=path.strip('/').split('/')
+                if hasattr(self,'member_tenant'):
+                    if {'tenant','tenant_id','user_id','account_id','entitlement','grant'} & set(data):raise Fault(400,'Account scope is selected by the server')
+                    if path in {'/v1/conversations','/v1/topics'}:self.application.entitlements.require('CONVERSATION')
+                    if path=='/v1/sources' or (len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events'):
+                        if data.get('event',{}).get('type','message') in {'message','upload'}:self.application.entitlements.require('CONVERSATION')
                 if getattr(self.application,'cloud',False):
                     if path=='/v1/development/logout':
                         self.application.development_auth.logout(self.headers.get('Cookie'));self.json(200,{'authenticated':False},'__Host-hcla=; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return
@@ -111,7 +146,11 @@ def handler(application):
                         from packages.cloud.temporary import execute
                         execute(self.application,self,data);return
                     if path=='/v1/temporary/cancel':
-                        self.application.lifecycle.cancel_temporary(data.get('request_id'));self.json(200,{'cancel_requested':True});return
+                        identity=data.get('request_id')
+                        if hasattr(self,'member_tenant'):
+                            from packages.cloud.temporary import member_execution_key
+                            identity=member_execution_key(self.application,identity)
+                        self.application.lifecycle.cancel_temporary(identity);self.json(200,{'cancel_requested':True});return
                     if len(parts)==4 and parts[:2]==['v1','runs'] and parts[3]=='execute':
                         self.json(200,self.application.execute(tenant,parts[2]));return
                     if path=='/v1/sources' or (len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events'):
@@ -139,20 +178,27 @@ def handler(application):
 
         def do_GET(self):
             try:
-                if urlparse(self.path).path.startswith('/v1/trial/'):
-                    if urlparse(self.path).path!='/v1/trial/status':raise Fault(404,'Unknown trial route')
+                path=self.request_path()
+                if path.startswith('/v1/account/'):
+                    if path!='/v1/account/status':raise Fault(404,'Unknown account route')
+                    auth=getattr(self.application,'member_auth',None)
+                    if auth is None:self.json(200,{'available':False,'authenticated':False});return
+                    auth.boundary(self)
+                    self.json(200,self.application.member_status(self.headers.get('Cookie')));return
+                if path.startswith('/v1/trial/'):
+                    if path!='/v1/trial/status':raise Fault(404,'Unknown trial route')
                     trial=getattr(self.application,'trial_auth',None)
                     if trial is None:self.json(200,{'available':False,'authenticated':False,'temporary_only':True});return
                     trial.boundary(self)
                     self.json(200,trial.status(self.headers.get('Cookie')));return
-                if urlparse(self.path).path=='/v1/development/status':
+                if path=='/v1/development/status':
                     authenticated=False
                     if self.application.real_chat and self.application.development_auth:
                         self.application.development_auth.boundary(self)
                         try:self.application.development_auth.require(self.headers.get('Cookie'));authenticated=True
                         except Fault:pass
                     self.json(200,{'enabled':self.application.real_chat,'authenticated':authenticated,'configuration':self.application.configuration,'production_enabled':False,'cloud':getattr(self.application,'cloud',False),'request_bound':getattr(self.application,'request_bound',False)});return
-                tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); path=parsed.path; parts=path.strip('/').split('/')
+                tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); parts=path.strip('/').split('/')
                 if path=='/v1/development/runtime':
                     result=self.application.development_bridge.handshake() if self.application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}
                 elif path=='/v1/conversations': result=self.application.stores.conversations(tenant)
@@ -170,6 +216,7 @@ def handler(application):
                     deadline=time.monotonic()+(50 if self.application.real_chat else 10)
                     try:
                         while time.monotonic()<deadline:
+                            if hasattr(self,'member_tenant') and not self.application.member_auth.active(self.application.member_context[1]):return
                             for event in ctrl.events(tenant,parts[2],after):
                                 self.wfile.write(('id: '+str(event['seq'])+'\ndata: '+json.dumps(event,ensure_ascii=False)+'\n\n').encode()); self.wfile.flush(); after=event['seq']
                             if not ctrl.read(tenant,parts[2])['pending']: return

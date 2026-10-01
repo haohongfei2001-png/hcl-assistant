@@ -30,7 +30,12 @@ class Lifecycle:
                 if payload_hash is not None and old['payload_hash'] != payload_hash: raise Fault(409,'Idempotency payload conflict')
                 return None
             owner=uid()
-            self.store.db.execute('INSERT INTO execution(run_id,owner,expires_at,payload_hash,temporary) VALUES(?,?,clock_timestamp() + (? * interval \'1 second\'),?,?)',(run_id,owner,LEASE_SECONDS,payload_hash,temporary))
+            # Explicit tenant is required for member stores; old owner schema
+            # remains usable until the separately approved additive migration.
+            if self.store.tenant=='hcla-owner':
+                self.store.db.execute('INSERT INTO execution(run_id,owner,expires_at,payload_hash,temporary) VALUES(?,?,clock_timestamp() + (? * interval \'1 second\'),?,?)',(run_id,owner,LEASE_SECONDS,payload_hash,temporary))
+            else:
+                self.store.db.execute('INSERT INTO execution(run_id,tenant,owner,expires_at,payload_hash,temporary) VALUES(?,?,?,clock_timestamp() + (? * interval \'1 second\'),?,?)',(run_id,self.store.tenant,owner,LEASE_SECONDS,payload_hash,temporary))
             return owner
     def finish(self, run_id, owner):
         with self.store.transaction():

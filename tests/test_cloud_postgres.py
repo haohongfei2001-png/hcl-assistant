@@ -40,12 +40,14 @@ class CloudPostgresTests(unittest.TestCase):
                 c.execute((ROOT/'supabase/migrations/20261001084651_isolated_hcla_cloud.sql').read_text())
             if c.execute("SELECT to_regclass('hcla.trial_budget_policy')").fetchone()[0] is None:
                 c.execute((ROOT/'supabase/migrations/20261001174151_bounded_temporary_trial.sql').read_text())
+            if c.execute("SELECT to_regclass('hcla.member_sessions')").fetchone()[0] is None:
+                c.execute((ROOT/'supabase/migrations/20261001195008_member_accounts_and_entitlements.sql').read_text())
         cls.verifier=password_verifier('offline password fixture')
         cls.config=DevelopmentConfig.from_env({'HCLA_DEEPSEEK_API_KEY':'offline-fixture','HCLA_DEEPSEEK_BASE_URL':'https://api.deepseek.com','HCLA_DEEPSEEK_MODEL':'deepseek-v4-pro','HCLA_DEV_ACCESS_TOKEN':'offline-owner-access-fixture','HCLA_DEV_MAX_REQUESTS':'10','HCLA_DEV_MAX_COST_USD':'100','HCLA_DEV_INPUT_USD_PER_MILLION':'1.32','HCLA_DEV_OUTPUT_USD_PER_MILLION':'3.96','HCLA_DEV_MAX_OUTPUT_TOKENS':'512','HCLA_DEV_BUDGET_ID':'offline-isolated-cloud-grant'})
     def setUp(self):
         self.admin=self.connect()
         tables=self.admin.execute("SELECT tablename FROM pg_tables WHERE schemaname='hcla' AND tablename!='schema_version'").fetchall()
-        for row in tables:self.admin.execute('TRUNCATE hcla.'+row['tablename']+' RESTART IDENTITY')
+        self.admin.execute('TRUNCATE '+','.join('hcla.'+row['tablename'] for row in tables)+' RESTART IDENTITY')
         policy=DevelopmentBudget._policy(SimpleNamespace(config=self.config))
         self.admin.execute('INSERT INTO hcla.budget_policy VALUES(1,%s)',(policy,))
         self.open=[]

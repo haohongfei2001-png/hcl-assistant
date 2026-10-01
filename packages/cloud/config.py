@@ -48,6 +48,7 @@ class CloudConfig:
     provider:DevelopmentConfig|None=field(repr=False)
     trial:object|None=field(default=None,repr=False)
     cloud_api_key:str=field(default='',repr=False)
+    member_provider:object|None=field(default=None,repr=False)
     @classmethod
     def from_env(cls,env):
         if not env.get('HCLA_DATABASE_URL') or not env.get('HCLA_PUBLIC_ORIGIN'):raise ValueError('Cloud setup incomplete')
@@ -85,4 +86,6 @@ class CloudConfig:
             from packages.cloud.trial import TrialWindow
             trial=TrialWindow.from_value(strict_json(env['HCLA_TRIAL_WINDOW']))
             if provider is None:raise ValueError('Trial requires a new explicit model grant')
-        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider,trial,env.get('HCLA_DEEPSEEK_API_KEY',''))
+        from packages.cloud.member_auth import MemberProviderConfig
+        member_provider=MemberProviderConfig.from_env(env)
+        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider,trial,env.get('HCLA_DEEPSEEK_API_KEY',''),member_provider)

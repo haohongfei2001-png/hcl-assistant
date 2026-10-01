@@ -147,6 +147,7 @@ CURRENT_PACKAGES = (
     ('P1-03', 'P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE', list(range(17, 21))),
     ('C1-01', 'C1-01_CLOUD_HOSTING_ADAPTATION', list(range(1, 7))),
     ('U1-01', 'U1-01_CHAT_INTERFACE_REFINEMENT', list(range(1, 7))),
+    ('M1-01', 'M1-01_MEMBER_ACCOUNTS_AND_ISOLATION', list(range(1, 7))),
 )
 L3_STOP = 'STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED'
 
@@ -182,7 +183,7 @@ def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
     for index, (row, expected) in enumerate(zip(rows, CURRENT_PACKAGES)):
         require(row.get('task') == expected[1], 'refinement task identity')
         require(row.get('depends_on') == ([] if index == 0 else [CURRENT_PACKAGES[index - 1][0]]), 'unknown/changed refinement dependency')
-        require(row.get('acceptance') == [f'{"U" if expected[0] == "U1-01" else "C" if expected[0] == "C1-01" else "D" if expected[0] == "D1-01" else "R"}{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
+        require(row.get('acceptance') == [f'{"M" if expected[0] == "M1-01" else "U" if expected[0] == "U1-01" else "C" if expected[0] == "C1-01" else "D" if expected[0] == "D1-01" else "R"}{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
         require(row.get('state') in {'COMPLETE', 'NEXT_READY', 'WAITING_DEPENDENCY'}, 'unknown refinement state')
         require(bool(row.get('delta')), 'refinement delta required')
         if row['state'] == 'COMPLETE':

@@ -100,6 +100,7 @@ class Guard:
                 c=self.store.connection
                 c.execute('SET LOCAL search_path = hcla, pg_catalog')
                 c.execute("SELECT set_config('hcla.tenant', %s, true)", (self.store.tenant,))
+                c.execute("SELECT set_config('hcla.member_session', %s, true)", (self.store.member_session_key or '',))
                 c.execute("SET LOCAL lock_timeout = '5s'")
                 c.execute("SET LOCAL statement_timeout = '10s'")
                 c.execute('SELECT pg_advisory_xact_lock(171956945, 1)')
@@ -135,7 +136,7 @@ class PostgresLedger(Ledger):
             except ssl.SSLError:
                 startup.mark(StartupCode.DATABASE_TLS)
                 raise
-        self.connection=connection; self.tenant=tenant; self.volatile=False
+        self.connection=connection; self.tenant=tenant; self.volatile=False; self.member_session_key=None
         try:
             startup.mark(StartupCode.DATABASE_ROLE)
             role=connection.execute("SELECT rolsuper,rolbypassrls,pg_has_role(current_user,'hcla_app','member') AS member FROM pg_roles WHERE rolname=current_user").fetchone()
@@ -155,6 +156,17 @@ class PostgresLedger(Ledger):
         row=self.connection.execute('SELECT owner,expires_at > clock_timestamp() AS valid FROM execution WHERE run_id=%s',(run_id,)).fetchone()
         if row is None or row['owner'] != owner or not row['valid']:
             raise Fault(409,'EXECUTION_OWNERSHIP_EXPIRED')
+    def bind_member(self, principal):
+        from packages.cloud.member_auth import VerifiedPrincipal
+        import uuid
+        if (not isinstance(principal,VerifiedPrincipal)
+                or not re.fullmatch(r'https://[a-z0-9]{20}\.supabase\.co/auth/v1',principal.issuer)
+                or str(uuid.UUID(principal.subject))!=principal.subject
+                or type(principal.expires_at) is not int or principal.expires_at<=0
+                or self.lock.depth or self.fence is not None
+                or self.tenant not in (TENANT,principal.tenant)):
+            raise Fault(403,'Verified account identity required')
+        self.tenant=principal.tenant
     @contextmanager
     def transaction(self):
         with self.lock: yield

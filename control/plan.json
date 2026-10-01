@@ -217,12 +217,12 @@
     "authority": "SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE",
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
-    "phase": "ASSISTANT_FIRST_REFINEMENT_COMPLETE",
-    "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
-    "next_package_id": null,
+    "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
+    "next_ready": "M1-01_MEMBER_ACCOUNTS_AND_ISOLATION",
+    "next_package_id": "M1-01",
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
-    "current_request_scope": "AUTHORIZED_SIX_POINT_CHAT_UI_REFINEMENT_ZERO_PROVIDER",
-    "current_executor_stop_after": "U1-01_EXACT_MAIN_VERIFIED",
+    "current_request_scope": "AUTHORIZED_ORDINARY_ACCOUNT_ISOLATION_AND_SESSION_CONTINUITY_ZERO_PROVIDER",
+    "current_executor_stop_after": "M1-01_EXACT_MAIN_VERIFIED",
     "implementation_started": true,
     "implementation_requires_separate_work": false,
     "execution_scope": "SYNTHETIC_PRODUCT_REFINEMENT_AND_GATED_DEVELOPMENT_CHAT",
@@ -414,6 +414,24 @@
           "U06"
         ],
         "evidence": "docs/U1_01_EVIDENCE.md"
+      },
+      {
+        "id": "M1-01",
+        "task": "M1-01_MEMBER_ACCOUNTS_AND_ISOLATION",
+        "depends_on": [
+          "U1-01"
+        ],
+        "state": "NEXT_READY",
+        "delta": "普通账号注册登录、请求身份与数据隔离、服务端权限和额度、自动续期；线上认证另行启用",
+        "acceptance": [
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M06"
+        ],
+        "evidence": "NOT_IMPLEMENTED"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -464,11 +482,18 @@
       "existing_app_data_reuse_allowed": false,
       "deployment_verified": false,
       "document": "docs/CLOUD_HOSTING.md"
+    },
+    "member_accounts": {
+      "implementation_authorized": true,
+      "live_auth_activation_authorized": false,
+      "paid_billing_implemented": false,
+      "live_provider_calls_authorized": false,
+      "document": "docs/MEMBER_ACCOUNTS.md"
     }
   },
   "writer": {
-    "branch": "feature/bounded-temporary-trial",
-    "scope": "C1-01_BOUNDED_TEMPORARY_GUEST_TRIAL",
+    "branch": "feature/member-auth-isolation",
+    "scope": "M1-01_MEMBER_ACCOUNTS_AND_ISOLATION",
     "status": "IN_PROGRESS"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

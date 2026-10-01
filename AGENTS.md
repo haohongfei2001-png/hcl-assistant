@@ -7,11 +7,11 @@
 先读README、STATUS、DEVELOPMENT_PLAN、Master Plan1.2、docs/DOCUMENT_AUTHORITY.md、UX_SPEC、VISUAL_SYSTEM、contracts、PRODUCT_REFINEMENT_WORK_PACKAGES和ACCEPTANCE_MATRIX；再核对remote main、open PR和writer。普通用户先聊天；Explain/Inspector按需，Lab是高级研究环境。
 
 当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。<!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
+**NEXT_READY: M1-01_MEMBER_ACCOUNTS_AND_ISOLATION**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M1-01。
 
-当前7包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+普通账号注册登录、请求身份与数据隔离、服务端权限和额度、自动续期；线上认证另行启用。验收：M01、M02、M03、M04、M05、M06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。
@@ -64,3 +64,7 @@ Owner approved U1-01 following the screenshot review: compact growing composer, 
 ## Bounded temporary trial amendment (2026-10-01)
 
 Owner requested an at-most-four-hour, shared USD10, no-login temporary synthetic trial. The sole writer may implement isolated guest routes and a new explicit versioned budget policy; no full membership system, owner-route bypass, historical budget reset, production HCL activation or real-private-data permission is included. Offline CI remains zero provider calls. Live key entry and matching bounded activation are separate steps. Contract: [temporary trial](docs/TEMPORARY_TRIAL.md).
+
+## Ordinary account amendment (2026-10-01 19:40 UTC)
+
+Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 is the sole current engineering package: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).

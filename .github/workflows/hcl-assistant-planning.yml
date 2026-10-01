@@ -112,6 +112,7 @@ jobs:
         run: |
           set -euo pipefail
           cd product-export
+          python3 -m pip install -r requirements.lock
           python3 scripts/check_planning.py | tee ../planning-receipt.json
           python3 scripts/check_repository.py | tee ../repository-receipt.json
           python3 -m unittest discover -s tests -v 2>&1 | tee ../planning-tests.txt
@@ -249,7 +250,7 @@ jobs:
           python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-cloud-runtime"
           echo "HCL_DEVELOPMENT_ARTIFACT=$RUNNER_TEMP/hcla-cloud-runtime" >> "$GITHUB_ENV"
       - name: Real Postgres independent-instance and temporary-state regressions
-        run: python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres tests.test_cloud_trial -v
+        run: python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres tests.test_cloud_trial tests.test_cloud_members -v
       - name: Shared cloud UI with local injected provider fixture
         run: |
           npm ci --ignore-scripts
