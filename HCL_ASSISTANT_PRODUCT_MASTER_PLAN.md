@@ -157,13 +157,13 @@ STOP_USING 阻止未来上下文与派生复活；DELETE 清理受影响的原�
 
 ## 13. Continuum V1 视觉采用与实施增量
 
-Owner 已确认最新一轮三张无实物背景产品状态稿与两张数字形象稿。采用身份为 **CONTINUUM-V1-20261001**，不改 Canonical 1.2 / A2-Product 的产品架构和机器版本。完整目录、五稿映射、原图校验值、示例语义处置及生效门槛见 [Design Adoption](docs/design/continuum-v1/README.md)。当前资产未入库核验的草稿不能被称作已正式采用；必须五张原图完整入库、协调最新 main、通过 exact-head 审阅/CI 并合入，再核验 exact-main。
+Owner 已确认最新一轮三张无实物背景产品状态稿与两张数字形象稿。采用身份为 **CONTINUUM-V1-20261001**，不改 Canonical 1.2 / A2-Product 的产品架构和机器版本。五张原始 PNG 已完整入库并完成 GitHub blob 回读核验；完整目录、五稿映射、原图校验值和示例语义处置见 [Design Adoption](docs/design/continuum-v1/README.md)。本采用变更合入 main 后正式生效；实现仍须通过后续 P1-03 的实际页面与交互验收。
 
 视觉探索结束：保留本轮布局、浅蓝紫色系、柔和光感、半透明材质和整体气质。背景不放风景或物品，不退回旧的灰绿编辑器界面。Continuum 的同一工作面、对象原位展开、输入/上下文连续与真实修订保持不变。静态图没有表达的响应式、键盘、长内容、加载/异常、动效与阅读位置保持由 [Implementation Spec](docs/design/continuum-v1/IMPLEMENTATION_SPEC.md) 补齐，不再扩展产品战略。
 
 M-01 悬浮核心与 M-02 输入/容器/信号接收两候选并存，最终选择为空；共同界面先行，可关闭插槽和 A/B 核对状态不依赖唯一选择。图中 HCL Technologies、示例文件/数据/引用/能力按钮不成为本项目事实或授权；按真实支持范围与原创 synthetic fixtures 替换语义，记录差异，不借此重设计外观。
 
-已完成 P0-01、P1-01 及历史回执不重开。正在执行的 P1-02/PR10 不被本次文档工作接管。视觉实施和对照验收纳入既有待做 P1-03，分成三个串行交付切片，仍只有原来的 product_development 队列和当前唯一任务。详见 [Development Plan](DEVELOPMENT_PLAN.md) 和 [Work Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。
+已完成 P0-01、P1-01、P1-02 及历史回执不重开。视觉实施和对照验收纳入唯一待做 P1-03，分成三个串行交付切片，仍只有原来的 product_development 队列和当前唯一任务。详见 [Development Plan](DEVELOPMENT_PLAN.md) 和 [Work Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。
 
 视觉还原是完成条件：实际首页、三轮长内容、依据/来源、修订变化及返回原位置截图必须与对应原稿对照，并提供实际可播放交互记录；两套形象和关闭状态、响应式及异常状态均验证。缺失、重大偏差或默认组件替代必须显式记录，不能只因“按钮能点”填 PASS。V1 的 V01–V10 是 R19/R20 下新增验收义务，设计采用和旧 CI 不代表这些义务已经通过。
 
