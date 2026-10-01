@@ -65,7 +65,7 @@ def handler(application):
 
         def body(self):
             length=int(self.headers.get('Content-Length','0'))
-            if length>262144: raise Fault(413,'Request too large')
+            if length<0 or length>(1048576 if getattr(application,'cloud',False) and urlparse(self.path).path=='/v1/temporary/execute' else 262144): raise Fault(413,'Request too large')
             try: obj=json.loads(self.rfile.read(length))
             except (ValueError,UnicodeError): raise Fault(400,'Invalid complete JSON')
             if not isinstance(obj,dict): raise Fault(400,'JSON object required')
@@ -83,9 +83,23 @@ def handler(application):
                 if path=='/v1/development/login' and application.real_chat:
                     if application.development_auth is None:raise Fault(503,'Development configuration required')
                     application.development_auth.boundary(self,mutation=True)
-                    session=application.development_auth.login(self.body().get('access_token'))
-                    self.json(200,{'authenticated':True},'hcla_development='+session+'; HttpOnly; SameSite=Strict; Path=/v1; Max-Age=3600');return
+                    credentials=self.body()
+                    session=application.development_auth.login(credentials if getattr(application,'cloud',False) else credentials.get('access_token'))
+                    cookie=application.development_auth.cookie(session) if getattr(application,'cloud',False) else 'hcla_development='+session+'; HttpOnly; SameSite=Strict; Path=/v1; Max-Age=3600'
+                    self.json(200,{'authenticated':True},cookie);return
                 tenant=self.tenant(); data=self.body(); parts=path.strip('/').split('/')
+                if getattr(application,'cloud',False):
+                    if path=='/v1/development/logout':
+                        application.development_auth.logout(self.headers.get('Cookie'));self.json(200,{'authenticated':False},'__Host-hcla=; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return
+                    if path=='/v1/temporary/execute':
+                        from packages.cloud.temporary import execute
+                        execute(application,self,data);return
+                    if path=='/v1/temporary/cancel':
+                        application.lifecycle.cancel_temporary(data.get('request_id'));self.json(200,{'cancel_requested':True});return
+                    if len(parts)==4 and parts[:2]==['v1','runs'] and parts[3]=='execute':
+                        self.json(200,application.execute(tenant,parts[2]));return
+                    if path=='/v1/sources' or (len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events'):
+                        if data.get('event',{}).get('type','message') in {'message','upload'} and application.live_chat_service is None:raise Fault(503,'模型服务尚未启用，请联系管理员；无需在网页填写密钥')
                 if path=='/v1/topics': result=application.stores.persistent.topic(tenant,data.get('title','Topic'))
                 elif path=='/v1/conversations': result=application.stores.conversation(tenant,title=data.get('title','新对话'),topic_id=data.get('topic_id'),memory=data.get('memory','CONVERSATION'))
                 elif len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events':
@@ -115,7 +129,7 @@ def handler(application):
                         application.development_auth.boundary(self)
                         try:application.development_auth.require(self.headers.get('Cookie'));authenticated=True
                         except Fault:pass
-                    self.json(200,{'enabled':application.real_chat,'authenticated':authenticated,'configuration':application.configuration,'production_enabled':False});return
+                    self.json(200,{'enabled':application.real_chat,'authenticated':authenticated,'configuration':application.configuration,'production_enabled':False,'cloud':getattr(application,'cloud',False),'request_bound':getattr(application,'request_bound',False)});return
                 tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); path=parsed.path; parts=path.strip('/').split('/')
                 if path=='/v1/development/runtime':
                     result=application.development_bridge.handshake() if application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}

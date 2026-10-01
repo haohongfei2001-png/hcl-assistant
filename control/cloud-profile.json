@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "purpose": "OWNER_ONLY_SYNTHETIC_CLOUD_PREVIEW",
+  "provider_enabled_without_approved_grant": false,
+  "provider": {
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-v4-pro",
+    "thinking": "enabled",
+    "reasoning_effort": "high",
+    "input_usd_per_million": "1.32",
+    "output_usd_per_million": "3.96",
+    "max_output_tokens": 8192,
+    "pricing_basis": "EXISTING_REVIEWED_PEAK_RATES_RECHECK_BEFORE_NEW_GRANT"
+  },
+  "grant": {"default": null, "must_identify": ["budget_id", "max_requests", "max_cost_usd"]},
+  "hosting": {"framework": "vite", "build_command": "npm run build:cloud", "output_directory": "dist", "function_max_duration_seconds": 300}
+}

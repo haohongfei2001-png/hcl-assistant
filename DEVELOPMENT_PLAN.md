@@ -7,7 +7,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-当前5包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+当前6包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -27,6 +27,7 @@
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | COMPLETE |
 | D1-01 | development-only DeepSeek chat | P1-02 | COMPLETE |
 | P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | COMPLETE |
+| C1-01 | isolated stateless hosting and offline acceptance | P1-03 | COMPLETE |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
@@ -69,3 +70,7 @@ User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The p
 Continuum 工作只扩充既有 P1-03 的实施/验收范围，按三个串行切片执行：V1-A 共享外观/Home/长对话/Composer → V1-B 依据/来源/修订/锚点返回 → V1-C 双形象/响应式/motion/Inspector/Settings/整体验收。切片不拥有独立 NEXT_READY、state 或 writer，不构成第二队列。
 
 P1-03 原 R17–R20 义务不减少；V01–V10 从属于其视觉/交互完成条件。实际页面必须与 UI-01/UI-02/UI-03 对照，并提供可播放的来源往返、修订状态和阅读位置恢复证据；无法忠实实现的部分进入偏差登记，不能静默替换为默认组件。M-01/M-02 均保留，未选唯一形象不阻塞共同界面。
+
+## Cloud hosting amendment (2026-10-01 08:36 UTC)
+
+Owner approved C1-01 engineering adaptation after P1-03 for isolated Vercel/Postgres hosting. This adds a bounded package to the sole current queue; it does not reopen completed packages, change the reviewed HCL lock, authorize account provisioning, create credentials, reuse another app database, authorize real private data or renew the exhausted provider grant. Offline CI remains zero provider calls. Runtime hosting is not production HCL activation or efficacy evidence. Details: [cloud hosting contract](docs/CLOUD_HOSTING.md).

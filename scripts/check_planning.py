@@ -39,7 +39,7 @@ REVISION_ACTIONS = {'ADD', 'CORRECT', 'RETRACT', 'SUPERSEDE',
                     'HYPOTHETICAL_BRANCH', 'STOP_USING', 'DELETE'}
 PERMISSIONS = {'ACCOUNT_DATA_ACCESS', 'PERSON_PERSPECTIVE_ACCESS',
                'PERSISTENCE_REUSE_PERMISSION'}
-IGNORED_DIRS = {'.git', '.venv', '__pycache__', 'node_modules', 'dist', 'pages-dist', 'coverage', 'test-results', 'playwright-report', '.tmp', '.local'}
+IGNORED_DIRS = {'.git', '.venv', '__pycache__', 'node_modules', 'dist', 'pages-dist', 'coverage', 'test-results', 'playwright-report', '.tmp', '.local', '.hcla-runtime'}
 
 
 def require(condition: bool, message: str) -> None:
@@ -145,6 +145,7 @@ CURRENT_PACKAGES = (
     ('P1-02', 'P1-02_REVISION_EVIDENCE_MEMORY_LOOP', list(range(13, 17))),
     ('D1-01', 'D1-01_DEVELOPMENT_DEEPSEEK_CHAT', list(range(1, 7))),
     ('P1-03', 'P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE', list(range(17, 21))),
+    ('C1-01', 'C1-01_CLOUD_HOSTING_ADAPTATION', list(range(1, 7))),
 )
 L3_STOP = 'STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED'
 
@@ -170,13 +171,17 @@ def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
     require(q.get('judge_status') == 'LONG_TERM_GOAL_ONLY_NOT_IMPLEMENTED_NOT_VALIDATED_NOT_PRODUCTION_ENABLED', 'Judge is not implemented')
     require(q.get('after_all_complete_if_l3_gates_unmet') == L3_STOP, 'refinement completion cannot open L3')
     require(set(plan.get('l3_gates', [])) == {'I06_DISPOSITION', 'PINNED_PERMITTED_RUNTIME_ARTIFACT', 'PRODUCT_ADAPTER_SCOPE_VALIDATION', 'EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION'}, 'all four L3 gates required')
+    cloud = q.get('cloud_hosting', {})
+    require(cloud.get('implementation_authorized') is True, 'cloud engineering authorization required')
+    for key in ('provisioning_authorized', 'credential_creation_authorized', 'live_provider_calls_authorized', 'existing_app_data_reuse_allowed', 'deployment_verified'):
+        require(cloud.get(key) is False, 'cloud code authorization cannot imply activation: ' + key)
     rows = q.get('packages', [])
     require([r.get('id') for r in rows] == [r[0] for r in CURRENT_PACKAGES], 'canonical refinement package boundaries')
     pending = []
     for index, (row, expected) in enumerate(zip(rows, CURRENT_PACKAGES)):
         require(row.get('task') == expected[1], 'refinement task identity')
         require(row.get('depends_on') == ([] if index == 0 else [CURRENT_PACKAGES[index - 1][0]]), 'unknown/changed refinement dependency')
-        require(row.get('acceptance') == [f'{"D" if expected[0] == "D1-01" else "R"}{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
+        require(row.get('acceptance') == [f'{"C" if expected[0] == "C1-01" else "D" if expected[0] == "D1-01" else "R"}{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
         require(row.get('state') in {'COMPLETE', 'NEXT_READY', 'WAITING_DEPENDENCY'}, 'unknown refinement state')
         require(bool(row.get('delta')), 'refinement delta required')
         if row['state'] == 'COMPLETE':

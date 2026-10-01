@@ -9,7 +9,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-当前5包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+当前6包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -17,6 +17,10 @@
 当前实施状态由以上队列与各包证据共同界定。当前机器队列是 `control/plan.json.product_development`；细节见 [Development Plan](DEVELOPMENT_PLAN.md) 与 [Authority](docs/DOCUMENT_AUTHORITY.md)。
 
 长期终局：Understand → Revise → Judge → Help → Act。**Judge = LONG_TERM_GOAL_ONLY / NOT_IMPLEMENTED_AS_GENERAL_CAPABILITY / NOT_VALIDATED / NOT_PRODUCTION_ENABLED**。未新增Judge运行时能力、已启用manifest项或agent权限。
+
+## Cloud adaptation checkpoint
+
+C1-01 offline implementation and real Postgres/direct-stream browser evidence are recorded in [cloud evidence](docs/C1_01_EVIDENCE.md). The shared cloud route retains actual synthetic HCL preparation in request/tab memory, without persisting temporary bodies. Owner HTTPS authentication, durable ordinary history, fenced request execution and conservative usage accounting are implemented. Final-head/exact-main adoption remains required; no hosted URL, new provider grant, external account or real-private-data activation is implied.
 
 ## Implemented baseline and evidence
 
@@ -60,3 +64,7 @@ Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身�
 Continuum 实施增量仍只属于 P1-03：V1-A 共享视觉/Home/长内容/Composer → V1-B 依据/来源/修订/阅读锚点返回 → V1-C 双 companion/off、响应式/motion、Inspector/Settings 和整体验收。两套形象 M-01/M-02 同时保留，`selected_companion=null`，不阻塞共同界面。
 
 本次只改变设计资产、规格和计划元数据；无应用/测试/workflow/runtime lock/capability manifest/研究机制变更，无生产或 Judge/Act 激活。原图示例文案、数据、引用和未实现按钮不成为事实。V01–V10 的实际页面截图、交互演示与偏差登记仍为 NOT_IMPLEMENTED / NOT_VERIFIED。
+
+## Cloud hosting amendment (2026-10-01 08:36 UTC)
+
+Owner approved C1-01 engineering adaptation after P1-03 for isolated Vercel/Postgres hosting. This adds a bounded package to the sole current queue; it does not reopen completed packages, change the reviewed HCL lock, authorize account provisioning, create credentials, reuse another app database, authorize real private data or renew the exhausted provider grant. Offline CI remains zero provider calls. Runtime hosting is not production HCL activation or efficacy evidence. Details: [cloud hosting contract](docs/CLOUD_HOSTING.md).

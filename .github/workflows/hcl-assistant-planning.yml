@@ -201,3 +201,48 @@ jobs:
           path: product-export/.tmp/continuum-comparisons
           retention-days: 7
           if-no-files-found: ignore
+
+  cloud-postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: offline-fixture
+          POSTGRES_DB: hcla_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d hcla_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      HCLA_TEST_POSTGRES_DSN: postgresql://postgres:offline-fixture@127.0.0.1:5432/hcla_test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Install pinned cloud database client
+        run: python3 -m pip install -r requirements.lock
+      - name: Acquire only reviewed provider-free runtime
+        run: |
+          python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-cloud-runtime"
+          echo "HCL_DEVELOPMENT_ARTIFACT=$RUNNER_TEMP/hcla-cloud-runtime" >> "$GITHUB_ENV"
+      - name: Real Postgres independent-instance and temporary-state regressions
+        run: python3 -m unittest tests.test_cloud tests.test_cloud_postgres -v
+      - name: Shared cloud UI with local injected provider fixture
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          npm run build:cloud
+          npx playwright install --with-deps chromium --only-shell
+          npx playwright test --config playwright.cloud.config.js
+      - name: Retain cloud browser failure evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cloud-synthetic-browser-evidence
+          path: test-results
+          retention-days: 7
+          if-no-files-found: ignore

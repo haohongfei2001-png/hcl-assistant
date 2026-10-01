@@ -1,0 +1,2 @@
+# Cloud runtime; local SQLite mode does not import these dependencies.
+-r requirements.lock
