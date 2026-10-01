@@ -8,14 +8,17 @@ used, so Supabase transaction pooling is supported. No schema is created here.
 from contextlib import contextmanager
 from pathlib import Path
 import os
+import hashlib
 import re
 import ssl
 import threading
+from urllib.parse import urlsplit
 from packages.cloud.diagnostics import StartupCode, StartupDiagnostics, close_after_startup_failure
 from packages.store.ledger import Ledger, Fault
 
 SCHEMA = 'hcla'
 TENANT = 'hcla-owner'
+SUPABASE_CA_SHA256 = '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7'
 
 
 def system_root_cert():
@@ -34,6 +37,19 @@ def system_root_cert():
         for candidate in ('/etc/pki/tls/certs/ca-bundle.crt','/etc/ssl/certs/ca-certificates.crt'):
             if Path(candidate).is_file():return candidate
     raise Fault(503, 'System certificate bundle unavailable')
+
+
+def database_root_cert(dsn):
+    """Supabase's private CA is scoped to its database hosts, never global TLS."""
+    host=urlsplit(dsn).hostname or ''
+    if (re.fullmatch(r'aws-[0-9]+-[a-z0-9-]+\.pooler\.supabase\.com',host)
+            or re.fullmatch(r'db\.[a-z0-9]+\.supabase\.co',host)):
+        certificate=Path(__file__).with_name('certs')/'supabase-root-2021.crt'
+        # Official dashboard certificate, pinned as a public deployment asset.
+        if hashlib.sha256(certificate.read_bytes()).hexdigest()!=SUPABASE_CA_SHA256:
+            raise Fault(503,'Database certificate bundle unavailable')
+        return str(certificate)
+    return system_root_cert()
 
 class Row(dict):
     def __getitem__(self, key):
@@ -112,7 +128,7 @@ class PostgresLedger(Ledger):
             import psycopg
             from psycopg.rows import dict_row
             startup.mark(StartupCode.DATABASE_TLS)
-            root_cert=system_root_cert()
+            root_cert=database_root_cert(dsn)
             startup.mark(StartupCode.DATABASE_CONNECT)
             try:
                 connection=psycopg.connect(dsn,sslmode='verify-full',sslrootcert=root_cert,autocommit=True,prepare_threshold=None,row_factory=dict_row,connect_timeout=5)

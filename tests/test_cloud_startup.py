@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 
 from apps.api import cloud_server
 from packages.cloud.diagnostics import StartupCode, StartupDiagnostics
-from packages.cloud.postgres import PostgresLedger, system_root_cert
+from packages.cloud.postgres import PostgresLedger, system_root_cert,database_root_cert,SUPABASE_CA_SHA256
 from packages.store.ledger import Fault
 
 SENTINEL = 'SECRET_DSN_PASSWORD_OWNER_HASH_QUERY_HOST_CANARY'
@@ -125,6 +125,18 @@ class CloudStartupTests(unittest.TestCase):
              patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=None)), \
              patch('packages.cloud.postgres.Path.is_file',return_value=False):
             with self.assertRaises(Fault):system_root_cert()
+
+    def test_pinned_supabase_ca_is_scoped_to_exact_provider_hosts(self):
+        import hashlib
+        for host in ('aws-0-us-west-2.pooler.supabase.com','db.syntheticref.supabase.co'):
+            cert=database_root_cert('postgresql://'+host+'/postgres?sslmode=verify-full')
+            self.assertEqual(hashlib.sha256(Path(cert).read_bytes()).hexdigest(),SUPABASE_CA_SHA256)
+            self.assertEqual(len(ssl.create_default_context(cafile=cert).get_ca_certs()),1)
+        for host in ('aws-0-us-west-2.pooler.supabase.com.evil.test','not-supabase.example.test'):
+            with patch('packages.cloud.postgres.system_root_cert',return_value='host-ca-only'):
+                self.assertEqual(database_root_cert('postgresql://'+host+'/postgres'),'host-ca-only')
+        with patch('packages.cloud.postgres.Path.read_bytes',return_value=b'tampered'):
+            with self.assertRaises(Fault):database_root_cert('postgresql://aws-0-us-west-2.pooler.supabase.com/postgres')
 
     def test_explicit_verify_full_overrides_legacy_uri_tls_aliases(self):
         for query in ('sslmode=verify-full&requiressl=0', 'sslmode=verify-full&sslmode='):

@@ -467,8 +467,8 @@
     }
   },
   "writer": {
-    "branch": "fix/cloud-postgres-system-ca",
-    "scope": "C1-01_HOST_CA_BUNDLE_CORRECTION",
+    "branch": "fix/supabase-verified-ca",
+    "scope": "C1-01_SUPABASE_VERIFIED_CA_MAINTENANCE",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
