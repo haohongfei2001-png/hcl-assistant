@@ -30,7 +30,7 @@ def system_root_cert():
     # Standalone Python may have a build-time default absent from Amazon Linux.
     # Only existing platform CA bundles qualify, never a custom/downloaded CA.
     # An explicit broken override remains an error rather than being ignored.
-    if 'SSL_CERT_FILE' not in os.environ:
+    if 'SSL_CERT_FILE' not in os.environ and 'SSL_CERT_DIR' not in os.environ:
         for candidate in ('/etc/pki/tls/certs/ca-bundle.crt','/etc/ssl/certs/ca-certificates.crt'):
             if Path(candidate).is_file():return candidate
     raise Fault(503, 'System certificate bundle unavailable')

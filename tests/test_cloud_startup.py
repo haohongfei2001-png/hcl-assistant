@@ -112,6 +112,11 @@ class CloudStartupTests(unittest.TestCase):
 
     def test_standalone_python_can_use_only_existing_os_bundles(self):
         candidate='/etc/pki/tls/certs/ca-bundle.crt'
+        for override in ('SSL_CERT_FILE','SSL_CERT_DIR'):
+            with patch.dict(os.environ,{override:'/synthetic/explicit-trust'},clear=True), \
+                 patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=None)), \
+                 patch('packages.cloud.postgres.Path.is_file',return_value=True):
+                with self.assertRaises(Fault):system_root_cert()
         with patch.dict(os.environ,{},clear=True), \
              patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=None)), \
              patch('packages.cloud.postgres.Path.is_file',lambda path:str(path)==candidate):
