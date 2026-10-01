@@ -318,7 +318,7 @@
 }
 
 .continuum-shell .context-panel button[aria-current=true]{border-color:#8fa6ed;background:#ebf1ff;box-shadow:inset 3px 0 #647cf6}
-@media(prefers-reduced-motion:no-preference){.continuum-shell:not([data-motion=static])>.context-panel[open]{animation:continuum-context-enter 280ms ease-out both}@keyframes continuum-context-enter{from{opacity:.35;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}}
+@media(prefers-reduced-motion:no-preference){.continuum-shell:not([data-motion=static])>.context-panel[open]{animation:continuum-context-enter 280ms ease-out both}@keyframes continuum-context-enter{from{transform:translateX(12px)}to{transform:translateX(0)}}}
 
 .continuum-shell .context-panel mark{color:#182c61;background:#dce7ff;border-radius:3px}
 
@@ -351,3 +351,7 @@
  .continuum-shell .home-suggestions {grid-template-columns:minmax(0,1fr);gap:7px;margin:12px 2px}
  .continuum-shell .home-suggestions button {min-height:44px;padding:9px 13px}
 }
+
+/* Keep the help phrase and short mobile introduction readable at narrow widths. */
+.continuum-shell .home-copy h1 span {display:inline-block;white-space:nowrap}
+@media(max-width:479px){.continuum-shell .home-copy>p:not(.home-greeting){text-wrap:balance}}
