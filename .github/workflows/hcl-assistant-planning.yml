@@ -160,10 +160,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: continuum-visual-captures
+          name: continuum-local-visual-captures
           path: |
-            product-export/test-results/**/*.png
-            product-export/test-results/**/continuum-evidence.json
+            product-export/test-results/continuum-visual-local*/**/*.png
+            product-export/test-results/**/*.json
           retention-days: 7
           if-no-files-found: ignore
 
@@ -173,5 +173,16 @@ jobs:
         with:
           name: continuum-replay-videos
           path: product-export/test-results/**/*.webm
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Retain Pages Continuum captures separately
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: continuum-pages-visual-captures
+          path: |
+            product-export/test-results/continuum-visual-pages*/**/*.png
+            product-export/test-results/continuum-visual-pages*/**/*.json
           retention-days: 7
           if-no-files-found: ignore

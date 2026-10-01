@@ -306,3 +306,13 @@
 .continuum-shell article.is-context-target .turn-actions {border-color:#b4c5f5;box-shadow:0 1px 0 1px #c4d3fb}
 
 .continuum-shell .file-reference{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid #cbd9f4;background:#f8fbff;max-width:100%;flex-wrap:wrap}.continuum-shell .file-reference span{overflow-wrap:anywhere}
+
+@media(max-width:959px){.continuum-shell .nav-scrim{left:min(260px,85vw);width:auto;right:0}}
+/* Keep a long history inside its own scroller rather than enlarging the grid row. */
+.continuum-shell {grid-template-rows:minmax(0,1fr)}
+.continuum-shell #sidebar {min-height:0;overflow:hidden}
+.continuum-shell #sidebar>nav {flex:1 1 auto;min-height:0;overflow:auto}
+@media(min-width:768px) and (max-width:1023px){
+ .continuum-shell:is(.has-context,:has(>.context-panel)),.continuum-shell.collapsed:is(.has-context,:has(>.context-panel)){grid-template-columns:minmax(0,1fr)}
+ .continuum-shell>.context-panel{position:fixed;inset:0;z-index:24;margin:0;width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0;padding:20px;background:#f8fbff}
+}
