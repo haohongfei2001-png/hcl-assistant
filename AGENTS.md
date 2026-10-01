@@ -7,11 +7,11 @@
 先读README、STATUS、DEVELOPMENT_PLAN、Master Plan1.2、docs/DOCUMENT_AUTHORITY.md、UX_SPEC、VISUAL_SYSTEM、contracts、PRODUCT_REFINEMENT_WORK_PACKAGES和ACCEPTANCE_MATRIX；再核对remote main、open PR和writer。普通用户先聊天；Explain/Inspector按需，Lab是高级研究环境。
 
 当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。<!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
+**NEXT_READY: U2-01_CONSUMER_ACCOUNT_ENTRY_AND_FIRST_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：U2-01。
 
-当前8包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+移动端账号入口、连接与登录恢复、内联使用确认、不可用状态与草稿保留。验收：U07、U08、U09、U10
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。
@@ -67,4 +67,8 @@ Owner requested an at-most-four-hour, shared USD10, no-login temporary synthetic
 
 ## Ordinary account amendment (2026-10-01 19:40 UTC)
 
-Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 is the sole current engineering package: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
+Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 delivered the bounded account engineering slice: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
+
+## Consumer journey amendment (2026-10-01 21:18 UTC)
+
+Owner requested continued consumer-product improvement. U2-01 is the bounded next slice: the adopted visual language on the mobile account entry, explicit connection/sign-in recovery, first-message consent next to Send, and truthful account/model availability. It preserves one chat UI and all synthetic-only, tenant, entitlement, budget and activation gates. No live Auth, credential, paid email, billing, provider or private-data activation is included.

@@ -38,3 +38,12 @@ PR6已合入main e2a72050，维护验收保留：unchanged main退出UP_TO_DATE�
 每行完成需命令、exact SHA、fixture lineage、实际结果、surface/浏览器/存储范围与限制；只用新原创非确认材料，不改名复用研究失败题或读取confirmation/gold/私人数据。截图只证视觉，失败/未知/未处理/权限/删除/不支持均需验收。
 
 P0/P1完成不开放L3或把Judge升级实现。真实日常MVP、中文多轮效力、真实provider延迟/成本、跨模型增益与生产隐私须后续单独授权验证。
+
+## Consumer account journeys
+
+| ID | Positive obligation | Negative / boundary | Package |
+|---|---|---|---|
+| U07 | Mobile/desktop member entry follows adopted visual system and keyboard controls | No clipping, hidden primary action, stored password or provider key field | U2-01 |
+| U08 | Account connection and stalled login have bounded, visible recovery | No automatic login/register resubmission, stale response or lost email; passwords clear | U2-01 |
+| U09 | First member message uses consent next to Send without opening Settings | Enter/attachment/sample cannot bypass synthetic-use consent or server authorization | U2-01 |
+| U10 | Unavailable model/account blocks sending while keeping the draft and readable history | No fallback paid dispatch, relaxed entitlement, enabled Auth or false live-ready claim | U2-01 |

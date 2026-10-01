@@ -5,11 +5,11 @@
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03核心已采用；Continuum V1及整体synthetic验收在a1251e3d/run36809090489通过267 Python、24 Node和66 browser，独立源代码/视觉审查无阻塞项。本PR完成实现验收记录，采用仍须final-head和exact-main核验。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
+**NEXT_READY: U2-01_CONSUMER_ACCOUNT_ENTRY_AND_FIRST_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：U2-01。
 
-当前8包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+移动端账号入口、连接与登录恢复、内联使用确认、不可用状态与草稿保留。验收：U07、U08、U09、U10
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -75,4 +75,4 @@ Owner approved U1-01 following the screenshot review: compact growing composer, 
 
 ## Ordinary account amendment (2026-10-01 19:40 UTC)
 
-Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 is the sole current engineering package: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
+Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 delivered the bounded account engineering slice: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
