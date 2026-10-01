@@ -1,11 +1,13 @@
 """Acquire only the reviewed three-file runtime slice at the locked exact SHA.
 
-No credentials/provider configuration is read. GitHub public API only. No tree
+Only an optional short-lived CI GitHub read token is used for these public paths.
+No provider configuration is read. No tree
 listing, archives, clone, tags, branches, evaluation or data endpoints.
 """
 import argparse
 import base64
 import json
+import os
 from pathlib import Path
 import sys
 import urllib.request
@@ -13,13 +15,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from packages.runtime_bridge.contract import load_config, validate_config, verify_artifact
 
 
-def acquire(destination, get=None):
+def acquire(destination, get=None, github_read_token=None):
     config = load_config(); validate_config(config)
     prefix = 'https://api.github.com/repos/' + config['source_repository'] + '/'
     if get is None:
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+        opener=urllib.request.build_opener(NoRedirect)
         def get(relative):
-            request = urllib.request.Request(prefix + relative, headers={'User-Agent': 'hcl-assistant-development-bridge', 'Accept': 'application/vnd.github+json'})
-            with urllib.request.urlopen(request, timeout=20) as response: return json.load(response)
+            headers={'User-Agent':'hcl-assistant-development-bridge','Accept':'application/vnd.github+json'}
+            if github_read_token: headers['Authorization']='Bearer '+github_read_token
+            request=urllib.request.Request(prefix+relative,headers=headers)
+            with opener.open(request,timeout=20) as response: return json.load(response)
     commit = get('git/commits/' + config['source_commit_sha'])
     if commit['sha'] != config['source_commit_sha'] or commit['tree']['sha'] != config['source_tree_sha']:
         raise ValueError('UNSUPPORTED_VERSION')
@@ -44,4 +51,4 @@ def acquire(destination, get=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(); parser.add_argument('destination'); args = parser.parse_args()
-    print(json.dumps(acquire(args.destination), indent=2))
+    print(json.dumps(acquire(args.destination,github_read_token=os.environ.get('HCLA_RUNTIME_READ_TOKEN')), indent=2))

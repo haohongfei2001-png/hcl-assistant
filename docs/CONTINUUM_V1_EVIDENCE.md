@@ -35,3 +35,11 @@ The first capture head6dd954590122ec6a478e6c164d852e463aba7129/run36803879085 pa
 | UI-01 at200% text | Readable controls without page overflow | Second-run brand text clipped in sidebar while controls remained usable | Minor visual defect, corrected by allowing brand wrapping | Final corrected capture required; raw failure retained | second-run doubled-text capture, later repaired capture |
 
 The latest source review found no remaining core privacy/usability blocker in accepted-file callbacks, current-policy filenames, layout-effect focus cleanup, source selection or truthful whole-record locator. This is conditional source clearance, not a substitute for final exact-head browser results and exact-main adoption.
+
+## Bounded capability and measurement limits
+
+Partial semantic reevaluation is UNSUPPORTED in the current bounded product. The UI reports actual committed change, invalidated/not-reevaluated records and complete/failed/unknown attempt independently. It does not invent a partially understood result or mark an old answer reanalyzed because a version changed. V06 exercises that truthful pending/unsupported disposition, actual synthetic failure/unknown outcomes, ambiguous target, failed persistence and removed sources.
+
+Per-capture accessibility receipts record observed computed foreground/RGBA ancestry, alpha compositing over a conservative lower bound of the fixed gradient palette, selection ratios and primary hit-box dimensions. This is a composited bound for the implemented fixed surfaces, not a universal claim for arbitrary backgrounds or a raw screenshot score. Hover, disabled, error, opaque and keyboard-focus states are captured. Successful reading interruptions retain browser trace/video; source-load refusal and reduced-motion reversal are captured separately.
+
+An unauthenticated GitHub public-API quota failure stopped run36807205908 before tests; it is not a product acceptance result. The same exact four allowlisted metadata/blob requests now accept only the workflow's existing ephemeral read-only GitHub token in request headers, refuse redirects and retain all identity/digest checks. No new credential or access grant was created, no provider configuration is read, and token values never enter artifacts.

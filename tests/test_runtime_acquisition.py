@@ -32,3 +32,15 @@ class AcquisitionTests(unittest.TestCase):
             calls.append(endpoint);return {'sha':'f'*40,'tree':{'sha':'f'*40}}
         with tempfile.TemporaryDirectory() as temp, self.assertRaises(ValueError):acquire(temp,get)
         self.assertEqual(len(calls),1)
+
+    def test_optional_ci_token_is_header_only_and_redirects_are_refused(self):
+        from unittest.mock import patch, MagicMock
+        config=load_config();response=MagicMock();response.__enter__.return_value.read.return_value=json.dumps({'sha':'f'*40,'tree':{'sha':'f'*40}})
+        opener=MagicMock();opener.open.return_value=response
+        with patch('scripts.fetch_development_runtime.urllib.request.build_opener',return_value=opener) as build, tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError,'UNSUPPORTED_VERSION'):acquire(temp,github_read_token='synthetic-ephemeral-read-token')
+            request=opener.open.call_args.args[0]
+            self.assertEqual(request.get_header('Authorization'),'Bearer synthetic-ephemeral-read-token')
+            self.assertEqual(request.full_url,'https://api.github.com/repos/'+config['source_repository']+'/git/commits/'+config['source_commit_sha'])
+            self.assertIsNone(build.call_args.args[0]().redirect_request(None,None,302,'',{},'https://example.invalid/'))
+            self.assertEqual(list(Path(temp).iterdir()),[])

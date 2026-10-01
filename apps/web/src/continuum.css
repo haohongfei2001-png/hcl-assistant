@@ -323,3 +323,7 @@
 .continuum-shell .context-panel mark{color:#182c61;background:#dce7ff;border-radius:3px}
 
 .continuum-shell .brand{white-space:normal;overflow-wrap:anywhere}
+
+.continuum-shell .home-copy>small,.continuum-shell .home-copy p.muted,.continuum-shell .composer-note,.continuum-shell .composer-controls>small{color:#526080}
+
+.continuum-shell button{min-width:44px}

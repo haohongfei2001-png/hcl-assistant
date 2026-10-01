@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 const pages='http://127.0.0.1:4174/';
+test.use({trace:'on',video:'on'});
 for(const surface of ['local','pages']){
  test(`${surface} attachment selection is local pending state until explicit commit`,async({page})=>{
   await page.goto(surface==='local'?'/':pages);let events=0;page.on('request',r=>{if(r.method()==='POST'&&r.url().includes('/events'))events++});

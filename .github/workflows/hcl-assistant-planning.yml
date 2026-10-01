@@ -96,6 +96,8 @@ jobs:
           print(json.dumps(receipt, indent=2))
           PY
       - name: Acquire exact allowlisted development runtime (public, provider-free)
+        env:
+          HCLA_RUNTIME_READ_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
