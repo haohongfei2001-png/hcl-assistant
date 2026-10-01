@@ -1,9 +1,12 @@
 """Provider-free configuration and temporary-state unit regressions."""
 import json
+import os
+import tempfile
+from pathlib import Path
 import unittest
 from unittest.mock import patch
-from packages.cloud.auth import password_verifier,valid_verifier
-from packages.cloud.config import CloudConfig
+from packages.cloud.auth import password_verifier,valid_verifier,check_password
+from packages.cloud.config import CloudConfig,provider_from_grant
 from packages.cloud.postgres import translate
 from packages.cloud.temporary import pack,unpack,SYNTHETIC_TENANT
 from packages.store.ledger import Ledger,Fault
@@ -41,3 +44,49 @@ class CloudUnitTests(unittest.TestCase):
         snapshot['state']['revision']=5
         with self.assertRaises(Fault):unpack(snapshot,'1'*64,'session-a',c['id'])
         store.close()
+
+    @unittest.skipUnless(os.environ.get('HCL_DEVELOPMENT_ARTIFACT'),'Reviewed runtime required for bundle smoke')
+    def test_production_bundle_is_absolute_verified_and_repeatable(self):
+        from scripts.build_cloud_runtime import build
+        from packages.runtime_bridge.bridge import RuntimeBridge
+        with tempfile.TemporaryDirectory() as d:
+            path=build(Path(d)/'bundle')
+            self.assertTrue(path.is_absolute())
+            self.assertEqual(RuntimeBridge(path).handshake()['handshake_status'],'READY')
+            with patch('scripts.build_cloud_runtime.acquire',side_effect=AssertionError('Verified cache must not fetch')):
+                self.assertEqual(build(path),path)
+            link=Path(d)/'symlink';link.symlink_to(path,target_is_directory=True)
+            with self.assertRaises(ValueError):build(link)
+
+    def test_private_owner_bundle_and_no_implicit_grant(self):
+        e=self.env();owner={'schema_version':1,'login':'owner','verifier':self.verifier,'temporary_state_key':'1'*64}
+        for key in ('HCLA_OWNER_LOGIN','HCLA_OWNER_PASSWORD_HASH','HCLA_TEMPORARY_STATE_KEY'):e.pop(key)
+        e['HCLA_OWNER_CONFIG']=json.dumps(owner)
+        self.assertIsNone(CloudConfig.from_env(e).provider)
+        e['HCLA_DEEPSEEK_API_KEY']='offline-fixture'
+        self.assertIsNone(CloudConfig.from_env(e).provider)
+        e['HCLA_MODEL_GRANT']=json.dumps({'budget_id':'offline-new-cloud-grant','max_requests':3,'max_cost_usd':'10'})
+        config=CloudConfig.from_env(e)
+        self.assertEqual(config.provider.model,'deepseek-v4-pro');self.assertEqual(config.provider.max_requests,3)
+        e['HCLA_MODEL_GRANT']='{"budget_id":"one","budget_id":"two","max_requests":1,"max_cost_usd":"10"}'
+        with self.assertRaises(ValueError):CloudConfig.from_env(e)
+        e.pop('HCLA_MODEL_GRANT');owner['schema_version']=True;e['HCLA_OWNER_CONFIG']=json.dumps(owner)
+        with self.assertRaises(ValueError):CloudConfig.from_env(e)
+        owner['schema_version']=1;owner['extra']='refuse';e['HCLA_OWNER_CONFIG']=json.dumps(owner)
+        with self.assertRaises(ValueError):CloudConfig.from_env(e)
+    def test_browser_verifier_fixed_params_match_server_and_fail_closed(self):
+        import hashlib
+        value='synthetic owner password only';salt=bytes([7]*16)
+        derived=hashlib.pbkdf2_hmac('sha256',value.encode(),salt,600000,dklen=32).hex()
+        verifier='pbkdf2-sha256$600000$'+salt.hex()+'$'+derived
+        self.assertTrue(valid_verifier(verifier));self.assertTrue(check_password(value,verifier))
+        self.assertFalse(check_password('wrong synthetic password',verifier))
+        self.assertFalse(valid_verifier(verifier.replace('600000','1')))
+        unicode_value='😀'*12
+        unicode_key=hashlib.pbkdf2_hmac('sha256',unicode_value.encode(),salt,600000,dklen=32).hex()
+        unicode_verifier='pbkdf2-sha256$600000$'+salt.hex()+'$'+unicode_key
+        self.assertTrue(check_password(unicode_value,unicode_verifier))
+        self.assertFalse(check_password('😀'*6,unicode_verifier))
+    def test_new_grant_requires_all_bounds_and_cannot_renew_consumed(self):
+        for grant in ({}, {'budget_id':'anything','max_requests':True,'max_cost_usd':'10'}, {'budget_id':'hcla-20261001-six-requests-usd10','max_requests':6,'max_cost_usd':'10'}):
+            with self.assertRaises(ValueError):provider_from_grant(grant,'offline-fixture')

@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {pbkdf2Sync} from 'node:crypto';
 test.skip(!process.env.HCLA_TEST_POSTGRES_DSN,'Cloud browser fixture requires isolated Postgres');
 async function enter(page){
  await page.request.post('/v1/fixture/reset-throttle');
@@ -41,4 +42,20 @@ test('logout during a delayed temporary stream cannot resurrect tab bodies',asyn
  await page.waitForTimeout(1800);
  const result=await page.evaluate(async id=>{try{return JSON.stringify(await(await import('/src/api.ts')).api(`/v1/runs/${id}`))}catch(error){return String(error)}},run);
  expect(result).toContain('401');expect(result).not.toContain('LOGOUT_TEMP_PRIVATE_CANARY');await expect(page.locator('body')).not.toContainText('LOGOUT_TEMP_PRIVATE_CANARY');
+});
+test('owner setup uses local crypto and synthetic placeholders without network or storage',async({page})=>{
+ // Deliberately fixed test-only bytes: this is not a usable generated credential.
+ await page.addInitScript(()=>{
+  Object.defineProperty(Crypto.prototype,'getRandomValues',{value:array=>array.fill(7)});
+  Object.defineProperty(navigator.clipboard,'writeText',{value:async()=>{window.__syntheticCopied=true}});
+  Storage.prototype.setItem=()=>{throw new Error('Setup must not persist')};
+ });
+ await page.goto('/owner-setup.html');const requests=[];page.on('request',request=>requests.push(request.url()));
+ await page.getByLabel('密码（至少 12 个字符）',{exact:true}).fill('😀'.repeat(6));await page.getByLabel('再次输入密码',{exact:true}).fill('😀'.repeat(6));await page.getByRole('button',{name:'生成私人设置',exact:true}).click();await expect(page.getByRole('status')).toContainText('至少 12 个字符');await expect(page.locator('#bundle')).toHaveValue('');
+ await page.getByLabel('密码（至少 12 个字符）',{exact:true}).fill('synthetic owner password only');await page.getByLabel('再次输入密码',{exact:true}).fill('synthetic owner password only');await page.getByRole('button',{name:'生成私人设置',exact:true}).click();await expect(page.getByRole('status')).toHaveText('已在当前浏览器生成，未发送或保存');
+ const shape=await page.locator('#bundle').evaluate(el=>{const value=JSON.parse(el.value);return {version:value.schema_version,login:value.login,algorithm:value.verifier.split('$')[0],iterations:value.verifier.split('$')[1],syntheticKey:value.temporary_state_key==='07'.repeat(32),masked:el.type==='password'}});
+ expect(shape).toEqual({version:1,login:'owner',algorithm:'pbkdf2-sha256',iterations:'600000',syntheticKey:true,masked:true});expect(requests).toEqual([]);
+ const expectedVerifier='pbkdf2-sha256$600000$'+'07'.repeat(16)+'$'+pbkdf2Sync('synthetic owner password only',Buffer.alloc(16,7),600000,32,'sha256').toString('hex');expect(await page.locator('#bundle').evaluate((el,expected)=>JSON.parse(el.value).verifier===expected,expectedVerifier)).toBe(true);
+ await expect(page.getByLabel('密码（至少 12 个字符）',{exact:true})).toHaveValue('');await page.getByRole('button',{name:'复制到剪贴板'}).click();expect(await page.evaluate(()=>window.__syntheticCopied)).toBe(true);
+ await page.getByRole('button',{name:'清空本页'}).click();await expect(page.locator('#bundle')).toHaveValue('');expect(await page.evaluate(()=>location.search+location.hash)).toBe('');
 });

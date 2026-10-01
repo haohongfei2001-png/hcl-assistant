@@ -6,7 +6,7 @@ Authorized engineering amendment: 2026-10-01 08:36 UTC. This is a Vercel deploym
 
 - Ordinary conversations use a dedicated `hcla` schema in a new, isolated Postgres/Supabase project. No TodayAction or existing authentication project is reused
 - Owner signs in over the exact configured HTTPS origin. The browser sees no model, rate, grant-ID or API-key form. Server-only configuration is one-time operator setup
-- Passwords use a fixed-cost scrypt verifier; sessions are opaque, hash-only database records with Secure/HttpOnly/SameSite cookies. Rotation invalidates prior sessions. Mutations require exact origin and same-app header
+- Passwords use a fixed-cost salted scrypt or PBKDF2 verifier; sessions are opaque, hash-only database records with Secure/HttpOnly/SameSite cookies. Rotation invalidates prior sessions. Mutations require exact origin and same-app header
 - POST accepts a durable Controller run. An explicit POST execute request owns bounded execution until completion; GET/SSE only reads/replays. Cold starts do not kill pending runs. Database ownership fences prevent duplicate dispatch and stale publication
 - Atomic immutable budget reservations share the Controller transaction. No cold-start reset, no automatic paid retry/refund. Unconfirmed transport keeps the concurrency slot blocked; expiry is UNKNOWN rather than evidence of transport termination
 - Cancel and source-policy changes are checked during silent model thinking as well as answer deltas. Output is withheld immediately on cancellation or withdrawal. Provider cancellation may still cost money
@@ -14,18 +14,22 @@ Authorized engineering amendment: 2026-10-01 08:36 UTC. This is a Vercel deploym
 - HCL sample requests preserve the exact synthetic-only temporary/no-Topic contract. Authenticated owner identity is checked before the internal synthetic fixture tag is used. Ordinary unsupported language remains explicit NO_TREATMENT, without blocking ordinary model chat
 - No hidden reasoning is logged, stored or streamed. Same-run explicit results and truthful treatment/usage receipts remain inspectable
 
-## Setup and activation gates
+## One-time setup and activation gates
 
-No hosted endpoint has been verified. Do not describe repository readiness as a live website.
+No hosted endpoint has been verified. Repository readiness is not a live website.
 
-1. Owner approves/creates a dedicated project and selects a Vercel account/project, after reviewing costs and terms. Never reuse an existing app database
-2. Apply the checked-in migration only to that new project. Create a separate login role inheriting `hcla_app`, without superuser, BYPASSRLS, schema ownership or public-table privileges. Credential creation/entry remains owner-controlled
-3. In Vercel secure settings, set HCLA_DATABASE_URL to the isolated transaction-pooler URL with sslmode=verify-full, HCLA_PUBLIC_ORIGIN to the exact HTTPS origin, HCLA_OWNER_LOGIN, HCLA_OWNER_PASSWORD_HASH and a 32-byte hex HCLA_TEMPORARY_STATE_KEY. No configuration value belongs in chat, a screenshot, Git or frontend variables
-4. The build runs `npm run build:cloud` and acquires only the three already-reviewed runtime files to `.hcla-runtime`; no research checkout, repin or provider call. api/index.py is the Vercel handler, maxDuration 300 seconds; adapter deadline 60 seconds and ownership deadline 120 seconds leave cleanup headroom
-5. Model use stays disabled unless a new bounded grant is explicitly approved, installed as an immutable budget_policy row, and HCLA_CLOUD_PROVIDER_ENABLED=true. Requested model is deepseek-v4-pro, thinking enabled, reasoning effort high; no fallback. Existing server-side D1 budget/rate/output variables apply; HCLA_DEV_ACCESS_TOKEN is not needed for cloud login. The owner can privately run scripts/configure_cloud_owner.py once for hidden password entry, and scripts/print_cloud_budget_policy.py for approved metadata; neither helper contacts a service or installs configuration
-6. Verify the actual preview HTTPS endpoint: unauthenticated denial, owner login/logout, cross-origin denial, persistence across invocations, streaming/replay/cancel, temporary refresh loss and approved HCL synthetic preparation. Live provider requests require their own remaining approved budget
+The normal setup has **three sensitive entries**, all personally controlled by the owner. Model names, rates, output limit and build defaults are versioned in `control/cloud-profile.json` and `vercel.json`; they are not a user form. No model grant is enabled by default.
 
-Schema migration does not create a login credential, seed a model budget or grant access to anon/authenticated. `hcla_app` has no budget-policy write privilege. Supabase Data API exposure is unnecessary; keep the private schema unexposed. Configure backup retention and log redaction for the eventual data authorization before enabling real personal use. Logical deletion purges application copies but is not a claim of immediate provider/backup erasure.
+1. Approve the isolated target and bounds together: a NEW HCLA Supabase/Postgres project, a Vercel project from this repository, owner-only access, selected free/paid plan, and a NEW request-count/total-USD/data-scope grant. Confirm actual costs/terms shown by providers; persistent credential/access steps retain their required action-time approval
+2. The operator applies the migration only to the new project, prepares a restricted database login inheriting hcla_app, configures the verified HTTPS origin, and installs the explicitly approved immutable budget-policy metadata. No existing app/auth database is reused
+3. The owner privately enters HCLA_DATABASE_URL in Vercel's secure environment interface. It must be the restricted login's transaction-pooler connection string, with sslmode=verify-full; system CA trust is used. The app refuses superuser/BYPASSRLS connections
+4. The owner opens the verified site's /owner-setup.html, chooses a login/password, and explicitly clicks Generate. Web Crypto computes a salted PBKDF2-HMAC-SHA256 verifier (600,000 iterations) and CSPRNG signing key in that browser only. One masked HCLA_OWNER_CONFIG value is explicitly copied by the owner directly into Vercel's secure environment field. No terminal, manual hash computation, download, network submission, third-party script, analytics, URL/query propagation or browser storage is used. Do not screenshot or share the result. This does not create an account or configure the server by itself
+5. The owner privately enters the newly secured HCLA_DEEPSEEK_API_KEY. The operator fills HCLA_PUBLIC_ORIGIN and HCLA_MODEL_GRANT from verified non-secret setup/approval information. A key alone never enables paid calls; grant metadata plus its matching database policy are required. The exhausted historical grant is explicitly rejected
+6. Rebuild and verify the actual HTTPS endpoint: denial before login, login/logout, cross-origin denial, persistent reload, streaming/replay/cancel, temporary refresh loss and actual approved HCL preparation. Real provider requests require remaining explicit budget. Real-private-data and production HCL activation remain separate gates
+
+The owner-only setup helper loads only same-origin static code/style assets. After password entry it makes no requests, writes no storage/history/logs, and creates no file. Browser tests use deterministic synthetic bytes and never render the private output in screenshots or test artifacts. A legacy private command-line helper remains optional for operators; it is not the normal user path.
+
+Schema migration creates no login credential, model budget or anon/authenticated access. hcla_app cannot write budget_policy. Supabase Data API exposure is unnecessary; keep hcla unexposed. Before enabling any real personal-data scope, verify backup retention and log redaction. Logical application deletion is not a claim of immediate provider/backup erasure.
 
 ## Acceptance
 
@@ -39,3 +43,20 @@ C06: offline full regression/build/browser, real disposable Postgres CI, exact-h
 Actual commands/results are recorded in C1_01_EVIDENCE.md. Cloud readiness, account setup and hosted endpoint verification remain distinct.
 
 Primary references checked 2026-10-01: [Vercel Python](https://vercel.com/docs/functions/runtimes/python), [Supabase connections](https://supabase.com/docs/guides/database/connecting-to-postgres), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security). Transaction pooling uses no prepared statements or session advisory locks.
+
+## Exact deployment fields
+
+Owner-managed sensitive fields, entered only in Vercel secure settings:
+- HCLA_DATABASE_URL
+- HCLA_DEEPSEEK_API_KEY
+- HCLA_OWNER_CONFIG, generated locally by the explicit browser setup action
+
+Operator-managed non-secret fields:
+- HCLA_PUBLIC_ORIGIN: verified HTTPS origin without trailing slash
+- HCLA_MODEL_GRANT: JSON object containing budget_id, max_requests (integer), max_cost_usd (decimal string), matching the user's new approval. It has no default value
+
+The metadata-only scripts/print_cloud_budget_policy.py --approved-grant helper converts that same non-secret JSON to the immutable database policy. It reads no credentials and does not install anything. Historical per-field D1 configuration remains compatibility-only; it is not required for normal setup.
+
+Safe blank deployment template: docs/CLOUD_ENV_TEMPLATE.txt (the existing .env.example remains local-mode only) (never commit a filled copy). Committed defaults: Vite, build npm run build:cloud, output dist, Python function maximum 300 seconds, DeepSeek official HTTPS endpoint, deepseek-v4-pro, thinking enabled/high, 8192 output-token cap and the existing reviewed peak-rate floor. Recheck official peak rates at new grant approval. The build copies/reuses only an exact verified three-file runtime slice and performs its real subprocess handshake.
+
+Cryptographic reference: [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). The existing server scrypt verifier remains supported; browser setup uses the fixed Web Crypto-compatible PBKDF2 parameters, not a fast unsalted hash.

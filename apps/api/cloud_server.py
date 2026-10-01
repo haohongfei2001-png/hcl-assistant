@@ -1,5 +1,6 @@
 """Opt-in cloud application; each invocation owns its connections and work."""
 import os
+from pathlib import Path
 from packages.store.ledger import Ledger, Fault
 from packages.store.registry import Stores
 from packages.controller.interaction import Controller
@@ -26,7 +27,7 @@ class CloudApplication:
         self.stores=CloudStores(store or PostgresLedger(config.database_url))
         self.development_auth=CloudAuth(self.stores.persistent,config.origin,config.login,config.verifier)
         self.configuration={'configured':True,'provider_enabled':config.provider is not None}
-        self.development_bridge=RuntimeBridge(runtime) if runtime else None
+        self.development_bridge=RuntimeBridge(Path(runtime).absolute()) if runtime else None
         self.controllers={};self.lifecycle=Lifecycle(self.stores.persistent)
         self.lifecycle.recover()
         self.live_chat_service=None

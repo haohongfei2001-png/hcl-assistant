@@ -235,6 +235,7 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npm run build
+          npm run build:cloud
           npx playwright install --with-deps chromium --only-shell
           npx playwright test --config playwright.cloud.config.js
       - name: Retain cloud browser failure evidence

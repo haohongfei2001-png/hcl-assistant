@@ -17,9 +17,25 @@ def password_verifier(password, salt=None):
 
 def valid_verifier(value):
     try:
-        algorithm,n,r,p,salt,key=value.split('$')
-        return (algorithm,n,r,p)==('scrypt','131072','8','1') and len(bytes.fromhex(salt))==16 and len(bytes.fromhex(key))==32
+        parts=value.split('$')
+        if len(parts)==6:
+            algorithm,n,r,p,salt,key=parts
+            return (algorithm,n,r,p)==('scrypt','131072','8','1') and len(bytes.fromhex(salt))==16 and len(bytes.fromhex(key))==32
+        if len(parts)==4:
+            algorithm,iterations,salt,key=parts
+            return (algorithm,iterations)==('pbkdf2-sha256','600000') and len(bytes.fromhex(salt))==16 and len(bytes.fromhex(key))==32
+        return False
     except (ValueError,AttributeError): return False
+
+
+def check_password(password,verifier):
+    if not isinstance(password,str) or not 12<=len(password)<=1024 or not valid_verifier(verifier):return False
+    parts=verifier.split('$')
+    if parts[0]=='scrypt':candidate=password_verifier(password,bytes.fromhex(parts[4]))
+    else:
+        key=hashlib.pbkdf2_hmac('sha256',password.encode(),bytes.fromhex(parts[2]),600000,dklen=32)
+        candidate='pbkdf2-sha256$600000$'+parts[2]+'$'+key.hex()
+    return hmac.compare_digest(candidate,verifier)
 
 class CloudAuth:
     def __init__(self,store,origin,login,verifier):
@@ -43,9 +59,7 @@ class CloudAuth:
             if count>=5: raise Fault(429,'Too many sign-in attempts; wait one minute')
             self.store.db.execute('INSERT INTO login_attempts DEFAULT VALUES')
         try:
-            salt=bytes.fromhex(self.verifier.split('$')[4])
-            candidate=password_verifier(password,salt)
-            matches=hmac.compare_digest(candidate,self.verifier) and isinstance(login,str) and hmac.compare_digest(login.encode(),self.login_name.encode())
+            matches=check_password(password,self.verifier) and isinstance(login,str) and hmac.compare_digest(login.encode(),self.login_name.encode())
         except (ValueError,TypeError): matches=False
         if not matches: raise Fault(401,'Sign-in failed')
         token=secrets.token_urlsafe(32)

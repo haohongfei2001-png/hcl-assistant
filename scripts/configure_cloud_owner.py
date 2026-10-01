@@ -5,6 +5,7 @@ secure environment UI. Do not paste output into chat, commit it, or screenshot i
 No network, database write, account creation, or provider invocation occurs.
 """
 import getpass
+import json
 from pathlib import Path
 import secrets
 import sys
@@ -18,5 +19,4 @@ if __name__=='__main__':
     verifier=password_verifier(password)
     del password,confirmation
     print('Copy only into your hosting provider secure environment form. Do not share this output.')
-    print('HCLA_OWNER_PASSWORD_HASH='+verifier)
-    print('HCLA_TEMPORARY_STATE_KEY='+secrets.token_hex(32))
+    print('HCLA_OWNER_CONFIG='+json.dumps({'schema_version':1,'login':'owner','verifier':verifier,'temporary_state_key':secrets.token_hex(32)},separators=(',',':')))

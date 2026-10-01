@@ -160,7 +160,7 @@ class CloudPostgresTests(unittest.TestCase):
     def test_temporary_real_pinned_hcl_preparation_no_body_in_postgres(self):
         runtime=os.environ.get('HCL_DEVELOPMENT_ARTIFACT')
         self.assertTrue(runtime,'Cloud integration CI must supply the reviewed runtime')
-        app=self.app(runtime=runtime);cookie=app.development_auth.cookie(app.development_auth.login({'login':'owner','password':'offline password fixture'}))
+        app=self.app(runtime=os.path.relpath(runtime,ROOT));self.assertTrue(app.development_bridge.directory.is_absolute());cookie=app.development_auth.cookie(app.development_auth.login({'login':'owner','password':'offline password fixture'}))
         import uuid
         c={'id':'temp-'+str(uuid.uuid4()),'memory':'TEMPORARY'}
         request=self.request(c,'Ada said, "I believe that the workshop starts Friday."')

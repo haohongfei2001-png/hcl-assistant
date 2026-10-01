@@ -7,7 +7,7 @@
     "api/index.py": {
       "maxDuration": 300,
       "excludeFiles": "{node_modules/**,test-results/**,tests/**,pages-dist/**,.local/**,.tmp/**,docs/design/**}",
-      "includeFiles": "{packages/**,apps/api/**,contracts/**,.hcla-runtime/**}"
+      "includeFiles": "{packages/**,apps/api/**,contracts/**,control/cloud-profile.json,.hcla-runtime/**}"
     }
   },
   "rewrites": [

@@ -1,0 +1,14 @@
+# One-time server configuration only. Never use VITE_ or commit a filled copy.
+# Owner enters these only in the provider's secure environment settings.
+HCLA_DATABASE_URL=
+HCLA_OWNER_CONFIG=
+HCLA_DEEPSEEK_API_KEY=
+
+# Operator fills the verified HTTPS origin; no trailing slash.
+HCLA_PUBLIC_ORIGIN=
+
+# NO model grant is enabled by this template.
+# After a NEW bounded approval, the operator adds HCLA_MODEL_GRANT containing
+# exactly budget_id, max_requests (integer), max_cost_usd (decimal string),
+# and installs its matching immutable database metadata policy.
+# Model, rates, output cap and hosting defaults: control/cloud-profile.json.
