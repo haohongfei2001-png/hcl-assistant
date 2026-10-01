@@ -2,7 +2,7 @@
 
 Design ID: `CONTINUUM-V1-20261001`. Product architecture remains **Canonical 1.2 / A2-Product**. This is an appearance/interaction implementation amendment, not a new product strategy.
 
-**Repository adoption is pending.** The Owner approved these five designs in the current conversation. The five original PNG files have been staged and hashed in the conversation delivery bundle, but have not yet been imported and verified in this branch. This PR must remain draft and must not merge until all five original assets below exist with the manifest hashes, latest main is reconciled, and exact-head review/CI succeeds. Neither this text nor a hash manifest substitutes for the images. After merge, verify exact-main CI before reporting adoption complete.
+**Repository adoption is now complete at the asset/specification level once this change is on `main`.** The Owner approved these five designs; all five original PNGs are stored below and have been read back from GitHub with Git blob identities matching the manifest. They are the canonical Continuum V1 visual references. This does not mean the application implements them: implementation and visual acceptance remain P1-03 work, and exact-head plus exact-main CI remain required for this adoption change.
 
 ## Approved source set
 
@@ -52,4 +52,4 @@ This change may contain only design assets, specifications and plan metadata. It
 
 Existing P0-01 and P1-01 completion/evidence remain historical facts. P1-02 work in PR #10 is not taken over. V1 implementation is assigned to three dependent delivery slices **inside the existing pending P1-03 package**; these are not additional scheduler tasks. The checker currently fixes the four parent identities and version `1.2/A2-Product`; no checker/test/workflow is changed to manufacture compatibility. See Development Plan and the refinement work-package definition.
 
-Before merging this adoption, reread main/open PRs, preserve the existing implementation writer and any newly merged package/evidence, synchronize the queue mirrors, and verify that the diff contains only allowed paths. Do not merge this draft with missing images merely because existing CI passes: current CI does not automatically validate this new visual acceptance contract.
+This adoption was reconciled against main `905ff1fbb3b2264757931e8d9ff5fdff54e7a32f`, after P1-02 merged. The five image blobs are present and verified; the change remains limited to design assets, specifications and plan metadata. Existing CI does not automatically validate future V01–V10 implementation evidence, so P1-03 must still supply the visual comparisons and playable journeys defined here.
