@@ -303,9 +303,62 @@
         "visual_acceptance_spec": "docs/design/continuum-v1/ACCEPTANCE.md",
         "delivery_slices_are_independent_queue": false,
         "ordered_delivery_slices": [
-          {"id": "V1-A", "depends_on": "P1-02_AND_V1_DESIGN_ADOPTION", "scope": "shared surfaces home long conversation and composer", "design_refs": ["UI-01", "UI-02"], "verification": ["V01", "V02", "V08", "V10"]},
-          {"id": "V1-B", "depends_on": "V1-A", "scope": "evidence source revision and anchored return", "design_refs": ["UI-02", "UI-03"], "verification": ["V03", "V04", "V05", "V06", "V07", "V10"]},
-          {"id": "V1-C", "depends_on": "V1-B", "scope": "both companion candidates off state responsive motion and original P1-03 integrated acceptance", "design_refs": ["UI-01", "UI-02", "UI-03", "M-01", "M-02"], "verification": ["V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09", "V10"]}
+          {
+            "id": "V1-A",
+            "depends_on": "P1-02_AND_V1_DESIGN_ADOPTION",
+            "scope": "shared surfaces home long conversation and composer",
+            "design_refs": [
+              "UI-01",
+              "UI-02"
+            ],
+            "verification": [
+              "V01",
+              "V02",
+              "V08",
+              "V10"
+            ]
+          },
+          {
+            "id": "V1-B",
+            "depends_on": "V1-A",
+            "scope": "evidence source revision and anchored return",
+            "design_refs": [
+              "UI-02",
+              "UI-03"
+            ],
+            "verification": [
+              "V03",
+              "V04",
+              "V05",
+              "V06",
+              "V07",
+              "V10"
+            ]
+          },
+          {
+            "id": "V1-C",
+            "depends_on": "V1-B",
+            "scope": "both companion candidates off state responsive motion and original P1-03 integrated acceptance",
+            "design_refs": [
+              "UI-01",
+              "UI-02",
+              "UI-03",
+              "M-01",
+              "M-02"
+            ],
+            "verification": [
+              "V01",
+              "V02",
+              "V03",
+              "V04",
+              "V05",
+              "V06",
+              "V07",
+              "V08",
+              "V09",
+              "V10"
+            ]
+          }
         ]
       }
     ],
@@ -321,13 +374,16 @@
     "design_adoption": {
       "id": "CONTINUUM-V1-20261001",
       "owner_decision": "APPROVED_FOR_REPOSITORY_ADOPTION",
-      "repository_status": "PENDING_BINARY_IMPORT_AND_REVIEW",
+      "repository_status": "ALL_FIVE_ASSETS_PRESENT_READBACK_VERIFIED_FORMALLY_ADOPTED_ON_MAIN_MERGE",
       "document": "docs/design/continuum-v1/README.md",
       "manifest": "docs/design/continuum-v1/asset-manifest.json",
       "reconciled_main": "905ff1fbb3b2264757931e8d9ff5fdff54e7a32f",
       "implementation_status": "NOT_IMPLEMENTED",
-      "asset_and_merge_gate_required": true,
-      "companion_candidates": ["M-01", "M-02"],
+      "asset_and_merge_gate_required": false,
+      "companion_candidates": [
+        "M-01",
+        "M-02"
+      ],
       "selected_companion": null,
       "companion_selection_blocks_shared_ui": false,
       "change_scope": "DESIGN_ASSETS_SPECIFICATIONS_AND_PLAN_METADATA_ONLY",
@@ -336,9 +392,9 @@
     }
   },
   "writer": {
-    "branch": "product/p1-02-evidence-memory-loop",
-    "scope": "P1-02_REVISION_EVIDENCE_MEMORY_LOOP",
-    "status": "AWAITING_FINAL_EXACT_HEAD_REVIEW_AND_MERGE"
+    "branch": null,
+    "scope": "P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE",
+    "status": "UNCLAIMED_NEXT_READY_AFTER_CONTINUUM_V1_ADOPTION"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
