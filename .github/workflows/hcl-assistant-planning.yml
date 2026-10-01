@@ -155,3 +155,23 @@ jobs:
             product-export/.tmp/screenshots
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Retain lightweight Continuum reference and app captures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: continuum-visual-captures
+          path: |
+            product-export/test-results/**/*.png
+            product-export/test-results/**/continuum-evidence.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Retain Continuum replay videos
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: continuum-replay-videos
+          path: product-export/test-results/**/*.webm
+          retention-days: 7
+          if-no-files-found: ignore
