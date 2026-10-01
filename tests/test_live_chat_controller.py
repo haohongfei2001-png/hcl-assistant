@@ -36,7 +36,7 @@ class LiveChatTests(unittest.TestCase):
         return self.ctrl.handle_interaction(self.tenant,{'scope':{'conversation_id':self.c},'expected_state_version':self.store.version(self.tenant),'idempotency_key':str(self.store.version(self.tenant)),'development_chat':live,'synthetic_input_confirmed':True,'event':{'text':text,**event}},defer=defer)
     def test_ordinary_chinese_controller_answer_receipt_and_explain(self):
         run=self.say('请帮我构思一个虚构纸灯活动')
-        self.assertEqual(run['answer']['text'],self.adapter.answer);self.assertEqual(run['run_receipt']['actual_treatment'],'NO_TREATMENT')
+        self.assertEqual(run['answer']['text'],self.adapter.answer);self.assertEqual(run['run_receipt']['actual_treatment'],'NO_TREATMENT');self.assertEqual(run['run_receipt']['runtime_hash'],'NO_HCL_RUNTIME_SELECTED')
         self.assertEqual(run['run_receipt']['provider']['actual_model'],self.adapter.model)
         self.assertIsNone(run['run_receipt']['usage']['cost']['amount']);self.assertEqual(run['run_receipt']['usage']['provider_calls'],1)
         self.assertEqual(project(run)['source_links'],[]);self.assertEqual(len(self.budget.calls),1);self.assertEqual(run['budget']['max_provider_calls'],1)
@@ -77,7 +77,7 @@ class LiveChatTests(unittest.TestCase):
     def test_failure_and_partial_not_masked_and_paid_retry_refused(self):
         for outcome in ['FAILED','PARTIAL','UNKNOWN']:
             self.adapter.outcome=outcome;run=self.say('合成失败测试'+outcome)
-            self.assertIsNone(run['answer']);self.assertEqual(run['run_receipt']['outcome'],outcome)
+            self.assertIsNone(run['answer']);self.assertEqual(run['run_receipt']['outcome'],outcome);self.assertEqual(run['run_receipt']['errors'],run['errors'])
             with self.assertRaises(Fault):self.ctrl.retry(self.tenant,run['run_id'],'paid-retry')
     def test_missing_service_and_unconfirmed_input_make_zero_calls(self):
         with self.assertRaises(Fault):Controller(self.store).handle_interaction(self.tenant,{'scope':{'conversation_id':self.c},'development_chat':True,'event':{'text':'合成'}})

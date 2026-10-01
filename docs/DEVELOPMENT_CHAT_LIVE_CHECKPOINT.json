@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "source_run_id": 36797830169,
+  "source_commit": "54cbbf2ff741fb247fca5708e444598e04db7db6",
+  "artifact_id": 11134706410,
+  "artifact_sha256": "af61dca58c09af04a5e57194513edfe94423a246979a5a3cd926fbaf3de110cf",
+  "prior_calls": 3,
+  "prior_reserved_usd": "4.1766912",
+  "remaining_calls": 3,
+  "remaining_reserved_allowance_usd": "5.8233088",
+  "grant_total_calls": 6,
+  "grant_total_usd": "10",
+  "prior_usage_priced_upper_bound_usd": "0.00989868",
+  "actual_provider_cost_usd": null,
+  "prior_outcomes": [
+    {
+      "run_id": "3dd73902862e4b7c8ad11fa56b4157cc",
+      "requested_model": "deepseek-v4-pro",
+      "actual_model": "deepseek-v4-pro",
+      "outcome": "COMPLETED",
+      "finish_reason": "stop",
+      "provider_calls": 1,
+      "prompt_tokens": 208,
+      "completion_tokens": 109
+    },
+    {
+      "run_id": "11c8b42aa3df4c7ca3f57b3b4e6b7813",
+      "requested_model": "deepseek-v4-pro",
+      "actual_model": "deepseek-v4-pro",
+      "outcome": "COMPLETED",
+      "finish_reason": "stop",
+      "provider_calls": 1,
+      "prompt_tokens": 219,
+      "completion_tokens": 102
+    },
+    {
+      "run_id": "f9f5cdb85d1247b397632523bee583cc",
+      "requested_model": "deepseek-v4-pro",
+      "actual_model": "deepseek-v4-pro",
+      "outcome": "FAILED",
+      "finish_reason": "length",
+      "provider_calls": 1,
+      "prompt_tokens": 295,
+      "completion_tokens": 2048
+    }
+  ]
+}
