@@ -157,7 +157,7 @@ STOP_USING 阻止未来上下文与派生复活；DELETE 清理受影响的原�
 
 ## 13. Continuum V1 视觉采用与实施增量
 
-Owner 已确认最新一轮三张无实物背景产品状态稿与两张数字形象稿。采用身份为 **CONTINUUM-V1-20261001**，不改 Canonical 1.2 / A2-Product 的产品架构和机器版本。五张原始 PNG 已完整入库并完成 GitHub blob 回读核验；完整目录、五稿映射、原图校验值和示例语义处置见 [Design Adoption](docs/design/continuum-v1/README.md)。本采用变更合入 main 后正式生效；实现仍须通过后续 P1-03 的实际页面与交互验收。
+Owner 已确认最新一轮三张无实物背景产品状态稿与两张数字形象稿。采用身份为 **CONTINUUM-V1-20261001**，不改 Canonical 1.2 / A2-Product 的产品架构和机器版本。五张批准 PNG 的原始 payload 已按仓库 text-only 边界无损嵌入 UTF-8 SVG 包装，并逐一反解核验原始 byte size、SHA-256 与 Git blob identity；这是存储适配而非视觉变换。完整目录、五稿映射、原图校验值和示例语义处置见 [Design Adoption](docs/design/continuum-v1/README.md)。本采用变更合入 main 后正式生效；实现仍须通过后续 P1-03 的实际页面与交互验收。
 
 视觉探索结束：保留本轮布局、浅蓝紫色系、柔和光感、半透明材质和整体气质。背景不放风景或物品，不退回旧的灰绿编辑器界面。Continuum 的同一工作面、对象原位展开、输入/上下文连续与真实修订保持不变。静态图没有表达的响应式、键盘、长内容、加载/异常、动效与阅读位置保持由 [Implementation Spec](docs/design/continuum-v1/IMPLEMENTATION_SPEC.md) 补齐，不再扩展产品战略。
 
