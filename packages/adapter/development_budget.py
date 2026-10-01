@@ -397,8 +397,10 @@ class DevelopmentBudget:
                             'active_requests': sum(row['outcome'] == 'active' for row in rows),
                             'reserved_cost_usd': _money(reserved), 'charged_cost_usd': _money(charged),
                             'max_cost_usd': _money(self.config.max_cost_usd),
-                            'known_actual_cost_usd': _money(sum(known, Decimal(0))) if known else None,
-                            'unknown_cost_requests': len(rows) - len(known),
+                            'actual_provider_cost_usd': None,
+                            'cost_basis': 'CONFIGURED_PEAK_RATES_NOT_PROVIDER_INVOICE',
+                            'known_usage_priced_upper_bound_usd': _money(sum(known, Decimal(0))) if known else None,
+                            'unknown_usage_requests': len(rows) - len(known),
                             'over_budget': charged > self.config.max_cost_usd}
             except sqlite3.Error:
                 raise BudgetError('budget_database_unavailable') from None

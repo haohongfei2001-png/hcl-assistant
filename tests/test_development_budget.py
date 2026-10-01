@@ -127,12 +127,12 @@ class DevelopmentBudgetTests(unittest.TestCase):
         self.assertTrue(reservation.granted)
         self.assertEqual(reservation.reserved_cost_usd, Decimal('0.0012'))
         self.assertEqual(budget.snapshot()['active_requests'], 1)
-        self.assertIsNone(budget.snapshot()['known_actual_cost_usd'])
+        self.assertIsNone(budget.snapshot()['known_usage_priced_upper_bound_usd'])
         budget.finish('run-1', 'attempt-1', 'completed', input_tokens=250, output_tokens=10)
         state = budget.snapshot()
-        self.assertEqual(state['known_actual_cost_usd'], '0.00027')
+        self.assertEqual(state['known_usage_priced_upper_bound_usd'], '0.00027')
         self.assertEqual(state['charged_cost_usd'], '0.0012')
-        self.assertEqual(state['unknown_cost_requests'], 0)
+        self.assertEqual(state['unknown_usage_requests'], 0)
         self.assertEqual(state['active_requests'], 0)
 
     def test_duplicate_attempt_is_idempotent_never_grants_a_second_dispatch(self):
@@ -163,7 +163,7 @@ class DevelopmentBudgetTests(unittest.TestCase):
         budget.close()
         restarted = self.budget()
         self.assertEqual(restarted.snapshot(), expected)
-        self.assertEqual(expected['unknown_cost_requests'], 3)
+        self.assertEqual(expected['unknown_usage_requests'], 3)
         self.assertEqual(expected['charged_cost_usd'], '0.0009')
         self.assert_code('request_budget_exhausted', restarted.reserve, 'run-4', 'attempt-1', 1)
 
@@ -171,7 +171,7 @@ class DevelopmentBudgetTests(unittest.TestCase):
         budget = self.budget(replace(self.config, max_cost_usd=Decimal('0.0003')))
         budget.reserve('run-1', 'attempt-1', 100)
         budget.finish('run-1', 'attempt-1', 'completed', input_tokens=0, output_tokens=0, actual_cost_usd='0')
-        self.assertEqual(budget.snapshot()['known_actual_cost_usd'], '0')
+        self.assertEqual(budget.snapshot()['known_usage_priced_upper_bound_usd'], '0')
         self.assert_code('cost_budget_exhausted', budget.reserve, 'run-2', 'attempt-1', 1)
         self.assertEqual(budget.snapshot()['request_count'], 1)
 
@@ -328,7 +328,7 @@ budget.close()
         budget.reserve('run-1', 'attempt-1', 100)
         budget.finish('run-1', 'attempt-1', 'unknown')
         budget.finish('run-1', 'attempt-1', 'unknown', input_tokens=20, output_tokens=10)
-        self.assertEqual(budget.snapshot()['known_actual_cost_usd'], '0.00004')
+        self.assertEqual(budget.snapshot()['known_usage_priced_upper_bound_usd'], '0.00004')
         self.assertEqual(budget.snapshot()['charged_cost_usd'], '0.0003')
         self.assert_code('usage_already_recorded', budget.finish, 'run-1', 'attempt-1', 'unknown',
                          input_tokens=21, output_tokens=10)
