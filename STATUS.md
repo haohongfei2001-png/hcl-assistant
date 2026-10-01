@@ -45,9 +45,9 @@ L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、
 
 ## Continuum V1 design adoption status
 
-Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 CONTINUUM-V1-20261001，目录见 [Design Adoption](docs/design/continuum-v1/README.md)。当前仓库状态为 **PENDING_BINARY_IMPORT_AND_REVIEW**：五张原PNG已在会话交付包保留并校验，但尚未在此分支完成二进制入库与回读；不能声称资产已齐、已正式采用或 V1 已实现。规格/计划草稿不覆盖 main。
+Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 CONTINUUM-V1-20261001，目录见 [Design Adoption](docs/design/continuum-v1/README.md)。五张原PNG已入库并完成GitHub回读，blob identity 与 manifest 全部一致；本采用变更合入 main 后即作为正式视觉基准。**V1 application implementation 仍未完成**，不能把设计采用写成能力或界面已实现。
 
-初读基线为 fa2cd0bf。准备期间 PR10 已合入 **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f**；本次协调保留其全部应用、测试、记录和 P1-02 COMPLETE / P1-03 NEXT_READY 投影，不把新状态覆盖回初读基线。采用说明中对 fa2cd0bf/当时 PR10 执行的描述是读取历史，当前事实以本节和唯一队列为准。本次不接管其 writer，原 writer 元数据随 main 原样保留。
+采用变更已与 **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f** 对齐；该 main 已包含 PR10/P1-02 的全部应用、测试和证据。本次不改其代码或回执，也不恢复旧任务。唯一下一项为 P1-03；实现 writer 在本设计采用完成后按现有单 writer 规则认领。
 
 V1 实施增量属于同一 P1-03 的三个顺序交付切片，不另起队列；仅在原图入库与本采用PR的门槛满足后生效。原 P1-03 的 Inspector/Settings/整体synthetic范围和 R17–R20 义务仍保留。两套形象 M-01/M-02 同时保留，selected_companion=null，未选唯一形象不阻塞共同界面。
 
