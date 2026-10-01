@@ -53,7 +53,7 @@ PR #6在本次采用期间已由另一执行者合入 `e2a72050e184e61f45b17de3f
 
 ## 6. Continuum V1 增量，不另建队列
 
-最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。五张原图已按 manifest 入库并完成 blob 回读；本采用变更合入 main 后成为正式视觉基准。视觉采用不等于 P1-03 实现完成。
+最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。五张批准 PNG 的原始 payload 已按 manifest 无损嵌入 UTF-8 SVG 文本包装，并以原始 byte size、SHA-256 与 Git blob identity 完成反解核验；exact-head/main 通过并合入后成为正式视觉基准。视觉采用不等于 P1-03 实现完成。
 
 本采用变更直接基于并已协调 main **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f**，保留其全部 P1-02 代码、回执和 COMPLETE 状态。唯一 NEXT_READY 为 P1-03；本次文档/资产采用不实现应用代码，P1-03 implementation writer 由后续实现工作按单 writer 规则认领。
 
