@@ -1,9 +1,9 @@
 {
-  "bridge_version": "1.0",
+  "bridge_version": "1.1",
   "source_repository": "haohongfei2001-png/human-cognition-layer",
-  "source_commit_sha": "a8229fcf22eccb851c58502a09ae7cecb346faf5",
-  "source_tree_sha": "1a016e0a232647f6d682f1b7c6c2586c27df2905",
-  "artifact_digest": "sha256:ced40fea69e33b4a817a288cb2eb6e59a12915039ad08699923474902c8956d0",
+  "source_commit_sha": "97b9bf187360860327ab573bae2217401b779ff0",
+  "source_tree_sha": "333a24cf0775574b8aaabffafba18e43957ca7ac",
+  "artifact_digest": "sha256:fabfe2dcfcc2c71beea23c38e80b042a7cc420c1dd5911eb1b106bc51b866a1e",
   "interface_version": "hcl-epistemic-callables-v1",
   "interface_digest": "sha256:a9525023e7307ad6b1f90ba14f8ae14aad4d7401c7f2b2c4833c465953dd8119",
   "implementation_id": "hcl-provider-free-epistemic-slice",
@@ -18,12 +18,12 @@
       "sha256": "9f6fcf7127a9c38c3e63c74dedae7c13d03727f8cb0a2cd4006deb2002ae0265"
     },
     "hcl/cognition/semantic.py": {
-      "git_blob_sha": "5b1854d8b31afbe2804bd1e610a28d2596391709",
-      "sha256": "f4fe72ecdc8054d5fa34b79a62915ab91d4dede00ab1cafe7e6cfb99c45ce2f8"
+      "git_blob_sha": "c8935ec2f66b92e74248c5b22f6b572a44f3e877",
+      "sha256": "c581e81228526574c979a7c465d86bf73e3ec8f29a6eb207a21514180b0cc688"
     },
     "hcl/cognition/epistemic.py": {
-      "git_blob_sha": "16e7ba591e7bc2d01a28e405f85bea309dff96ab",
-      "sha256": "a9a38bec7be4997f2573e801fc0d1dc700c05682228bfa495c6f9b8b131a698d"
+      "git_blob_sha": "2af976515394a9b1564f6267516e7349103328f4",
+      "sha256": "d775efebd23c59a6ce81c507dfe347492067d4e1173331122185a41f447569a6"
     }
   },
   "interface": {
@@ -55,5 +55,5 @@
     "max_response_bytes": 262144
   },
   "receipt_version": "1.0",
-  "capability_manifest_digest": "sha256:7ca66ccd3bbfa0401f755d7b34406bd61617f29797520ae4200bada70f6afab0"
+  "capability_manifest_digest": "sha256:83068bb11bd076fe44ecc279382a28ce687f351157b6320c18aa41c9d1e3d462"
 }
