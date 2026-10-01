@@ -22,7 +22,7 @@ class CurrentQueueTests(unittest.TestCase):
         self.assertEqual(result['next_ready'], json.loads((ROOT/'control/plan.json').read_text())['product_development']['next_ready'])
         self.assertEqual(result['legacy_stage_next_ready'], L3_STOP)
         self.assertEqual(result['package_count'], 11)
-        self.assertEqual(result['current_package_count'], 6)
+        self.assertEqual(result['current_package_count'], 7)
     def test_development_gate_cannot_inherit_research_budget(self):
         for key,value in [('provider_default','ENABLED'),('live_requires_explicit_product_budget',False),('research_budget_reuse_allowed',True),('bridge_lock_unchanged',False),('production_enabled',True),('private_data_allowed',True)]:
             p=copy.deepcopy(self.plan);p['product_development']['development_chat'][key]=value

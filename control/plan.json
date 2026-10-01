@@ -221,8 +221,8 @@
     "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
     "next_package_id": null,
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
-    "current_request_scope": "AUTHORIZED_CLOUD_ADAPTATION_OFFLINE_ZERO_PROVIDER",
-    "current_executor_stop_after": "C1-01_OR_EXTERNAL_SETUP_GATE",
+    "current_request_scope": "AUTHORIZED_SIX_POINT_CHAT_UI_REFINEMENT_ZERO_PROVIDER",
+    "current_executor_stop_after": "U1-01_EXACT_MAIN_VERIFIED",
     "implementation_started": true,
     "implementation_requires_separate_work": false,
     "execution_scope": "SYNTHETIC_PRODUCT_REFINEMENT_AND_GATED_DEVELOPMENT_CHAT",
@@ -396,6 +396,24 @@
           "C06"
         ],
         "evidence": "docs/C1_01_EVIDENCE.md"
+      },
+      {
+        "id": "U1-01",
+        "task": "U1-01_CHAT_INTERFACE_REFINEMENT",
+        "depends_on": [
+          "C1-01"
+        ],
+        "state": "COMPLETE",
+        "delta": "six-point Continuum chat refinement, honest home/history state, compact composer and contextual actions",
+        "acceptance": [
+          "U01",
+          "U02",
+          "U03",
+          "U04",
+          "U05",
+          "U06"
+        ],
+        "evidence": "docs/U1_01_EVIDENCE.md"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -449,8 +467,8 @@
     }
   },
   "writer": {
-    "branch": "product/cloud-hosting-adaptation",
-    "scope": "C1-01_CLOUD_HOSTING_ADAPTATION",
+    "branch": "product/chat-interface-refinement",
+    "scope": "U1-01_CHAT_INTERFACE_REFINEMENT",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

@@ -158,6 +158,15 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Retain compact chat refinement captures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: chat-refinement-captures
+          path: product-export/test-results/chat-refinement*/**/*.png
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Retain lightweight Continuum reference and app captures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

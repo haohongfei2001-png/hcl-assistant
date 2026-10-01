@@ -5,6 +5,19 @@ export const emptyState = () => ({schemaVersion: 2, storageRevision: 0, conversa
 export const uid = prefix => prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 const clone = value => JSON.parse(JSON.stringify(value));
 
+// A cleared conversation remains a real body-free historical container. It is
+// safe to leave its selected view only when no independent data remains.
+export function fullyCleared(c) {
+  return Boolean(c && ((c.records || []).some(r => r.status === 'DELETED'))
+    && !(c.runs || []).length && !(c.records || []).some(r => r.status !== 'DELETED')
+    && !(c.branches || []).length);
+}
+const cleanupTitles = new Set(['对话（删除已清理）', '历史对话（删除已清理）']);
+function normalizeHistory(state) {
+  for (const c of state.conversations) if (cleanupTitles.has(c.title)) c.title = '历史对话';
+  if (fullyCleared(state.conversations.find(c => c.id === state.currentId))) state.currentId = null;
+  return state;
+}
 export function persistentState(state) {
   const conversations = state.conversations.filter(c => c.memory !== 'TEMPORARY');
   return {schemaVersion: 2, storageRevision: state.storageRevision || 0, conversations, currentId: conversations.some(c => c.id === state.currentId) ? state.currentId : null};
@@ -23,7 +36,7 @@ export function loadState(storage) {
     const value = JSON.parse(stored);
     if (value.schemaVersion !== 2 || !Array.isArray(value.conversations)) throw new Error('不支持的存储版本');
     // Defensive removal of temporary copies from older or externally changed data.
-    const clean = persistentState(value);
+    const clean = normalizeHistory(persistentState(clone(value)));
     if (JSON.stringify(clean) !== JSON.stringify(value)) saveState(clean, storage);
     // A still-open v1 tab or interrupted prior cleanup must not retain old bodies.
     storage.removeItem(LEGACY_KEY);
@@ -41,9 +54,10 @@ export function loadState(storage) {
     // v1 recorded no dependency lineage. Conservatively remove generated/run copies
     // when a deletion was requested; retain independently authored source records.
     const runs = hasDeleted ? [] : (c.runs || []).map(r => ({...r, basis: [], basisRefs: [], caps: [], legacyUnverified: true}));
-    state.conversations.push({...c, title: hasDeleted ? '历史对话（删除已清理）' : c.title, records, runs});
+    state.conversations.push({...c, title: hasDeleted ? '历史对话' : c.title, records, runs});
   }
   state.currentId = state.conversations.some(c => c.id === old.currentId) ? old.currentId : null;
+  normalizeHistory(state);
   saveState(state, storage);
   storage.removeItem(LEGACY_KEY);
   return state;
@@ -187,7 +201,7 @@ export function submit(state, conversationId, input, meta = {}) {
     else record.kind = 'UNRESOLVED';
   }
   c.records.push(record);
-  if (c.title === '新对话') c.title = input.slice(0, 22);
+  if (c.title === '新对话' || (c.title === '历史对话' && !c.runs.length)) c.title = input.slice(0, 22);
   const run = {id: uid('run'), conversationId: c.id, recordId: record.id, input, version: c.version, createdAt: new Date().toISOString(), ...result};
   c.runs.push(run); return run;
 }
@@ -232,7 +246,7 @@ export function changeRecord(state, conversationId, id, action) {
       conv.runs = conv.runs.filter(run => !affected.has(run.recordId));
       conv.records = conv.records.map(item => affected.has(item.id) ? {id: item.id, kind: 'UNRESOLVED', status: 'DELETED', version: item.version} : item);
       if (conv.branches) conv.branches = conv.branches.filter(branch => !affected.has(branch.record.id));
-      if (conv.id === c.id || conv.records.some(item => affected.has(item.id))) conv.title = '对话（删除已清理）';
+      if (conv.id === c.id || conv.records.some(item => affected.has(item.id))) conv.title = '历史对话';
     }
   }
   c.version += 1;
