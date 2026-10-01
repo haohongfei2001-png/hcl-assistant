@@ -195,7 +195,7 @@ def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
 
 def queue_summary(q):
     current = next((r for r in q['packages'] if r['id'] == q['next_package_id']), None)
-    detail = (current['delta'] + '。验收：' + '、'.join(current['acceptance'])) if current else '四包已完成；L3四门槛未满足，停止交接，不启动provider、Judge或Act。'
+    detail = (current['delta'] + '。验收：' + '、'.join(current['acceptance'])) if current else f"当前{len(q['packages'])}包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。"
     return ('<!-- CURRENT_PRODUCT_QUEUE_START -->\n'
             '**NEXT_READY: ' + q['next_ready'] + '**\n\n'
             '当前产品阶段：' + q['phase'] + '。唯一当前任务：' + (q['next_package_id'] or '无，等待L3门槛') + '。\n\n'

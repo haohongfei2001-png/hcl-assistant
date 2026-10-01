@@ -13,7 +13,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-四包已完成；L3四门槛未满足，停止交接，不启动provider、Judge或Act。
+当前5包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -22,11 +22,11 @@
 
 当前队列机器投影为 `control/plan.json.product_development`。顶层旧phase/next_ready仅是L0–L2.5完成与L3生产门槛记录，不是第二套live队列；自动消费者迁移列入P0-01，未迁移者不得据旧字段新调度产品任务。
 
-## Actual implementation, not the target UI
+## Current implementation and entry
 
-L0–L2 mock产品与L2.5受限development bridge已合入main；基线PR #5与并发合入的维护PR #6见 [adoption record](docs/PRODUCT_REVIEW_ADOPTION.md)。普通Web消息仍MOCK，没有通用模型回答；L2.5只在明确配置的隔离synthetic路径执行固定runtime slice。production remains disabled，efficacy remains NOT_TESTED。旧截图和现有页面不是目标信息架构。
+L0–L2 mock产品与L2.5受限development bridge已合入main；基线PR #5与并发合入的维护PR #6见 [adoption record](docs/PRODUCT_REVIEW_ADOPTION.md)。普通Web消息仍MOCK，没有通用模型回答；L2.5只在明确配置的隔离synthetic路径执行固定runtime slice。production remains disabled，efficacy remains NOT_TESTED。P0/P1整改及Continuum V1共享界面已实现，受限验收见[P1-03证据](docs/P1_03_EVIDENCE.md)。
 
-Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。没有托管provider服务或生产认证；本轮只做获准的 synthetic/provider-free 产品整改，不改runtime lock或生产权限。历史证据见 [acceptance](docs/ACCEPTANCE_MATRIX.md) 与 [execution](docs/EXECUTION.md)。
+Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。没有托管provider服务或生产认证；默认mock/Pages/CI保持零provider调用；另行授权的D1开发态DeepSeek链路已完成原始合成输入验证，不改production runtime lock或生产权限。历史证据见 [acceptance](docs/ACCEPTANCE_MATRIX.md) 与 [execution](docs/EXECUTION.md)。
 
 既有 [upstream runtime synchronization](docs/RUNTIME_UPSTREAM_SYNC.md) 的hourly/manual候选验证与lock-only审阅维护继续保留，正常实验执行仍只读reviewed exact lock。它不是第二套产品开发队列；当前writer与新main仍受维护publisher的冲突检查。同步代码、workflow、C12契约和 [sync evidence](docs/RUNTIME_SYNC_EVIDENCE.md) 从已合入PR #6原样继承，不由本次文档工作实现或扩权。
 
@@ -35,6 +35,12 @@ Python >=3.11标准库/SQLite；React/TypeScript/Vite版本由npm lock固定。�
 `https://haohongfei2001-png.github.io/hcl-assistant/`
 
 这是browser-only静态脚本演示：无Python/SQLite backend、真实HCL、provider调用、服务器持久化或研究数据。**只使用合成信息，不输入真实私密数据。** P0-01已实现并验证受限的临时、删除、文件读取及显式更正/依据契约，实际验收与限制见 [Pages boundary and limitations](docs/PAGES_PREVIEW.md)。不能从“模拟”字样推定数据控制行为已正确。
+
+## One-command development chat
+
+在配置好的本地电脑中运行 `npm run chat`，同一命令启动API与共享网页、等待就绪并打开浏览器；Ctrl-C同时停止二者。首次普通依赖安装为 `npm ci --ignore-scripts`。需要操作员直接安全输入配置时运行 `npm run chat -- --configure`；密钥和本地访问密码是隐藏终端输入，不进入网页、仓库或浏览器存储。
+
+已验证DeepSeek后端开发链路和固定HCL合成Bridge参与，UI链路另有零调用浏览器测试；没有声称真实provider浏览器端到端或用户Mac安装已经验收。首轮6次开发调用授权已用完并关闭，不能拿旧grant初始化新的额度。后续本地使用需要一个安全配置且明确获准的新产品运行环境/额度，见[操作说明与实际结果](docs/DEVELOPMENT_CHAT.md)。线上真实聊天托管按用户指示暂停，下面的Pages仍只是静态演示。
 
 ## Run the existing local synthetic product
 
@@ -69,5 +75,7 @@ P0-01已迁移root checker/报告/advance消费者到唯一product_development�
 L3仍需I06处置、固定获准production artifact/interface、产品adapter scope验证、明确执行/数据授权。受限development接口与版本见 [Experimental Runtime Bridge](docs/EXPERIMENTAL_RUNTIME_BRIDGE.md)。不得为终局目标自动开放provider、研究数据或agent。
 
 ## Development-only chat amendment (2026-09-30 23:48 UTC)
+
+Historical authorization/dependency record: D1-01 is now completed within its bounded evidence scope; the initial six-call grant is closed. Current task state is the live queue above.
 
 User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.

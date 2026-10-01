@@ -9,7 +9,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-四包已完成；L3四门槛未满足，停止交接，不启动provider、Judge或Act。
+当前5包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -33,21 +33,25 @@
 
 ## Refinement evidence and remaining work
 
-P0-01的临时/删除/多标签页/完整文件/精确更正/实际依据/唯一队列契约已完成受限synthetic验证，见 [包证据](docs/P0_01_EVIDENCE.md)。最终采用须PR8精确head及main检查。已保留原始失败与修复迭代。P1-01共享Assistant-first界面、输入/阅读/恢复及Pages静态bundle见 [包证据](docs/P1_01_EVIDENCE.md)，最终采用以PR9的head/main检查为准。P1-02受限修订/依据/历史/导出闭环见 [包证据](docs/P1_02_EVIDENCE.md)，最终采用以PR10的head/main检查为准。下一步P1-03整体synthetic验收与只读检查。
+P0-01的临时/删除/多标签页/完整文件/精确更正/实际依据/唯一队列契约已完成受限synthetic验证，见 [包证据](docs/P0_01_EVIDENCE.md)。最终采用须PR8精确head及main检查。已保留原始失败与修复迭代。P1-01共享Assistant-first界面、输入/阅读/恢复及Pages静态bundle见 [包证据](docs/P1_01_EVIDENCE.md)，最终采用以PR9的head/main检查为准。P1-02受限修订/依据/历史/导出闭环见 [包证据](docs/P1_02_EVIDENCE.md)，最终采用以PR10的head/main检查为准。P1-03整体受限synthetic/只读检查与Continuum验收见[包证据](docs/P1_03_EVIDENCE.md)；当前完成与交接状态以上方唯一队列和最终exact-SHA检查为准。
 
 ## Production gate and compatibility record
 
 L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、PRODUCT_ADAPTER_SCOPE_VALIDATION、EXPLICIT_EXECUTION_AND_DATA_AUTHORIZATION。没有新增provider调用、真实数据或production activation授权。
 
-历史L2.5阶段交接码：`STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED`。它仅禁止历史包完成后自动进入L3，不是当前全产品NEXT_READY。control/plan.json顶层legacy字段保留这一作用域；当前checker已分别验证唯一product_development队列和旧11包/L3边界；报告明确区分两种next_ready，不放宽历史断言。
+历史L2.5阶段交接码：`STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED`。历史字段只保留L3边界，不独立调度当前产品；本轮授权包完成后，product_development也独立得出同一停止码。control/plan.json顶层legacy字段保留这一作用域；当前checker已分别验证唯一product_development队列和旧11包/L3边界；报告明确区分两种next_ready，不放宽历史断言。
 
 既有upstream候选测试/lock-only审阅维护继续按 [原契约](docs/RUNTIME_UPSTREAM_SYNC.md) 执行；它不是另一个feature-development NEXT_READY，不覆盖当前writer或A2方案。此文档不改变其workflow设置或生产门槛。
 
 ## Development-only chat amendment (2026-09-30 23:48 UTC)
 
+Historical authorization/dependency record: D1-01 is now completed within its bounded evidence scope; the initial six-call grant is closed. Current task state is the live queue above.
+
 User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
 
-## Continuum V1 design adoption status
+## Historical Continuum V1 design-adoption snapshot
+
+以下保留PR11设计采用时的状态，已由当前队列与[Continuum实施证据](docs/CONTINUUM_V1_EVIDENCE.md)取代；其中D1-01 NEXT_READY、未实现/未验证仅描述当时，不是当前任务或验收状态。
 
 Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 `CONTINUUM-V1-20261001`；五张批准 PNG 的原始 payload 已无损嵌入 UTF-8 SVG 文本包装并逐一反解核验，原始 byte size、SHA-256 与 Git blob identity 均与 manifest 一致。这是仓库存储适配，不改变像素内容；本采用变更通过 exact-head/main 核验并合入 main 后即成为正式视觉基准。**V1 application implementation 仍未完成**。
 
