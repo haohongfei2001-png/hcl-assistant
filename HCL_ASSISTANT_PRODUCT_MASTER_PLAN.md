@@ -163,7 +163,7 @@ Owner 已确认最新一轮三张无实物背景产品状态稿与两张数字�
 
 M-01 悬浮核心与 M-02 输入/容器/信号接收两候选并存，最终选择为空；共同界面先行，可关闭插槽和 A/B 核对状态不依赖唯一选择。图中 HCL Technologies、示例文件/数据/引用/能力按钮不成为本项目事实或授权；按真实支持范围与原创 synthetic fixtures 替换语义，记录差异，不借此重设计外观。
 
-已完成 P0-01、P1-01、P1-02 及历史回执不重开。视觉实施和对照验收纳入唯一待做 P1-03，分成三个串行交付切片，仍只有原来的 product_development 队列和当前唯一任务。详见 [Development Plan](DEVELOPMENT_PLAN.md) 和 [Work Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。
+已完成 P0-01、P1-01、P1-02 及历史回执不重开。最新 live queue 已在 P1-02 与 P1-03 之间插入获准的 D1-01 development-only chat；本视觉采用不改变该顺序、writer、预算或完成门槛。Continuum 实施与对照验收仍纳入 P1-03 的三个串行交付切片，并在 D1-01 完成后按唯一 product_development 队列进入。详见 [Development Plan](DEVELOPMENT_PLAN.md) 和 [Work Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。
 
 视觉还原是完成条件：实际首页、三轮长内容、依据/来源、修订变化及返回原位置截图必须与对应原稿对照，并提供实际可播放交互记录；两套形象和关闭状态、响应式及异常状态均验证。缺失、重大偏差或默认组件替代必须显式记录，不能只因“按钮能点”填 PASS。V1 的 V01–V10 是 R19/R20 下新增验收义务，设计采用和旧 CI 不代表这些义务已经通过。
 
