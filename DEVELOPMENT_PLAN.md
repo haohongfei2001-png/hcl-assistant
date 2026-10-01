@@ -7,7 +7,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-当前7包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+当前8包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -29,6 +29,7 @@
 | P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | COMPLETE |
 | C1-01 | isolated stateless hosting and offline acceptance | P1-03 | COMPLETE |
 | U1-01 | six-point Continuum chat interface refinement | C1-01 | COMPLETE |
+| M1-01 | 普通账号、隔离与自动续期 | M01–M06 | COMPLETE |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
@@ -79,3 +80,7 @@ Owner approved C1-01 engineering adaptation after P1-03 for isolated Vercel/Post
 ## Six-point chat refinement amendment (2026-10-01)
 
 Owner approved U1-01 following the screenshot review: compact growing composer, tighter Home, correct cleared-history state, one search and on-demand background/attachment details, three supported contextual actions, and neutral readable surfaces within Continuum V1. This is the sole implementation writer; accepted digital-being assets, provider/Bridge/security and production gates stay unchanged. Verification and bounded scope: [U1-01 evidence](docs/U1_01_EVIDENCE.md).
+
+## Ordinary account amendment (2026-10-01 19:40 UTC)
+
+Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 is the sole current engineering package: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).

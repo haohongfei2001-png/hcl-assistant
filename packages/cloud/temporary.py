@@ -24,6 +24,11 @@ TABLES={'accounts':('tenant','version','policy'),'objects':('id','tenant','type'
         'idempotency':('tenant','conversation','key','hash','result'),'records':('id','tenant','version','body'),'tombstones':('id','tenant')}
 MAX_STATE_BYTES=700000
 
+def member_execution_key(application,request_id):
+    if not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9-]{36}',request_id):raise Fault(400,'Request identifier required')
+    tenant,session_key=application.member_context
+    return digest('member-temporary\n'+tenant+'\n'+session_key+'\n'+request_id)
+
 def pack(store,key,session,conversation,revision):
     state={'conversation':conversation,'revision':revision,'expires':int(time.time())+3600,
            'tables':{table:[dict(r) for r in store.db.execute('SELECT * FROM '+table)] for table in TABLES}}
@@ -69,7 +74,14 @@ def projections(ctrl,conversation):
 
 def execute(application,handler,data,*,guest_session=None):
     # The outer API has already authenticated HTTPS owner identity and CSRF.
-    if guest_session is None:
+    member=getattr(application,'member_context',None)
+    if member is not None:
+        principal=application.member_auth.require(handler.headers.get('Cookie'))
+        if principal.tenant!=member[0] or application.member_auth.key(handler.headers.get('Cookie'))!=member[1]:raise Fault(403,'Account changed during request')
+        if getattr(application,'trial_auth',None) is not None:raise Fault(403,'Public trial cannot grant account model access')
+        application.entitlements.require('TEMPORARY')
+        session='member\n'+member[0]+'\n'+member[1]
+    elif guest_session is None:
         if getattr(application,'trial_auth',None) is not None:raise Fault(403,'Trial requires the isolated guest temporary route')
         auth=application.development_auth
         auth.require(handler.headers.get('Cookie'))
@@ -81,6 +93,7 @@ def execute(application,handler,data,*,guest_session=None):
     if not isinstance(conversation,str) or not re.fullmatch(r'temp-[a-f0-9-]{36}',conversation): raise Fault(400,'Temporary conversation identifier required')
     if not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9-]{36}',request_id): raise Fault(400,'Request identifier required')
     if guest_session is not None:request_id=application.trial_auth.execution_key(session,request_id)
+    if member is not None:request_id=member_execution_key(application,request_id)
     if not isinstance(request,dict): raise Fault(400,'Temporary request required')
     if request.get('scope',{}).get('conversation_id')!=conversation or request.get('scope',{}).get('topic_id') is not None or request.get('allowed_memory_scope')!='TEMPORARY': raise Fault(403,'Temporary scope mismatch')
     if request.get('development_execution') and application.development_bridge is None: raise Fault(503,'Reviewed development bridge unavailable')
@@ -99,6 +112,12 @@ def execute(application,handler,data,*,guest_session=None):
             from packages.cloud.trial import TrialCancellation
             cancellation=TrialCancellation(cancellation,application.trial_auth.budget)
         service=application.live_chat_service
+        if member is not None:
+            from packages.cloud.entitlements import MemberBudget,MemberCancellation
+            cancellation=MemberCancellation(cancellation,application.member_auth,member[1],application.entitlements,'TEMPORARY')
+            if service:
+                budget=MemberBudget(service.budget.operator,application.entitlements,application.member_auth,member[1],'TEMPORARY')
+                service=LiveChat(service.config,budget,service.adapter)
         live=LiveChat(service.config,service.budget,service.adapter,cancellation_factory=lambda _:cancellation) if service else None
         ctrl=Controller(store,development_bridge=application.development_bridge,live_chat_service=live)
         request=dict(request)
@@ -111,7 +130,9 @@ def execute(application,handler,data,*,guest_session=None):
             owner=application.lifecycle.claim(request_id,payload_hash,temporary=True)
             if owner is None: raise Fault(409,'Temporary request already consumed; it is never automatically repeated')
             revision=(head['revision'] if head else 0)+1
-            if head is None: persistent.db.execute('INSERT INTO temporary_heads(conversation_key,revision,snapshot_hash) VALUES(?,?,NULL)',(head_key,revision))
+            if head is None:
+                if member is None:persistent.db.execute('INSERT INTO temporary_heads(conversation_key,revision,snapshot_hash) VALUES(?,?,NULL)',(head_key,revision))
+                else:persistent.db.execute('INSERT INTO temporary_heads(conversation_key,tenant,revision,snapshot_hash) VALUES(?,?,?,NULL)',(head_key,member[0],revision))
             else: persistent.db.execute('UPDATE temporary_heads SET revision=?,snapshot_hash=NULL WHERE conversation_key=?',(revision,head_key))
         persistent.fence=(request_id,owner)
         handler.send_response(200);handler.send_header('Content-Type','text/event-stream');handler.send_header('Cache-Control','no-store');handler.send_header('X-Accel-Buffering','no');handler.end_headers()
@@ -119,7 +140,7 @@ def execute(application,handler,data,*,guest_session=None):
         def send(typ,payload):
             nonlocal disconnected
             if disconnected:return
-            if guest_session is not None and cancellation.is_set() and typ!='cloud.error':
+            if (guest_session is not None or member is not None) and cancellation.is_set() and typ!='cloud.error':
                 disconnected=True
                 return
             try:
@@ -136,6 +157,9 @@ def execute(application,handler,data,*,guest_session=None):
         try:
             ctrl.finish(SYNTHETIC_TENANT,run['run_id'])
             if guest_session is not None:application.trial_auth.budget.require_active()
+            if member is not None:
+                if not application.member_auth.active(member[1]):raise Fault(401,'Account session expired')
+                application.entitlements.require('TEMPORARY')
             next_snapshot=pack(store,key,session,conversation,revision)
             with persistent.transaction():
                 persistent.db.execute('UPDATE temporary_heads SET snapshot_hash=? WHERE conversation_key=? AND revision=?',(digest(canonical(next_snapshot)),head_key,revision))

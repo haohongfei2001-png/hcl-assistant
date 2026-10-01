@@ -7,7 +7,8 @@ const runOwners=new Map<string,string>();
 let epoch=0;
 let enabled=false;
 let trial=false;
-export function setCloudTemporary(value:boolean,guest=false){if(enabled!==value||trial!==guest)clearTemporary();enabled=value;trial=guest}
+let member=false;
+export function setCloudTemporary(value:boolean,guest=false,account=false){if(enabled!==value||trial!==guest||member!==account)clearTemporary();enabled=value;trial=guest;member=account}
 function entryForRun(id:string){const conversation=runOwners.get(id);return conversation?entries.get(conversation):undefined}
 export function clearTemporary(){epoch++;for(const entry of entries.values())entry.controller?.abort();entries.clear();runOwners.clear()}
 function notify(entry:Entry){for(const listener of entry.listeners)listener()}
@@ -20,7 +21,7 @@ async function execute(entry:Entry,request:unknown){
  entry.done=(async()=>{
   let wasAccepted=false;
   try{
-   const response=await fetch(trial?'/v1/trial/execute':'/v1/temporary/execute',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json','X-HCLA-Request':'1'},body:JSON.stringify({conversation_id:entry.conversation.id,request_id:requestId,request,snapshot:entry.packet.snapshot})});
+   const response=await fetch(trial?'/v1/trial/execute':member?'/v1/member/temporary/execute':'/v1/temporary/execute',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json','X-HCLA-Request':'1'},body:JSON.stringify({conversation_id:entry.conversation.id,request_id:requestId,request,snapshot:entry.packet.snapshot})});
    if(!response.ok){const value=await response.json();if(response.status===409&&/Temporary (state changed|request already consumed|conversation already started|conversation expired)/.test(value.error||''))entry.unavailable=true;throw new Error(`${response.status}: ${value.error}`)}
    const reader=response.body!.getReader(),decoder=new TextDecoder();let buffer='';let complete=false;
    while(true){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let boundary;
