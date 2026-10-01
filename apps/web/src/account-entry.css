@@ -1,0 +1,26 @@
+.account-screen {width:100%;max-width:none;margin:0;min-height:100dvh;padding:32px 16px;display:grid;place-items:center;background:radial-gradient(ellipse at 22% 10%,#e3ecfc 0,transparent 48%),radial-gradient(ellipse at 88% 72%,#eeedfb 0,transparent 50%),#f3f6fc;color:#151d43;box-sizing:border-box}
+.account-screen * {box-sizing:border-box}
+.account-screen .member-entry {width:min(100%,460px);max-width:460px;margin:0;padding:32px;border:1px solid #fff;border-radius:24px;background:#fff;box-shadow:0 12px 36px #465b9314;line-height:1.65}
+.account-brand {font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:28px;color:#172651}
+.member-entry h1 {font-size:28px;line-height:1.3;margin:0 0 12px;letter-spacing:-.025em}
+.member-entry .account-intro {font-size:14px;line-height:23px;color:#52607b;margin:0 0 24px}
+.member-entry form {display:grid;gap:16px}
+.member-entry label {font-size:14px;color:#24345f;gap:7px}
+.member-entry input {width:100%;min-width:0;min-height:48px;border:1px solid #a5b7da;border-radius:12px;background:#fafdff;color:#24345f;padding:11px 12px;font-size:16px}
+.member-entry .account-password-field {display:grid;gap:7px}
+.member-entry .account-password {display:flex;align-items:center;position:relative}
+.member-entry .account-password input {padding-right:68px}
+.member-entry button {font:inherit;min-height:44px;touch-action:manipulation;border-radius:12px;margin:0;cursor:pointer}
+.member-entry .password-visibility {position:absolute;right:5px;padding:8px 10px;background:transparent;color:#3654c4;font-size:14px}
+.member-entry .account-hint {font-size:13px;line-height:21px;color:#52607b;margin:0}
+.member-entry .account-primary {width:100%;background:#526bee;color:#fff;border:1px solid #526bee;font-weight:600;padding:12px 20px}
+.member-entry .account-primary:hover:not(:disabled) {background:#4059d7}
+.member-entry button:disabled {cursor:default;background:#e9eef9;color:#5c6989;border-color:#e9eef9;opacity:1}
+.member-entry :is(button,summary,input):focus-visible {outline:3px solid #3958c4;outline-offset:3px}
+.member-entry .account-switch {display:block;width:100%;margin-top:16px;background:transparent;color:#3654c4;font-size:14px}
+.member-entry .account-feedback {padding:12px 14px;background:#eff4fe;border:1px solid #d6e1f5;border-radius:12px;font-size:14px;overflow-wrap:anywhere}
+.member-entry .account-secondary {background:#eff4fe;color:#3654c4;border:1px solid #d6e1f5}
+.member-entry .account-admin {margin-top:24px;padding-top:16px;border-top:1px solid #e1e8f8;font-size:13px;color:#52607b}
+.member-entry .account-admin summary {min-height:44px;display:flex;align-items:center;cursor:pointer}
+.member-entry .account-admin button {margin-top:8px;color:#3654c4}
+@media(max-width:480px){.account-screen{padding:20px 12px;align-items:start}.account-screen .member-entry{padding:24px 20px;border-radius:20px}.account-brand{margin-bottom:22px}.member-entry h1{font-size:26px}}

@@ -355,3 +355,7 @@
 /* Keep the help phrase and short mobile introduction readable at narrow widths. */
 .continuum-shell .home-copy h1 span {display:inline-block;max-width:100%}
 @media(max-width:479px){.continuum-shell .home-copy>p:not(.home-greeting){text-wrap:balance}}
+
+/* Member first-send consent stays next to the action it controls. */
+.continuum-shell .composer-consent {display:flex;align-items:flex-start;gap:9px;padding:8px 4px 2px;color:#52607b;font-size:12px;line-height:20px}
+.continuum-shell .composer-consent input {flex:none;width:18px;height:18px;margin:1px 0;accent-color:#526bee}

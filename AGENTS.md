@@ -11,7 +11,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-当前8包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+当前9包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。
@@ -67,4 +67,8 @@ Owner requested an at-most-four-hour, shared USD10, no-login temporary synthetic
 
 ## Ordinary account amendment (2026-10-01 19:40 UTC)
 
-Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 is the sole current engineering package: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
+Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 delivered the bounded account engineering slice: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
+
+## Consumer journey amendment (2026-10-01 21:18 UTC)
+
+Owner requested continued consumer-product improvement. U2-01 is the bounded next slice: the adopted visual language on the mobile account entry, explicit connection/sign-in recovery, first-message consent next to Send, and truthful account/model availability. It preserves one chat UI and all synthetic-only, tenant, entitlement, budget and activation gates. No live Auth, credential, paid email, billing, provider or private-data activation is included.

@@ -7,7 +7,7 @@ async function enter(page,user='a'){
  await page.goto('/');await page.getByLabel('用户邮箱').fill(user+'@example.test');await page.getByLabel('用户密码').fill('offline member password');
  const accepted=page.waitForResponse(r=>r.url().endsWith('/v1/account/login'));await page.getByRole('button',{name:'登录账号',exact:true}).click();expect((await accepted).status()).toBe(200);
  await expect(page.getByLabel('消息',{exact:true})).toBeVisible();const identity=await browserRead(page,'/v1/account/status');expect(identity.status).toBe(200);expect(identity.body.authenticated).toBe(true);expect(identity.body.account_scope).toBe(expectedScope(user));
- await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('本次仅使用原创合成输入，并使用服务器已批准额度').check();await page.getByRole('button',{name:'关闭设置'}).click();
+ await page.getByLabel('本次仅使用原创合成内容，并使用账号可用额度').check();
 }
 async function send(page,text){await page.getByLabel('消息',{exact:true}).fill(text);await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('.assistant-message').last()).toContainText('原创离线自然语言');await expect(page.getByRole('button',{name:'停止',exact:true})).toHaveCount(0)}
 async function logout(page){await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByRole('button',{name:'退出登录',exact:true}).click();await expect(page.getByLabel('用户邮箱')).toBeVisible()}
@@ -20,15 +20,52 @@ test('registration requires confirmation and exposes no server credential',async
  await page.goto('/');await page.getByRole('button',{name:'没有账号，注册'}).click();await page.getByLabel('用户邮箱').fill('new@example.test');await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'注册账号',exact:true}).click();
  await expect(page.getByRole('status')).toContainText('邮箱');await expect(page.getByLabel('消息',{exact:true})).toHaveCount(0);await expect(page.getByLabel('用户密码')).toHaveValue('');
  expect(await page.evaluate(()=>JSON.stringify({local:localStorage,session:sessionStorage,cookie:document.cookie}))).not.toContain('offline member password');
- await page.screenshot({path:info.outputPath('member-confirmation-entry.png'),fullPage:true});
+ await page.screenshot({path:info.outputPath('member-confirmation-entry.png'),fullPage:true,animations:'disabled'});
 });
 
 test('ordinary account entry remains usable on a narrow phone screen',async({page},info)=>{
  await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.getByLabel('用户邮箱')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- await page.screenshot({path:info.outputPath('member-mobile-entry.png'),fullPage:true});
+ await page.screenshot({path:info.outputPath('member-mobile-entry.png'),fullPage:true,animations:'disabled'});
+ await expect(page.getByLabel('用户密码',{exact:true})).toHaveAttribute('type','password');await page.getByRole('button',{name:'显示密码',exact:true}).click();await expect(page.getByLabel('用户密码',{exact:true})).toHaveAttribute('type','text');await page.getByRole('button',{name:'隐藏密码',exact:true}).click();
  await page.getByLabel('用户邮箱').fill('a@example.test');await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  expect((await browserRead(page,'/v1/account/status')).body.account_scope).toBe(expectedScope('a'));
+});
+
+test('account connection failure has an explicit retry and preserves entered email',async({page},info)=>{
+ await page.route('**/v1/account/status',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Injected account outage'})}));
+ await page.goto('/');await expect(page.getByRole('button',{name:'重新检查连接'})).toBeVisible();await expect(page.getByRole('alert')).toContainText('连接不上账号服务');
+ await expect(page.getByRole('button',{name:'没有账号，注册'})).toHaveCount(0);await page.screenshot({path:info.outputPath('member-connection-retry.png'),fullPage:true,animations:'disabled'});
+ await page.unroute('**/v1/account/status');await page.getByRole('button',{name:'重新检查连接'}).click();await expect(page.getByLabel('用户邮箱')).toBeVisible();await expect(page.getByRole('alert')).toHaveCount(0);
+ await page.getByLabel('用户邮箱').fill('a@example.test');await page.getByLabel('用户密码').fill('incorrect password fixture');await page.getByRole('button',{name:'登录账号',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('登录未完成');await expect(page.getByLabel('用户邮箱')).toHaveValue('a@example.test');await expect(page.getByLabel('用户密码')).toHaveValue('');
+});
+
+test('a stalled sign-in is bounded and is never automatically repeated',async({page})=>{
+ await page.goto('/');await page.getByLabel('用户邮箱').fill('a@example.test');await page.getByLabel('用户密码').fill('offline member password');
+ let release;const held=new Promise(resolve=>release=resolve);let calls=0;
+ await page.route('**/v1/account/login',async route=>{calls++;await held;await route.abort().catch(()=>{})});
+ try{await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect(page.getByRole('button',{name:'正在处理…',exact:true})).toBeDisabled();
+  await expect(page.getByRole('alert')).toContainText('连接等待过久',{timeout:17000});expect(calls).toBe(1);await expect(page.getByLabel('用户邮箱')).toHaveValue('a@example.test');await expect(page.getByLabel('用户密码')).toHaveValue('');
+ }finally{release();await page.unroute('**/v1/account/login')}
+ await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
+});
+
+test('first member message needs no Settings visit and cannot bypass inline consent',async({page},info)=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/');await page.getByLabel('用户邮箱').fill('a@example.test');await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'登录账号',exact:true}).click();
+ await page.getByLabel('消息',{exact:true}).fill('原创合成：FIRST_MESSAGE_PHONE');let events=0;page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.endsWith('/events'))events++});
+ await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();await page.getByLabel('消息',{exact:true}).press('Enter');expect(events).toBe(0);await expect(page.getByLabel('消息',{exact:true})).toHaveValue('原创合成：FIRST_MESSAGE_PHONE');
+ const consent=page.getByLabel('本次仅使用原创合成内容，并使用账号可用额度');await expect(consent).toBeVisible();await consent.check();await expect(page.getByRole('button',{name:'发送',exact:true})).toBeEnabled();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('member-mobile-first-message.png'),fullPage:true,animations:'disabled'});
+ await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('.assistant-message').last()).toContainText('原创离线自然语言');expect(events).toBe(1);
+});
+
+test('unavailable model keeps a member draft and never sends a paid request',async({page})=>{
+ await page.route('**/v1/account/status',async route=>{const response=await route.fetch();const status=await response.json();await route.fulfill({response,json:{...status,model_enabled:false}})});
+ await enter(page);await page.getByLabel('消息',{exact:true}).fill('UNAVAILABLE_MODEL_DRAFT');let mutations=0;
+ page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.startsWith('/v1/member/'))mutations++});
+ await expect(page.getByRole('alert')).toContainText('模型服务暂未开放');await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();await page.getByLabel('消息',{exact:true}).press('Enter');
+ expect(mutations).toBe(0);await expect(page.getByLabel('消息',{exact:true})).toHaveValue('UNAVAILABLE_MODEL_DRAFT');
 });
 
 test('two member browsers have separate history and cannot use owner routes',async({page,browser},info)=>{
@@ -37,7 +74,7 @@ test('two member browsers have separate history and cannot use owner routes',asy
  expect((await page.request.get('/v1/conversations')).status()).toBe(401);expect(paths.filter(p=>p==='/v1/conversations'||p==='/v1/topics'||p==='/v1/history/search')).toEqual([]);
  const other=await browser.newContext();const b=await other.newPage();await b.goto('http://127.0.0.1:5173/');await b.getByLabel('用户邮箱').fill('b@example.test');await b.getByLabel('用户密码').fill('offline member password');await b.getByRole('button',{name:'登录账号',exact:true}).click();await expect(b.getByLabel('消息',{exact:true})).toBeVisible();
  await expect(b.locator('body')).not.toContainText('MEMBER_A_PRIVATE_CANARY');const identity=await browserRead(b,'/v1/account/status');expect(identity.status).toBe(200);expect(identity.body.authenticated).toBe(true);expect(identity.body.account_scope).toBe(expectedScope('b'));expect((await browserRead(b,'/v1/member/conversations/'+id)).status).toBe(403);
- await page.screenshot({path:info.outputPath('member-shared-chat.png'),fullPage:true});await other.close();
+ await page.screenshot({path:info.outputPath('member-shared-chat.png'),fullPage:true,animations:'disabled'});await other.close();
 });
 
 test('logout and account switch clear drafts and previous account UI',async({page})=>{

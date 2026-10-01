@@ -89,3 +89,7 @@ Owner approved 2026-10-01 08:36 UTC, after adopted P1-03. Preserve the existing 
 ## U1-01 Chat interface refinement
 
 Owner-approved six-point screenshot refinement after C1-01. One implementation writer; U01–U06 scope, regressions, visual comparison and explicit limits are recorded in [evidence](U1_01_EVIDENCE.md). This does not reopen prior packages or permit model calls, account changes or production activation.
+
+## U2-01 Consumer account entry and first chat
+
+Owner requested 2026-10-01 21:18 UTC. Refine ordinary-user journeys on the existing member/AssistantShell path: a coherent narrow-screen login/register view, bounded requests with explicit recovery, inline synthetic-use consent without a Settings visit, and a preserved draft while generation is unavailable. U07–U10 require injected-auth/browser failure journeys and actual captures, followed by exact-head/main gates. See [evidence](U2_01_EVIDENCE.md). Auth delivery, password recovery, paid billing and production activation remain separate incomplete capabilities.
