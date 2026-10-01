@@ -21,6 +21,10 @@ The default is disabled. The new migration `20261001195008_member_accounts_and_e
 
 After separate approval, operators must verify the dedicated Supabase project's email/password/confirmation and delivery configuration and apply the reviewed migration. Server fields are `HCLA_MEMBER_AUTH=supabase`, the exact `HCLA_SUPABASE_AUTH_URL`, and its existing publishable `HCLA_SUPABASE_PUBLISHABLE_KEY`; secret/service-role keys are rejected. No public frontend Supabase client/storage is introduced. Provider keys and the global model authorization remain their existing separate gates. Member entitlements are explicit operator metadata, not self-service billing. No default quota is silently granted on signup.
 
+Supabase's [default mail service](https://supabase.com/docs/guides/auth/auth-smtp) is restricted to project-team recipients and currently two messages/hour. Public email signup therefore requires separately verified mail delivery; code/fixture success does not establish it. This work has not read secret-bearing Auth configuration or enabled a mail provider. Password recovery and paid subscription checkout are not included in M1-01.
+
+Implementation and verification evidence: [M1-01 evidence](M1_01_EVIDENCE.md).
+
 ## Primary references
 
 [Supabase identity verification](https://supabase.com/docs/guides/auth/jwts), [session limits and logout caveats](https://supabase.com/docs/guides/auth/sessions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [AES-GCM](https://cryptography.io/en/latest/hazmat/primitives/aead/), [HKDF](https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#hkdf). Checked 2026-10-01. The Supabase shared JWT-signing secret is never configured or used; user_metadata never authorizes access.
