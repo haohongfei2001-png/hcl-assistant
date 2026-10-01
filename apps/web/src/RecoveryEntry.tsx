@@ -18,7 +18,7 @@ export function RecoveryEntry({onBack,initialEmail='',callback=false}:{onBack:()
  }catch{if(active()){
   let value:RecoveryStatus={available:true,ready:false,restart_required:true};
   if(exchangeStarted.current&&!signal.aborted){try{value=await api<RecoveryStatus>('/v1/account/recovery/status',undefined,signal)}catch{/* Read only; never exchange a code twice. */}}
-  if(active()){setStatus(value);setError(value.locked||value.ready?'':'恢复验证暂未完成。可以检查状态；链接失效时请重新申请，不会自动重复验证或修改密码')}
+  if(active()){setStatus(value.locked||value.ready||value.updated?value:{...value,requested:false,restart_required:true});setError(value.locked||value.ready?'':'恢复验证暂未完成。可以检查状态；链接失效时请重新申请，不会自动重复验证或修改密码')}
  }}})}
  useEffect(()=>{live.current=true;if(callback){const initial=window.__hclaRecovery;delete window.__hclaRecovery;code.current=initial?.code||null;if(initial?.invalid){invalidCallback.current=true;setError('恢复链接无效，请重新申请')}};void check();return()=>{live.current=false;revision.current++;flight.current?.abort();code.current=null}},[]);
  useEffect(()=>{if(!status?.ready||!status.expires_at)return;const timer=setTimeout(()=>{revision.current++;flight.current?.abort();setBusy(false);setPassword('');setConfirmation('');setStatus(value=>value?{...value,ready:false,restart_required:true}:value);setError('恢复验证已过期，请重新申请链接')},Math.max(0,status.expires_at*1000-Date.now()));return()=>clearTimeout(timer)},[status?.ready,status?.expires_at]);

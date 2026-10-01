@@ -264,7 +264,7 @@ class RecoveryPostgresTests(unittest.TestCase):
     def test_reset_cancels_old_session_and_refuses_budget_admission(self):
         from packages.cloud.entitlements import MemberCancellation
         from packages.adapter.development_budget import BudgetError
-        app,cookie,tenant=self.login();app.authenticate_member(cookie)
+        app,cookie,tenant=self.login()
         class Cancel:
             stopped=False
             def set(self):self.stopped=True
