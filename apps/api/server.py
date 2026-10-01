@@ -19,7 +19,8 @@ from packages.runtime_bridge.bridge import RuntimeBridge
 
 
 class Application:
-    def __init__(self, path=':memory:', development_runtime_directory=None):
+    def __init__(self, path=':memory:', development_runtime_directory=None, live_chat_service=None, development_auth=None, real_chat=False, configuration=None):
+        self.live_chat_service=live_chat_service;self.development_auth=development_auth;self.real_chat=real_chat;self.configuration=configuration or {}
         self.development_bridge=RuntimeBridge(development_runtime_directory) if development_runtime_directory is not None else None
         self.stores=Stores(Ledger(path)); self.controllers={}; self.lock=threading.RLock()
         store=self.stores.persistent
@@ -35,7 +36,7 @@ class Application:
 
     def controller(self, store):
         with self.lock:
-            if store not in self.controllers: self.controllers[store]=Controller(store,development_bridge=self.development_bridge)
+            if store not in self.controllers: self.controllers[store]=Controller(store,development_bridge=self.development_bridge,live_chat_service=self.live_chat_service)
             return self.controllers[store]
 
     def start(self, ctrl, tenant, run):
@@ -52,6 +53,10 @@ def handler(application):
         def log_message(self, *args): pass  # Never log user bodies or request URLs.
 
         def tenant(self):
+            if application.real_chat:
+                if application.development_auth is None:raise Fault(503,'Development configuration required')
+                application.development_auth.boundary(self,mutation=self.command=='POST')
+                return application.development_auth.require(self.headers.get('Cookie'))
             origin=self.headers.get('Origin')
             if origin and origin not in {'http://127.0.0.1:5173','http://localhost:5173','http://127.0.0.1:'+str(self.server.server_port),'http://localhost:'+str(self.server.server_port)}: raise Fault(403,'Synthetic API accepts only loopback app origins')
             identity=self.headers.get('X-Synthetic-Identity','demo-a')
@@ -66,22 +71,33 @@ def handler(application):
             if not isinstance(obj,dict): raise Fault(400,'JSON object required')
             return obj
 
-        def json(self, status, obj):
+        def json(self, status, obj, cookie=None):
             payload=json.dumps(obj,ensure_ascii=False).encode()
-            self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(payload))); self.end_headers(); self.wfile.write(payload)
+            self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(payload)));
+            if cookie:self.send_header('Set-Cookie',cookie)
+            self.end_headers(); self.wfile.write(payload)
 
         def do_POST(self):
             try:
-                tenant=self.tenant(); data=self.body(); path=urlparse(self.path).path; parts=path.strip('/').split('/')
+                path=urlparse(self.path).path
+                if path=='/v1/development/login' and application.real_chat:
+                    if application.development_auth is None:raise Fault(503,'Development configuration required')
+                    application.development_auth.boundary(self,mutation=True)
+                    session=application.development_auth.login(self.body().get('access_token'))
+                    self.json(200,{'authenticated':True},'hcla_development='+session+'; HttpOnly; SameSite=Strict; Path=/v1; Max-Age=3600');return
+                tenant=self.tenant(); data=self.body(); parts=path.strip('/').split('/')
                 if path=='/v1/topics': result=application.stores.persistent.topic(tenant,data.get('title','Topic'))
                 elif path=='/v1/conversations': result=application.stores.conversation(tenant,title=data.get('title','新对话'),topic_id=data.get('topic_id'),memory=data.get('memory','CONVERSATION'))
                 elif len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events':
                     store=application.stores.for_conversation(tenant,parts[2]); ctrl=application.controller(store)
                     data.setdefault('scope',{})['conversation_id']=parts[2]
+                    if application.real_chat and data.get('event',{}).get('type','message') in {'message','upload'}:data['development_chat']=True
                     result=application.start(ctrl,tenant,ctrl.handle_interaction(tenant,data,defer=True))
                 elif path=='/v1/sources':
                     conversation=data['scope']['conversation_id']; store=application.stores.for_conversation(tenant,conversation); ctrl=application.controller(store)
-                    data.setdefault('event',{})['type']='upload'; result=application.start(ctrl,tenant,ctrl.handle_interaction(tenant,data,defer=True))
+                    data.setdefault('event',{})['type']='upload'
+                    if application.real_chat:data['development_chat']=True
+                    result=application.start(ctrl,tenant,ctrl.handle_interaction(tenant,data,defer=True))
                 elif len(parts)==4 and parts[:2]==['v1','runs'] and parts[3] in {'cancel','retry'}:
                     ctrl=application.controller(application.stores.for_run(tenant,parts[2]))
                     result=ctrl.cancel(tenant,parts[2]) if parts[3]=='cancel' else application.start(ctrl,tenant,ctrl.retry(tenant,parts[2],data['idempotency_key'],defer=True))
@@ -93,6 +109,13 @@ def handler(application):
 
         def do_GET(self):
             try:
+                if urlparse(self.path).path=='/v1/development/status':
+                    authenticated=False
+                    if application.real_chat and application.development_auth:
+                        application.development_auth.boundary(self)
+                        try:application.development_auth.require(self.headers.get('Cookie'));authenticated=True
+                        except Fault:pass
+                    self.json(200,{'enabled':application.real_chat,'authenticated':authenticated,'configuration':application.configuration,'production_enabled':False});return
                 tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); path=parsed.path; parts=path.strip('/').split('/')
                 if path=='/v1/development/runtime':
                     result=application.development_bridge.handshake() if application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}
@@ -108,7 +131,7 @@ def handler(application):
                     ctrl=application.controller(application.stores.for_run(tenant,parts[2])); ctrl.read(tenant,parts[2])
                     after=int(self.headers.get('Last-Event-ID',query.get('after',['0'])[0]))
                     self.send_response(200); self.send_header('Content-Type','text/event-stream'); self.send_header('Cache-Control','no-store'); self.end_headers()
-                    deadline=time.monotonic()+10
+                    deadline=time.monotonic()+(50 if application.real_chat else 10)
                     try:
                         while time.monotonic()<deadline:
                             for event in ctrl.events(tenant,parts[2],after):

@@ -5,11 +5,11 @@
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03尚未实现。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
+**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
 
-bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
+development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -42,3 +42,7 @@ L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、
 历史L2.5阶段交接码：`STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED`。它仅禁止历史包完成后自动进入L3，不是当前全产品NEXT_READY。control/plan.json顶层legacy字段保留这一作用域；当前checker已分别验证唯一product_development队列和旧11包/L3边界；报告明确区分两种next_ready，不放宽历史断言。
 
 既有upstream候选测试/lock-only审阅维护继续按 [原契约](docs/RUNTIME_UPSTREAM_SYNC.md) 执行；它不是另一个feature-development NEXT_READY，不覆盖当前writer或A2方案。此文档不改变其workflow设置或生产门槛。
+
+## Development-only chat amendment (2026-09-30 23:48 UTC)
+
+User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.

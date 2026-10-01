@@ -3,11 +3,11 @@
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
+**NEXT_READY: D1-01_DEVELOPMENT_DEEPSEEK_CHAT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：D1-01。
 
-bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
+development-only same-Controller DeepSeek chat, valid context, truthful HCL and provider receipts, gated budget and one-command startup。验收：D01、D02、D03、D04、D05、D06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -25,7 +25,8 @@ bounded inspect/settings and integrated original synthetic acceptance。验收�
 | P0-01 | truthful preview contracts + current-queue checker migration | Canonical1.2合入main | COMPLETE |
 | P1-01 | shared Assistant-first home/chat shell、视觉与输入/阅读体系 | P0-01 | COMPLETE |
 | P1-02 | revision/change/Explain/source/history/memory闭环 | P1-01 | COMPLETE |
-| P1-03 | bounded Inspect/Settings与整体synthetic验收 | P1-02 | NEXT_READY |
+| D1-01 | development-only DeepSeek chat | P1-02 | NEXT_READY |
+| P1-03 | bounded Inspect/Settings与整体synthetic验收 | D1-01 | WAITING_DEPENDENCY |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
@@ -50,3 +51,7 @@ PR #6在本次采用期间已由另一执行者合入 `e2a72050e184e61f45b17de3f
 执行者先读最新main/open PR/AGENTS，只有一个implementation writer。重叠控制文档须协调到Canonical1.2后再合并，不能恢复第二套队列或覆盖已采用维护。
 
 每个实施包提供实际delta、正负/修订/持久化/browser证据、exact-head CI；合并后检查exact-main，再同步Status、此文件与product_development。代码、权限或实测未支持的内容保留未实现，不用描述代替验证。本次文档执行者在合并核验后停止。
+
+## Development-only chat amendment (2026-09-30 23:48 UTC)
+
+User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The provider-free restriction remains binding for historical mock/refinement tests and the existing HCL Bridge lock; it is not a permanent prohibition on this new gated product-owned DeepSeek transport. See [development chat contract](docs/DEVELOPMENT_CHAT.md). No live budget, configured server or public deployment is implied by code authorization. Production, research efficacy and private-data gates remain unchanged.
