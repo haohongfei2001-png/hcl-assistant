@@ -492,8 +492,8 @@
     }
   },
   "writer": {
-    "branch": "feature/member-auth-isolation",
-    "scope": "M1-01_MEMBER_ACCOUNTS_AND_ISOLATION",
+    "branch": "fix/account-readiness-feedback",
+    "scope": "M1-01_READINESS_AND_SIGNOUT_FEEDBACK_FIX",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

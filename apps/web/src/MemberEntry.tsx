@@ -3,7 +3,7 @@ import {api,configureCloud,setMemberReady} from './api';
 import {clearTemporary} from './cloud-temporary';
 
 type Status={available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{enabled:boolean;reason?:string|null}};
-export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean)=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode}){
+export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean,logoutPending:boolean)=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode}){
  const [status,setStatus]=useState<Status|null>(null),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[register,setRegister]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  const scope=useRef(''),channel=useRef<BroadcastChannel|null>(null),live=useRef(true),revision=useRef(0);
  const [renewing,setRenewing]=useState(false);
@@ -30,8 +30,15 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
   return()=>{live.current=false;revision.current++;flight.current?.controller.abort();clearInterval(poll);channel.current?.close();clearTemporary()};
  },[]);
  useEffect(()=>{if(!status?.authenticated||!status.expires_at)return;const timer=setTimeout(()=>{suspend();void refresh()},Math.max(0,status.expires_at*1000-Date.now()));return()=>clearTimeout(timer)},[status?.authenticated,status?.expires_at]);
- async function logout(){if(busy)return;setBusy(true);revision.current++;flight.current?.controller.abort();try{await api('/v1/account/logout',{});clear();channel.current?.postMessage({type:'signed-out'});setMessage('已退出账号')}catch{setError('退出未完成，请重试')}finally{setBusy(false)}}
- if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy);
+ async function logout(){
+  if(busy)return;setBusy(true);const epoch=++revision.current;flight.current?.controller.abort();
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+  const complete=()=>{if(!live.current||epoch!==revision.current)return;clear();channel.current?.postMessage({type:'signed-out'});setMessage('已退出账号')};
+  try{await api('/v1/account/logout',{},controller.signal);complete()}
+  catch(error){if(!live.current||epoch!==revision.current)return;if(/^Error: 401:/.test(String(error)))complete();else setError('退出未完成，请重试')}
+  finally{clearTimeout(timeout);if(live.current)setBusy(false)}
+ }
+ if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy);
  return <main className="development-entry member-entry"><h1>HCL Assistant</h1>{extra}
   <h2>{register?'创建账号':'登录账号'}</h2><p>使用邮箱保存和找回自己的合成内容对话。请勿输入真实私密资料。</p>
   {error&&<p role="alert">{error}</p>}{message&&<p role="status">{message}</p>}

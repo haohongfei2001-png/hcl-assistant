@@ -19,6 +19,23 @@ class CloudStores(Stores):
         if kwargs.get('memory')=='TEMPORARY': raise Fault(409,'Temporary conversations use the request-bound tab-memory route')
         return self.persistent.conversation(tenant,**kwargs)
 
+def verify_member_schema(store):
+    # Compile metadata-only reads under the restricted role. LIMIT0 reads no
+    # session, identity, ciphertext or budget row. Never create schema on startup.
+    columns={
+        'member_sessions':'session_key,tenant,issuer,subject,auth_epoch,expires_at,absolute_expires_at,refresh_ciphertext,refresh_state,refresh_owner,refresh_started_at',
+        'member_login_attempts':'identity_key,attempted_at',
+        'member_entitlements':'tenant,grant_id,enabled,starts_at,expires_at,temporary_enabled,persistent_enabled,max_requests,max_cost_usd',
+        'member_budget_attempts':'tenant,grant_id,run_key,attempt_key,charged_usd,outcome',
+        'execution':'tenant', 'temporary_heads':'tenant',
+    }
+    fields=[];tables=[]
+    for index,(table,names) in enumerate(columns.items()):
+        alias='m'+str(index);tables.append(table+' AS '+alias)
+        fields.extend(alias+'.'+name for name in names.split(','))
+    with store.transaction():
+        store.db.execute('SELECT '+','.join(fields)+' FROM '+' CROSS JOIN '.join(tables)+' LIMIT 0').fetchall()
+
 class CloudApplication:
     cloud=True
     request_bound=True
@@ -35,6 +52,9 @@ class CloudApplication:
             self.member_auth=None;self.member_context=None;self.entitlements=None
             if getattr(config,'member_provider',None) or member_provider:
                 from packages.cloud.member_auth import MemberAuth,SupabaseAuthProvider
+                startup.mark(StartupCode.MEMBER_SCHEMA)
+                verify_member_schema(store)
+                startup.mark(StartupCode.MEMBER_AUTH)
                 self.member_auth=MemberAuth(store,config.origin,config.state_key,member_provider or SupabaseAuthProvider(config.member_provider))
             startup.mark(StartupCode.RUNTIME_BRIDGE)
             self.development_bridge=RuntimeBridge(Path(runtime).absolute()) if runtime else None

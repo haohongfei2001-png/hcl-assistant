@@ -4,10 +4,17 @@ import {clearTemporary} from './cloud-temporary';
 import {MemberEntry} from './MemberEntry';
 export type DevelopmentStatus={enabled:boolean;authenticated:boolean;cloud?:boolean;request_bound?:boolean;configuration:{configured?:boolean;provider_enabled?:boolean;temporary_trial?:boolean;member_accounts?:boolean;missing?:string[];invalid?:string[]}};
 type TrialStatus={available:boolean;authenticated:boolean;expires_at?:number};
-export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolean,onLogout?:()=>void,trial?:boolean,account?:{scope:string;notice:string;renewing:boolean})=>React.ReactNode}){
+export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolean,onLogout?:()=>void,trial?:boolean,account?:{scope:string;notice:string;renewing:boolean;logoutPending:boolean})=>React.ReactNode}){
  const [status,setStatus]=useState<DevelopmentStatus|null>(null),[secret,setSecret]=useState(''),[login,setLogin]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [trial,setTrial]=useState<TrialStatus|null>(null),[guest,setGuest]=useState(false);
  const [ownerMode,setOwnerMode]=useState(false);
+ async function logoutOwner(){
+  if(busy)return;setBusy(true);setError('');const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+  const complete=()=>{clearTemporary();setStatus(value=>value?{...value,authenticated:false}:value)};
+  try{await api('/v1/development/logout',{},controller.signal);complete()}
+  catch(error){if(/^Error: 401:/.test(String(error)))complete();else setError('退出未完成，请重试')}
+  finally{clearTimeout(timeout);setBusy(false)}
+ }
  function leaveTrial(message=''){clearTemporary();configureCloud(true,false);setGuest(false);if(message)setTrial(value=>value?{...value,available:false,authenticated:false}:value);setError(message)}
  async function refresh(){try{
   const next=await api<DevelopmentStatus>('/v1/development/status');configureCloud(Boolean(next.request_bound));setStatus(next);setError('');
@@ -24,8 +31,8 @@ export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolea
  if(status&&!status.enabled)return children(false,false);
  if(guest)return children(true,true,()=>leaveTrial(),true);
  const trialEntry=trial&&<section><h2>临时试用</h2><p>无需账号，只在当前标签页保留对话；刷新或关闭后丢失。仅使用原创合成内容，请勿输入真实私密资料。</p><p>{trial.expires_at?`本轮试用截止：${new Date(trial.expires_at*1000).toLocaleString()}`:''}</p><button disabled={busy||!trial.available} onClick={async()=>{setBusy(true);setError('');try{await api('/v1/trial/start',{});const value=await api<TrialStatus>('/v1/trial/status');if(!value.available||!value.authenticated)throw new Error();clearTemporary();configureCloud(true,true);setTrial(value);setGuest(true)}catch{setError('试用尚未开始或已结束，请重新检查')}finally{setBusy(false)}}}>{trial.available?'开始临时试用（仅合成内容）':'试用尚未开始或已结束'}</button></section>;
- if(status?.configuration.member_accounts&&!ownerMode)return <MemberEntry extra={trialEntry} onOwner={()=>setOwnerMode(true)}>{(logout,scope,notice,renewing)=>children(true,true,logout,false,{scope,notice,renewing})}</MemberEntry>;
- if(status?.authenticated)return children(true,Boolean(status.cloud),status.cloud?()=>{void api('/v1/development/logout',{}).then(()=>{clearTemporary();setStatus({...status,authenticated:false})}).catch(()=>setError('退出未完成，请重试'))}:undefined);
+ if(status?.configuration.member_accounts&&!ownerMode)return <MemberEntry extra={trialEntry} onOwner={()=>setOwnerMode(true)}>{(logout,scope,notice,renewing,logoutPending)=>children(true,true,logout,false,{scope,notice,renewing,logoutPending})}</MemberEntry>;
+ if(status?.authenticated)return children(true,Boolean(status.cloud),status.cloud?()=>void logoutOwner():undefined,false,status.cloud?{scope:'owner',notice:busy?'正在退出账号…':error,renewing:busy,logoutPending:busy}:undefined);
  const cloud=Boolean(status?.cloud);
  return <main className="development-entry"><h1>{cloud?'HCL Assistant':'HCL Assistant 开发态聊天'}</h1>
   {error&&<p role="alert">{error}</p>}

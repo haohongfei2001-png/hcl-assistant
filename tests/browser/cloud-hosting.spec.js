@@ -14,6 +14,19 @@ test('cloud owner login, durable multi-request chat, reload and logout',async({p
  const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');await page.reload();await page.locator(`[data-conversation="${id}"]`).click();await expect(page.locator('.messages')).toContainText('云端纸灯');
  await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByRole('button',{name:'退出登录',exact:true}).click();await expect(page.getByLabel('密码',{exact:true})).toBeVisible();await expect(page.locator('.messages')).toHaveCount(0);
 });
+test('owner logout shows pending and failed state inside Settings and can retry',async({page})=>{
+ await enter(page);const dialog=page.getByRole('dialog',{name:'设置'});let release;const held=new Promise(resolve=>release=resolve);let started;const requested=new Promise(resolve=>started=resolve);let calls=0;
+ await page.route('**/v1/development/logout',async route=>{calls++;started();await held;await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Injected logout failure'})})});
+ try{await dialog.getByRole('button',{name:'退出登录',exact:true}).click();await requested;
+  await expect(dialog.getByRole('button',{name:'正在退出…',exact:true})).toBeDisabled();await expect(dialog).toContainText('正在退出账号');expect(calls).toBe(1);
+ }finally{release()}
+ await expect(dialog).toContainText('退出未完成，请重试');await expect(dialog.getByRole('button',{name:'退出登录',exact:true})).toBeEnabled();
+ await page.unroute('**/v1/development/logout');await dialog.getByRole('button',{name:'退出登录',exact:true}).click();await expect(page.getByLabel('密码',{exact:true})).toBeVisible();await expect(page.locator('.messages')).toHaveCount(0);
+});
+test('owner logout converges to signed out when its server cookie is already absent',async({page,context})=>{
+ await enter(page);await context.clearCookies();await page.getByRole('button',{name:'退出登录',exact:true}).click();
+ await expect(page.getByLabel('密码',{exact:true})).toBeVisible();await expect(page.locator('.messages')).toHaveCount(0);await expect(page.getByRole('alert')).toHaveCount(0);
+});
 test('cloud temporary HCL uses reviewed Bridge and disappears on refresh',async({page},info)=>{
  await enter(page);await page.getByLabel('记忆范围').selectOption('TEMPORARY');await page.getByRole('button',{name:'发送原创 HCL 合成样例（计一次调用）'}).click();await close(page);await expect(page.locator('.assistant-message').last()).toContainText('Ada');
  await page.getByLabel('更多消息操作').last().click();await page.getByRole('button',{name:'查看本次模型与 HCL 回执'}).last().click();await expect(page.getByRole('dialog',{name:'本次调用回执'})).toContainText('EXECUTED');await expect(page.getByRole('dialog',{name:'本次调用回执'})).toContainText('显式用于回答 true');
