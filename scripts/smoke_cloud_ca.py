@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import psycopg
 import psycopg_binary
 from psycopg.conninfo import conninfo_to_dict
-from packages.cloud.postgres import system_root_cert
+from packages.cloud.postgres import system_root_cert,database_root_cert
 
 
 def main():
@@ -40,11 +40,19 @@ def main():
         assert tls.SSL_CTX_load_verify_locations(context, system_root_cert().encode(), None) == 1
         count = crypto.OPENSSL_sk_num(crypto.X509_STORE_get0_objects(tls.SSL_CTX_get_cert_store(context)))
         assert count > 0, 'Host trust bundle must contain certificates'
+        supabase=database_root_cert('postgresql://aws-0-us-west-2.pooler.supabase.com/postgres?sslmode=verify-full')
+        scoped=tls.SSL_CTX_new(tls.TLS_client_method())
+        assert scoped
+        try:
+            assert tls.SSL_CTX_load_verify_locations(scoped,supabase.encode(),None)==1
+            assert crypto.OPENSSL_sk_num(crypto.X509_STORE_get0_objects(tls.SSL_CTX_get_cert_store(scoped)))==1
+        finally:tls.SSL_CTX_free(scoped)
     finally:
         tls.SSL_CTX_free(context)
     print(json.dumps({'pinned_client': 'psycopg-binary==3.2.12',
                       'explicit_host_ca_load': 'PASS', 'nonempty_trust_store': True,
                       'explicit_verify_full_overrides_uri_aliases': 'PASS',
+                      'pinned_supabase_ca_load':'PASS',
                       'network_connections': 0, 'provider_calls': 0}))
 
 
