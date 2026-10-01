@@ -85,3 +85,7 @@
 ## C1-01 — Cloud hosting adaptation amendment
 
 Owner approved 2026-10-01 08:36 UTC, after adopted P1-03. Preserve the existing shared UI/Controller/DeepSeek adapter and pinned synthetic HCL Bridge. Build isolated Postgres persistence, HTTPS owner-only authentication, atomic non-refunded provider reservations, request-owned streaming/replay/cancellation, and temporary tab-memory round trips. Accept C01–C06 in [cloud contract](CLOUD_HOSTING.md); evidence in [C1 evidence](C1_01_EVIDENCE.md). Ordinary use needs only URL/login/chat after one-time secure operator setup. No paid provisioning, persistent credential creation, old-grant renewal, TodayAction-data reuse, real private-data or production HCL activation follows from this code approval.
+
+## U1-01 Chat interface refinement
+
+Owner-approved six-point screenshot refinement after C1-01. One implementation writer; U01–U06 scope, regressions, visual comparison and explicit limits are recorded in [evidence](U1_01_EVIDENCE.md). This does not reopen prior packages or permit model calls, account changes or production activation.

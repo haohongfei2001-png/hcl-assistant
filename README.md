@@ -9,11 +9,11 @@
 开发先读 [STATUS](STATUS.md)、[DEVELOPMENT_PLAN](DEVELOPMENT_PLAN.md)、[AGENTS](AGENTS.md)、[Document Authority](docs/DOCUMENT_AUTHORITY.md)。数据/运行契约见 [contracts](contracts/PRODUCT_CONTRACTS_V1.md)。当前队列如下：
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
+**NEXT_READY: U1-01_CHAT_INTERFACE_REFINEMENT**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：U1-01。
 
-当前6包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+six-point Continuum chat refinement, honest home/history state, compact composer and contextual actions。验收：U01、U02、U03、U04、U05、U06
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -83,3 +83,7 @@ User-authorized D1-01 takes priority after adopted P1-02 and before P1-03. The p
 ## Cloud hosting amendment (2026-10-01 08:36 UTC)
 
 Owner approved C1-01 engineering adaptation after P1-03 for isolated Vercel/Postgres hosting. This adds a bounded package to the sole current queue; it does not reopen completed packages, change the reviewed HCL lock, authorize account provisioning, create credentials, reuse another app database, authorize real private data or renew the exhausted provider grant. Offline CI remains zero provider calls. Runtime hosting is not production HCL activation or efficacy evidence. Details: [cloud hosting contract](docs/CLOUD_HOSTING.md).
+
+## Six-point chat refinement amendment (2026-10-01)
+
+Owner approved U1-01 following the screenshot review: compact growing composer, tighter Home, correct cleared-history state, one search and on-demand background/attachment details, three supported contextual actions, and neutral readable surfaces within Continuum V1. This is the sole implementation writer; accepted digital-being assets, provider/Bridge/security and production gates stay unchanged. Verification and bounded scope: [U1-01 evidence](docs/U1_01_EVIDENCE.md).

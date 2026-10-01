@@ -5,7 +5,7 @@
 .continuum-shell {
  --sidebar:232px;
  --reading:760px;
- --muted:#576486;
+ --muted:#52607b;
  --line:#dce5f8;
  --accent:#526bee;
  --continuum-ink:#151d43;
@@ -16,7 +16,7 @@
  --continuum-focus:#3958c4;
  --continuum-shadow:0 12px 36px rgba(70,91,147,.08);
  color:var(--continuum-ink);
- background:radial-gradient(ellipse at 24% 15%,#dce8fc 0,transparent 48%),radial-gradient(ellipse at 86% 64%,#e8e9fc 0,transparent 52%),#edf3fd;
+ background:radial-gradient(ellipse at 22% 10%,#e3ecfc 0,transparent 48%),radial-gradient(ellipse at 88% 72%,#eeedfb 0,transparent 50%),#f3f6fc;
  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
  font-size:16px;
  line-height:1.7;
@@ -65,10 +65,10 @@
 .continuum-shell .header-search kbd {margin-left:auto;flex:none;border:1px solid #dbe3f5;background:#fff;border-radius:5px;padding:0 5px;font-size:12px}
 .continuum-shell .environment {max-width:260px;margin-left:auto;padding:8px 12px;min-height:44px;font-size:12px;line-height:19px;text-align:right;color:#40537c;background:#eff4fe;border:1px solid #d6e1f5;border-radius:12px;overflow-wrap:anywhere}
 .continuum-shell .header-search+.environment {margin-left:0}
-.continuum-shell .chat-workspace>main {width:100%;max-width:936px;padding:10px 24px 0;margin:0 auto;min-width:0;min-height:0}
+.continuum-shell .chat-workspace>main {width:100%;max-width:900px;padding:10px 24px 0;margin:0 auto;min-width:0;min-height:0}
 .continuum-shell .messages {min-width:0;min-height:0;padding:10px 0 22px;scrollbar-gutter:stable;scroll-padding-block:20px;overscroll-behavior:contain}
 .continuum-shell article {padding-bottom:24px;min-width:0;scroll-margin:18px;outline-offset:4px}
-.continuum-shell .user-message {display:block;width:fit-content;max-width:94%;margin:0 0 14px auto;padding:14px 18px;border:1px solid #f8fbff;border-radius:16px;background:#f1f5ff;color:#24345f;font-size:16px;line-height:27px;box-shadow:0 5px 20px #718cc408}
+.continuum-shell .user-message {display:block;width:fit-content;max-width:94%;margin:0 0 14px auto;padding:14px 18px;border:1px solid #f8fbff;border-radius:16px;background:#f4f6fa;color:#24345f;font-size:16px;line-height:27px;box-shadow:0 5px 20px #718cc408}
 .continuum-shell .assistant-message {padding:24px 28px 8px;border:1px solid #fff;border-bottom:0;border-radius:24px 24px 0 0;background:#fff;color:#26365f;font-size:16px;line-height:28px;min-width:0;box-shadow:0 -4px 24px #6c82b307}
 .continuum-shell .answer-identity {display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;line-height:20px;color:#172447;margin:0 0 18px;font-weight:600}
 .continuum-shell .answer-identity>small {font-weight:400;color:var(--muted)}
@@ -99,9 +99,9 @@
 .continuum-shell .turn-actions>button:first-child {border:1px solid #dfe6fb;background:#f5f8ff;border-radius:999px}
 .continuum-shell .message-menu {position:static;max-width:100%;min-width:min(180px,100%);background:#fff;border:1px solid #d7e1f7;border-radius:14px;box-shadow:var(--continuum-shadow);margin:6px 0;padding:6px}
 .continuum-shell .turn-notice {color:#835600;background:#fff7e7;border:1px solid #eee0b9;border-radius:10px;padding:10px 12px;font-size:14px;line-height:23px}
-.continuum-shell .composer {position:relative;isolation:isolate;flex-shrink:0;min-width:0;padding:16px 18px 12px;border:1px solid #fff;border-radius:26px;background:#fff;box-shadow:0 10px 32px rgba(106,130,184,.08),inset 0 0 0 1px #f9fbff}
+.continuum-shell .composer {position:relative;isolation:isolate;flex-shrink:0;min-width:0;padding:16px 18px 12px;border:1px solid #d9e0ec;border-radius:24px;background:#fff;box-shadow:0 8px 28px rgba(85,104,144,.06),inset 0 1px 0 #fff}
 .continuum-shell .composer:focus-within {border-color:#a6b7f3;box-shadow:0 0 0 2px #cbd6ff,0 10px 30px #738bba12}
-.continuum-shell .composer textarea {min-width:0;min-height:60px;max-height:224px;padding:3px 8px 10px;color:#1e2d54;background:transparent;font-size:16px;line-height:27px;scrollbar-width:thin}
+.continuum-shell .composer textarea {min-width:0;min-height:0;max-height:none;padding:3px 8px 10px;color:#1e2d54;background:transparent;font-size:16px;line-height:27px;scrollbar-width:thin}
 .continuum-shell .composer textarea::placeholder {color:#61729a;opacity:1}
 .continuum-shell .composer textarea:focus-visible {outline:0}
 .continuum-shell .composer-controls {display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;padding-top:8px}
@@ -117,24 +117,24 @@
 .continuum-shell .danger {color:#a43147}
 /* Home prompt, the shared composer, then real supported suggestion actions.
    The parent places home-suggestions AFTER the composer, not inside a bitmap. */
-.continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {max-width:1072px;padding-top:18px;overflow-y:auto;overscroll-behavior:contain;justify-content:flex-start}
-.continuum-shell:is(.is-home,:has(.home-stage)) .messages {flex:0 0 auto;overflow:visible;scrollbar-gutter:auto;padding:62px 0 24px}
-.continuum-shell .home-stage {display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,330px);align-items:center;gap:16px;min-height:288px;padding:0 18px;text-align:left}
+.continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {max-width:900px;padding-top:12px;overflow-y:auto;overscroll-behavior:contain;justify-content:flex-start}
+.continuum-shell:is(.is-home,:has(.home-stage)) .messages {flex:0 0 auto;overflow:visible;scrollbar-gutter:auto;padding:36px 0 18px}
+.continuum-shell .home-stage {display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,250px);align-items:center;gap:18px;min-height:218px;padding:0 12px;text-align:left}
 .continuum-shell .home-copy {min-width:0;padding:10px 0}
-.continuum-shell .home-copy>small {display:block;color:#596a92;font-size:15px;line-height:24px;margin-bottom:14px}
-.continuum-shell .home-copy h1 {color:#151d43;font-size:clamp(30px,3.05vw,44px);font-weight:650;line-height:1.34;letter-spacing:-.045em;margin:0 0 18px}
+.continuum-shell .home-copy>small {display:block;color:#596a92;font-size:15px;line-height:24px;margin-bottom:8px}
+.continuum-shell .home-copy h1 {color:#151d43;font-size:clamp(30px,2.85vw,40px);font-weight:650;line-height:1.34;letter-spacing:-.045em;margin:0 0 18px}
 .continuum-shell .home-copy h1 :is(em,strong,span) {color:#526bee;font-style:normal;font-weight:inherit}
 .continuum-shell .home-copy p {max-width:620px;color:#465981;font-size:17px;line-height:28px;margin:0 0 12px}
 .continuum-shell .home-copy p.muted {font-size:13px;line-height:21px;color:#586b93}
 .continuum-shell .home-companion {display:flex;align-items:center;justify-content:center;min-width:0;align-self:center;pointer-events:none}
 .continuum-shell .home-stage:not(:has(.home-companion .companion)) {grid-template-columns:minmax(0,1fr)}
 .continuum-shell .home-companion:empty {display:none}
-.continuum-shell:is(.is-home,:has(.home-stage)) .composer {min-height:192px;padding:22px 22px 17px;border-radius:28px}
-.continuum-shell:is(.is-home,:has(.home-stage)) .composer textarea {min-height:105px;padding:4px 4px 18px;font-size:18px;line-height:29px}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer {min-height:0;padding:18px 20px 14px;border-radius:26px}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer textarea {min-height:0;padding:4px 4px 8px;font-size:17px;line-height:28px}
 .continuum-shell:is(.is-home,:has(.home-stage)) .composer-controls {padding-top:10px}
-.continuum-shell .home-suggestions {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 16px;margin:22px 10px 18px;padding:0;list-style:none}
+.continuum-shell .home-suggestions {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 2px 14px;padding:0;list-style:none}
 .continuum-shell .home-suggestions>* {min-width:0}
-.continuum-shell .home-suggestions :is(button,a) {display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:50px;height:100%;padding:12px 18px;border:1px solid #fff;border-radius:999px;color:#304773;background:#f6f9ff;font-size:14px;line-height:22px;text-align:left;text-decoration:none;overflow-wrap:anywhere}
+.continuum-shell .home-suggestions :is(button,a) {display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;height:100%;padding:11px 16px;border:1px solid #e6ebf4;border-radius:18px;color:#304773;background:#f6f9ff;font-size:14px;line-height:22px;text-align:left;text-decoration:none;overflow-wrap:anywhere}
 .continuum-shell .home-suggestions :is(button,a):hover {background:#fff;border-color:#cddaf9}
 /* Dialog styles support the existing overlay and the integrator's dialog-panel hook. */
 .continuum-shell :is(.overlay,.dialog-panel) {color:#24345f;background:#fff;border:1px solid #fff;border-radius:24px;box-shadow:0 18px 60px #3d548828;padding:22px;width:min(430px,calc(100vw - 32px));max-width:100%;max-height:calc(100dvh - 32px);overflow:auto}
@@ -171,7 +171,7 @@
 .continuum-shell .source-return {min-height:44px;margin-bottom:12px;color:#3654c4;border:1px solid #d9e3fb;border-radius:999px;background:#f6f8ff}
 /* Native SVG derivatives have no event handlers or accessible status role. */
 .continuum-shell .companion {display:inline-flex;align-items:center;justify-content:center;flex:none;max-width:100%;vertical-align:middle;pointer-events:none;user-select:none;contain:layout style}
-.continuum-shell .companion--home {width:330px;height:275px}
+.continuum-shell .companion--home {width:250px;height:208px}
 .continuum-shell .companion--mini {width:44px;height:38px}
 .continuum-shell .companion svg {display:block;width:100%;height:100%;overflow:visible}
 .continuum-shell .companion-body {transform-origin:180px 155px}
@@ -198,11 +198,11 @@
  .continuum-shell .conversation-identity strong {max-width:210px}
  .continuum-shell .header-search {max-width:310px;flex-basis:160px}
  .continuum-shell .environment {max-width:220px}
- .continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding-top:34px}
- .continuum-shell .home-stage {min-height:250px;grid-template-columns:minmax(0,1fr) minmax(170px,250px);gap:10px;padding-inline:10px}
- .continuum-shell .companion--home {width:270px;height:225px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding-top:24px}
+ .continuum-shell .home-stage {min-height:202px;grid-template-columns:minmax(0,1fr) minmax(160px,220px);gap:10px;padding-inline:10px}
+ .continuum-shell .companion--home {width:220px;height:184px}
  .continuum-shell .home-copy h1 {font-size:36px}
- .continuum-shell .home-suggestions {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .continuum-shell .home-suggestions {grid-template-columns:repeat(3,minmax(0,1fr))}
  .continuum-shell:is(.has-context,:has(>.context-panel)) {--sidebar:176px;grid-template-columns:var(--sidebar) minmax(0,1fr) minmax(340px,380px)}
  .continuum-shell.collapsed:is(.has-context,:has(>.context-panel)) {grid-template-columns:minmax(0,1fr) minmax(350px,390px)}
  .continuum-shell:is(.has-context,:has(>.context-panel)) .assistant-message {padding-inline:20px}
@@ -242,32 +242,32 @@
  .continuum-shell .turn-actions {padding:6px 12px 12px;border-radius:0 0 20px 20px}
  .continuum-shell .user-message {max-width:96%;font-size:15px;line-height:26px;padding:12px 14px}
  .continuum-shell .composer {border-radius:22px;padding:12px 12px 10px}
- .continuum-shell .composer textarea {font-size:16px;line-height:27px;min-height:58px;padding-inline:2px}
+ .continuum-shell .composer textarea {font-size:16px;line-height:27px;min-height:0;padding-inline:2px}
  .continuum-shell .composer-controls {gap:6px;padding-top:5px}
  .continuum-shell .composer-controls>button {padding:10px 12px;font-size:13px}
  .continuum-shell .composer-controls>small {display:block;order:3;flex:1 1 100%;font-size:12px;line-height:18px}
  .continuum-shell .composer-note {font-size:12px;line-height:18px;margin-bottom:max(10px,env(safe-area-inset-bottom))}
  .continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {padding-top:8px}
  .continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding:8px 0 14px}
- .continuum-shell .home-stage {min-height:220px;grid-template-columns:minmax(0,1fr) 160px;padding:0 6px;gap:0}
+ .continuum-shell .home-stage {min-height:182px;grid-template-columns:minmax(0,1fr) 144px;padding:0 6px;gap:0}
  .continuum-shell .home-copy h1 {font-size:29px;line-height:1.35;margin-bottom:12px}
  .continuum-shell .home-copy>small {font-size:13px;margin-bottom:10px}
  .continuum-shell .home-copy p {font-size:15px;line-height:25px}
- .continuum-shell .home-companion .companion--home {width:176px;height:150px}
- .continuum-shell:is(.is-home,:has(.home-stage)) .composer {min-height:165px;padding:16px 14px 12px}
- .continuum-shell:is(.is-home,:has(.home-stage)) .composer textarea {font-size:16px;min-height:85px;line-height:27px}
- .continuum-shell .home-suggestions {margin:16px 2px;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .continuum-shell .home-companion .companion--home {width:150px;height:126px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .composer {min-height:0;padding:14px 14px 12px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .composer textarea {font-size:16px;min-height:0;line-height:27px}
+ .continuum-shell .home-suggestions {margin:14px 2px;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
  .continuum-shell .home-suggestions :is(button,a) {border-radius:18px;padding:11px 13px;font-size:13px;line-height:21px}
  .continuum-shell :is(.overlay,.dialog-panel) {position:fixed;inset:0;width:100%;height:100dvh;max-height:100dvh;margin:0;border-radius:0;padding:calc(18px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom));background:#f8fbff}
 }
 @media (max-width:479px) {
- .continuum-shell .home-stage {grid-template-columns:minmax(0,1fr);position:relative;min-height:0;padding:14px 8px 8px}
+ .continuum-shell .home-stage {grid-template-columns:minmax(0,1fr) 76px;position:relative;min-height:0;padding:14px 4px 8px}
  .continuum-shell .home-copy {padding:0}
  .continuum-shell .home-copy h1 {font-size:29px;max-width:100%;letter-spacing:-.035em}
- .continuum-shell .home-copy>small {padding-right:96px}
- .continuum-shell .home-companion {justify-self:end;grid-row:1;grid-column:1;margin-bottom:6px;align-self:start}
- .continuum-shell .home-companion .companion--home {width:110px;height:92px}
- .continuum-shell .home-copy {grid-row:2;grid-column:1}
+ .continuum-shell .home-copy>small {padding-right:0}
+ .continuum-shell .home-companion {justify-self:end;grid-row:1;grid-column:2;margin-top:20px;align-self:start}
+ .continuum-shell .home-companion .companion--home {width:86px;height:72px}
+ .continuum-shell .home-copy {grid-row:1;grid-column:1}
  .continuum-shell .home-stage:not(:has(.home-companion .companion)) .home-copy {grid-row:auto}
  .continuum-shell .home-suggestions {grid-template-columns:minmax(0,1fr)}
  .continuum-shell .assistant-message {padding:18px 16px 6px}
@@ -329,3 +329,25 @@
 .continuum-shell button{min-width:44px}
 
 .continuum-shell .assistive-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* U1-01: disclosure-first chrome and truthful empty history. */
+.continuum-shell .background-toggle {display:flex;align-items:center;gap:6px;flex:none;padding:6px 8px;color:var(--muted);font-size:13px;line-height:20px;border-radius:10px}
+.continuum-shell .background-toggle span {font-size:14px}
+.continuum-shell .empty-history {padding:48px 20px;text-align:center;color:var(--muted)}
+.continuum-shell .empty-history h1 {font-size:22px;line-height:1.5;color:var(--continuum-ink);margin:0 0 16px}
+.continuum-shell .empty-history p {max-width:540px;margin:0 auto 20px}
+.continuum-shell .empty-history button {color:#3654bd;border:1px solid #d8e2f4;margin:4px;background:#f9fbff}
+.continuum-shell .operation-feedback {display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;margin:0 0 10px;padding:6px 12px;color:#394967;background:#f9fbff;border:1px solid #dce4ef;border-radius:12px;font-size:13px;line-height:21px}
+.continuum-shell .operation-feedback button {padding:4px;flex:none}
+@media(max-width:767px){
+ .continuum-shell .conversation-identity {flex-direction:row;align-items:center;flex-wrap:wrap;gap:2px 8px}
+ .continuum-shell .header-search {flex-basis:140px;padding-inline:12px}
+ .continuum-shell .environment {flex-basis:150px;padding-inline:10px}
+ .continuum-shell .empty-history {padding:24px 8px}
+}
+@media(max-width:479px){
+ .continuum-shell .home-copy h1 {font-size:28px}
+ .continuum-shell .home-copy p {font-size:14px;line-height:24px}
+ .continuum-shell .home-suggestions {grid-template-columns:minmax(0,1fr);gap:7px;margin:12px 2px}
+ .continuum-shell .home-suggestions button {min-height:44px;padding:9px 13px}
+}

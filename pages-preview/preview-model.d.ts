@@ -9,3 +9,5 @@ export function decodeFile(name:string,bytes:Uint8Array):{content:string;fileNam
 export function exportConversation(c:any):any;
 
 export function reviseRecord(state:any,conversationId:string,recordId:string,intent:string,newContent?:string):any;
+
+export function fullyCleared(c:any):boolean;

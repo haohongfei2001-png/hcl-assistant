@@ -77,3 +77,17 @@ test('reset and later writes cannot reuse a stale revision identity',()=>{
  s.removeItem(STORAGE_KEY);const fresh=emptyState();createConversation(fresh);saveState(fresh,s);
  assert.notEqual(stale.storageRevision,fresh.storageRevision);assert.throws(()=>saveState(stale,s),/其他页面/);assert(!s.bytes().includes('PRE_RESET_CANARY'));
 });
+
+test('cleaned historical titles normalize without erasing independent stopped unresolved or branch data',()=>{
+ for(const extra of [
+  {records:[{id:'independent',status:'STOPPED',kind:'USER_REPORTED_EVENT',version:1,content:'INDEPENDENT'}]},
+  {records:[{id:'independent',status:'ACTIVE',kind:'UNRESOLVED',version:1,content:'INDEPENDENT'}]},
+  {branches:[{id:'branch',record:{id:'independent',status:'ACTIVE',kind:'HYPOTHETICAL',content:'INDEPENDENT'}}]},
+ ]){
+  const s=storage();const c={id:'cleared',title:'历史对话（删除已清理）',memory:'CONVERSATION',version:1,runs:[],...extra};c.records=[{id:'deleted',status:'DELETED',version:1},...(extra.records||[])];
+  s.setItem(STORAGE_KEY,JSON.stringify({schemaVersion:2,storageRevision:0,conversations:[c],currentId:c.id}));const loaded=loadState(s);assert.equal(loaded.currentId,c.id);assert.equal(loaded.conversations[0].title,'历史对话');assert(s.bytes().includes('INDEPENDENT'));assert(!s.bytes().includes('删除已清理'));
+ }
+});
+test('fully cleared selected view detaches while body-free history remains and later messages retitle honestly',()=>{
+ const {state,c}=setup(),s=storage();const run=submit(state,c.id,'记录：U1_DELETED_TITLE_CANARY');changeRecord(state,c.id,run.recordId,'DELETED');saveState(state,s);const loaded=loadState(s);assert.equal(loaded.currentId,null);assert.equal(loaded.conversations.length,1);assert.equal(loaded.conversations[0].title,'历史对话');assert(!s.bytes().includes('U1_DELETED_TITLE_CANARY'));submit(loaded,c.id,'2+2');assert.equal(loaded.conversations[0].title,'2+2');
+});
