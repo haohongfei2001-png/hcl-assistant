@@ -236,6 +236,8 @@ jobs:
           persist-credentials: false
       - name: Install pinned cloud database client
         run: python3 -m pip install -r requirements.lock
+      - name: Load host CA bundle in the actual pinned database TLS library
+        run: python3 scripts/smoke_cloud_ca.py
       - name: Exercise actual Vercel Python streaming entrypoint without configuration
         run: |
           python3 -m pip install vercel-runtime==0.22.1

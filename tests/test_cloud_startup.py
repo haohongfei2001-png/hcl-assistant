@@ -2,16 +2,19 @@
 from contextlib import nullcontext, redirect_stdout
 import io
 import json
+import os
 import ssl
 import sys
+import tempfile
 import threading
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
 from apps.api import cloud_server
 from packages.cloud.diagnostics import StartupCode, StartupDiagnostics
-from packages.cloud.postgres import PostgresLedger
+from packages.cloud.postgres import PostgresLedger, system_root_cert
 from packages.store.ledger import Fault
 
 SENTINEL = 'SECRET_DSN_PASSWORD_OWNER_HASH_QUERY_HOST_CANARY'
@@ -80,7 +83,8 @@ class CloudStartupTests(unittest.TestCase):
             with self.fake_driver(connect), patch.object(cloud_server.CloudConfig, 'from_env', return_value=self.config):
                 self.check_unconfigured(cloud_server.application({}))
             self.check_record(code)
-            self.assertEqual(connect.call_args.kwargs['sslrootcert'], 'system')
+            self.assertEqual(connect.call_args.kwargs['sslrootcert'], system_root_cert())
+            self.assertEqual(connect.call_args.kwargs['sslmode'], 'verify-full')
             self.assertEqual(connect.call_args.kwargs['connect_timeout'], 5)
 
     def test_missing_database_driver_has_fixed_code(self):
@@ -88,6 +92,49 @@ class CloudStartupTests(unittest.TestCase):
              patch.object(cloud_server.CloudConfig, 'from_env', return_value=self.config):
             self.check_unconfigured(cloud_server.application({}))
         self.check_record('DATABASE_DRIVER')
+
+    def test_missing_system_bundle_refuses_without_connect_or_tls_downgrade(self):
+        connect=Mock()
+        with patch.dict(os.environ,{'SSL_CERT_FILE':'/synthetic/missing-explicit-ca'}), \
+             patch('packages.cloud.postgres.ssl.get_default_verify_paths', return_value=SimpleNamespace(cafile=None)), \
+             self.fake_driver(connect), patch.object(cloud_server.CloudConfig, 'from_env', return_value=self.config):
+            self.check_unconfigured(cloud_server.application({}))
+        connect.assert_not_called();self.check_record('DATABASE_TLS')
+
+    def test_ca_discovery_requires_an_existing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle=Path(directory)/'synthetic-public-ca.pem';bundle.write_text('synthetic fixture')
+            for path in (None, str(Path(directory)/'missing'), directory):
+                with patch.dict(os.environ,{'SSL_CERT_FILE':'/synthetic/explicit-ca'}),patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=path)):
+                    with self.assertRaises(Fault):system_root_cert()
+            with patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=str(bundle))):
+                self.assertEqual(system_root_cert(),str(bundle))
+
+    def test_standalone_python_can_use_only_existing_os_bundles(self):
+        candidate='/etc/pki/tls/certs/ca-bundle.crt'
+        for override in ('SSL_CERT_FILE','SSL_CERT_DIR'):
+            with patch.dict(os.environ,{override:'/synthetic/explicit-trust'},clear=True), \
+                 patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=None)), \
+                 patch('packages.cloud.postgres.Path.is_file',return_value=True):
+                with self.assertRaises(Fault):system_root_cert()
+        with patch.dict(os.environ,{},clear=True), \
+             patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=None)), \
+             patch('packages.cloud.postgres.Path.is_file',lambda path:str(path)==candidate):
+            self.assertEqual(system_root_cert(),candidate)
+        with patch.dict(os.environ,{},clear=True), \
+             patch('packages.cloud.postgres.ssl.get_default_verify_paths',return_value=SimpleNamespace(cafile=None)), \
+             patch('packages.cloud.postgres.Path.is_file',return_value=False):
+            with self.assertRaises(Fault):system_root_cert()
+
+    def test_explicit_verify_full_overrides_legacy_uri_tls_aliases(self):
+        for query in ('sslmode=verify-full&requiressl=0', 'sslmode=verify-full&sslmode='):
+            self.capture.seek(0);self.capture.truncate()
+            self.config.database_url='postgresql://synthetic@db.example.test/postgres?'+query
+            connect=Mock(side_effect=SecretFailure(SENTINEL))
+            with self.fake_driver(connect),patch.object(cloud_server.CloudConfig,'from_env',return_value=self.config):
+                self.check_unconfigured(cloud_server.application({}))
+            self.assertEqual(connect.call_args.kwargs['sslmode'],'verify-full')
+            self.check_record('DATABASE_CONNECT')
 
     def test_database_role_and_schema_failures_close_partial_connections(self):
         for failure, code in [('role', 'DATABASE_ROLE'), ('schema', 'DATABASE_SCHEMA')]:
