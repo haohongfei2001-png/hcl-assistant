@@ -508,8 +508,8 @@
     }
   },
   "writer": {
-    "branch": "product/u2-01-consumer-entry",
-    "scope": "U2-01_CONSUMER_ACCOUNT_ENTRY_AND_FIRST_CHAT",
+    "branch": "fix/history-recovery",
+    "scope": "U2-01_HISTORY_RECOVERY_FOLLOWUP",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

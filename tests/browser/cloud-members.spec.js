@@ -68,6 +68,36 @@ test('unavailable model keeps a member draft and never sends a paid request',asy
  expect(mutations).toBe(0);await expect(page.getByLabel('消息',{exact:true})).toHaveValue('UNAVAILABLE_MODEL_DRAFT');
 });
 
+test('history outage stays distinct from an empty account and read-only retry keeps the draft',async({page},info)=>{
+ const uncaught=[];page.on('pageerror',error=>uncaught.push(error.message));
+ await page.route('**/v1/member/conversations',route=>route.request().method()==='GET'?route.fulfill({status:503,contentType:'text/html',body:'Injected unavailable history'}):route.continue());
+ await enter(page);await page.getByLabel('消息',{exact:true}).fill('HISTORY_RECOVERY_DRAFT');
+ await expect(page.getByRole('navigation',{name:'对话历史'})).toContainText('对话列表暂不可用');await expect(page.getByText('还没有对话',{exact:true})).toHaveCount(0);await expect(page.getByRole('alert')).toContainText('暂时无法加载对话列表');
+ await page.screenshot({path:info.outputPath('member-history-retry.png'),fullPage:true,animations:'disabled'});
+ let mutations=0;page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.startsWith('/v1/member/'))mutations++});
+ await page.unroute('**/v1/member/conversations');await page.getByRole('button',{name:'重新加载对话'}).click();await expect(page.getByText('还没有对话',{exact:true})).toBeVisible();await expect(page.getByRole('alert')).toHaveCount(0);
+ await expect(page.getByLabel('消息',{exact:true})).toHaveValue('HISTORY_RECOVERY_DRAFT');expect(mutations).toBe(0);expect(uncaught).toEqual([]);
+});
+
+test('an accepted new conversation is retained when its list refresh fails',async({page})=>{
+ await enter(page);let creates=0,events=0;
+ await page.route('**/v1/member/conversations',route=>{if(route.request().method()==='POST'){creates++;return route.continue()}return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Injected post-create list failure'})})});
+ page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.endsWith('/events'))events++});
+ await send(page,'原创合成：ACCEPTED_CONVERSATION_ONCE');await expect(page.getByRole('alert')).toContainText('暂时无法加载对话列表');expect(creates).toBe(1);expect(events).toBe(1);
+ const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');expect(id).toBeTruthy();
+ await page.unroute('**/v1/member/conversations');await page.getByRole('button',{name:'重新加载对话'}).click();await expect(page.locator('[data-conversation="'+id+'"]')).toBeVisible();
+ await expect(page.locator('.messages')).toContainText('ACCEPTED_CONVERSATION_ONCE');expect(creates).toBe(1);expect(events).toBe(1);
+});
+
+test('a failed history list cancels its still-pending companion read',async({page})=>{
+ await page.addInitScript(()=>{window.__historyTopicAborts=0;window.__historyTopicSettled=0;const original=window.fetch.bind(window);window.fetch=(input,options)=>{const topic=String(input).endsWith('/v1/member/topics');if(topic)options?.signal?.addEventListener('abort',()=>window.__historyTopicAborts++,{once:true});const result=original(input,options);if(topic)result.then(()=>window.__historyTopicSettled++,()=>window.__historyTopicSettled++);return result}});
+ let started;const topicStarted=new Promise(resolve=>started=resolve);let release;const held=new Promise(resolve=>release=resolve);
+ await page.route('**/v1/member/topics',async route=>{started();await held;await route.abort().catch(()=>{})});
+ await page.route('**/v1/member/conversations',async route=>{await topicStarted;await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Injected one-sided history failure'})})});
+ try{await enter(page);await expect(page.getByRole('button',{name:'重新加载对话'})).toBeEnabled();await expect.poll(()=>page.evaluate(()=>window.__historyTopicAborts)).toBe(1);await expect.poll(()=>page.evaluate(()=>window.__historyTopicSettled)).toBe(1)}
+ finally{release();await page.unroute('**/v1/member/topics');await page.unroute('**/v1/member/conversations')}
+});
+
 test('two member browsers have separate history and cannot use owner routes',async({page,browser},info)=>{
  const paths=[];page.on('request',r=>paths.push(new URL(r.url()).pathname));await enter(page);await send(page,'原创合成：MEMBER_A_PRIVATE_CANARY');
  const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');

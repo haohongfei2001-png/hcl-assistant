@@ -359,3 +359,6 @@
 /* Member first-send consent stays next to the action it controls. */
 .continuum-shell .composer-consent {display:flex;align-items:flex-start;gap:9px;padding:8px 4px 2px;color:#52607b;font-size:12px;line-height:20px}
 .continuum-shell .composer-consent input {flex:none;width:18px;height:18px;margin:1px 0;accent-color:#526bee}
+
+.continuum-shell .history-recovery {display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.continuum-shell .history-recovery button {flex:none;background:#fff;border:1px solid #d8e1f3;color:#3654c4}
