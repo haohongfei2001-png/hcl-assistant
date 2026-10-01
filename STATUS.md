@@ -2,7 +2,7 @@
 
 ## Current product direction and next task
 
-**Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03尚未实现。
+**Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03的Inspector/Settings核心切片已采用并核验exact-main；Continuum V1视觉/交互切片正在实现，整包尚未完成。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
 **NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**

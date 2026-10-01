@@ -406,7 +406,7 @@
       "document": "docs/design/continuum-v1/README.md",
       "manifest": "docs/design/continuum-v1/asset-manifest.json",
       "reconciled_main": "333b39f71cede6b741bfdd3486a66d6958901ce0",
-      "implementation_status": "NOT_IMPLEMENTED",
+      "implementation_status": "IMPLEMENTING_NOT_YET_VISUALLY_ACCEPTED",
       "asset_storage": "LOSSLESS_BASE64_IN_UTF8_SVG_WRAPPER",
       "original_payload_verification": "5_OF_5_BYTE_SIZE_SHA256_AND_GIT_BLOB_MATCH",
       "companion_candidates": [
@@ -421,9 +421,9 @@
     }
   },
   "writer": {
-    "branch": "product/p1-03-integrated-acceptance",
+    "branch": "product/continuum-v1-acceptance",
     "scope": "P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE",
-    "status": "IMPLEMENTING_CORE_INSPECTOR_ACCEPTANCE_BEFORE_ADOPTED_CONTINUUM_SLICES"
+    "status": "IMPLEMENTING_ADOPTED_CONTINUUM_V1_VISUAL_AND_INTERACTION_ACCEPTANCE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {

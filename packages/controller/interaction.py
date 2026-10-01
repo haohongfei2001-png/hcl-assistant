@@ -118,6 +118,15 @@ class Controller:
                 run['selected_context']={'record_ids':[],'records':[],'coverage':'UNAVAILABLE'}
                 run['operation_receipts']=[]; run['run_receipt']['operations']=[]
                 run['redacted']=True
+            # Presentation-only file label, re-read under the current source policy.
+            # Never persist a second filename copy on a run or return revoked labels.
+            run.pop('input_filename',None)
+            if not run.get('redacted'):
+                try:
+                    source=self.store.source(tenant,run['input_source_ref'],run['conversation_id'],run.get('topic_id'))
+                    if source.get('name') and source['name']!='message': run['input_filename']=source['name']
+                except Fault:
+                    pass
             run['outdated']=self.store.version(tenant)!=run['state_version_after']
             return run
 

@@ -20,5 +20,5 @@ export function Markdown({text}:{text:string}){
   if(/^\s*\d+\. /.test(line)){const items:string[]=[];while(i<lines.length&&/^\s*\d+\. /.test(lines[i]))items.push(lines[i++].replace(/^\s*\d+\. /,''));out.push(<ol key={out.length}>{items.map((x,j)=><li key={j}>{inline(x)}</li>)}</ol>);continue;}
   if(!line.trim()){i++;continue;}const paragraph=[line];i++;while(i<lines.length&&lines[i].trim()&&!/^(```|#{1,6} |>|\s*[-*] |\s*\d+\. )/.test(lines[i])&&!(i+1<lines.length&&lines[i].includes('|')&&/^[\s:|-]+$/.test(lines[i+1])))paragraph.push(lines[i++]);out.push(<p key={out.length}>{inline(paragraph.join('\n'))}</p>);
  }
- return <div className="markdown">{out}</div>;
+ return <div className="markdown">{out.map((node,index)=>React.isValidElement(node)?React.cloneElement(node as React.ReactElement<Record<string,unknown>>,{'data-reading-paragraph':String(index)}):node)}</div>;
 }

@@ -32,6 +32,15 @@ class AnswerEvidenceBindingTests(unittest.TestCase):
         self.assertEqual(completed['payload']['citation_refs'], expected)
         self.assertEqual(run['run_receipt']['usage']['provider_calls'], 0)
 
+    def test_file_label_is_current_policy_projection_not_a_persisted_copy(self):
+        for action in ('STOP_USING', 'DELETE'):
+            with self.subTest(action=action):
+                old=self.say('原创未解析文件内容', filename='ORIGINAL_FILE_LABEL_CANARY.txt')
+                self.assertEqual(old['input_filename'],'ORIGINAL_FILE_LABEL_CANARY.txt')
+                self.assertNotIn('input_filename',self.store.get('evidence','run',old['run_id']))
+                self.say('撤除文件',revisions=[{'action':action,'target_ids':[old['input_source_ref']['source_id']]}])
+                self.assertNotIn('input_filename',self.controller.read('evidence',old['run_id']))
+
     def test_direct_answer_keeps_selected_background_only_in_inspection(self):
         self.say('报告[榛]：原创纸灯工作坊背景')
         run = self.say('2+2')

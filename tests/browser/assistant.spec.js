@@ -11,7 +11,7 @@ test('desktop keyboard chat, raw source and refresh recovery',async({page})=>{
 });
 
 test('text upload reports limits and registered coverage, not understanding',async({page})=>{
- await conversation(page);await page.getByLabel('上传文本文件').setInputFiles({name:'synthetic.md',mimeType:'text/markdown',buffer:Buffer.from('原创合成文件：尚未解析。')});
+ await conversation(page);await page.getByLabel('上传文本文件').setInputFiles({name:'synthetic.md',mimeType:'text/markdown',buffer:Buffer.from('原创合成文件：尚未解析。')});await page.getByRole('button',{name:'提交附件',exact:true}).click();
  await expect(page.getByText('这段输入尚未解析。可以说明具体事件、人物和时间；当前模拟不具备任意语言理解能力。',{exact:true})).toBeVisible();
  await page.getByLabel('更多消息操作').last().click();await page.getByRole('button',{name:'查看输入原文 v1'}).last().click();await expect(page.getByRole('dialog')).toContainText('原创合成文件：尚未解析。');await expect(page.getByRole('dialog')).toContainText('未声明完整理解');await page.getByRole('button',{name:'关闭原文'}).click();
  await page.getByLabel('上传文本文件').setInputFiles({name:'bad.pdf',mimeType:'application/pdf',buffer:Buffer.from('synthetic unsupported')});await expect(page.getByRole('alert')).toContainText('仅支持 TXT');
@@ -53,16 +53,16 @@ test('person and event-time correction use simple fields and stay scoped',async(
  const context=await (await page.request.get(`/v1/context?conversation_id=${id}`)).json();const record=context.records.find(r=>r.kind==='USER_REPORTED_EVENT');expect(record.subject_refs[0]).toBe(id+':柏');expect(record.valid_time.start).not.toBeNull();expect(record.person_access_events).toEqual([]);
 });
 
-test('read-only Lab shares the recorded run and Compare remains gated without an inert control',async({page})=>{
+test('read-only Lab shares the recorded run and Compare stays disabled',async({page})=>{
  const id=await conversation(page);await page.getByLabel('消息',{exact:true}).fill('2+2');await page.getByLabel('消息',{exact:true}).press('Enter');await expect(page.getByText('2 + 2 = 4。',{exact:true})).toBeVisible();await page.getByLabel('更多消息操作').last().click();await page.getByRole('button',{name:'在 Lab 检查',exact:true}).last().click();const lab=page.getByRole('dialog',{name:'HCL Lab'});await expect(lab).toContainText('DIRECT');await expect(lab).toContainText('MOCK');await expect(lab.getByRole('button',{name:/Compare/})).toHaveCount(0);await lab.getByText('Research Compare 的能力门槛',{exact:true}).click();await expect(lab).toContainText('未开放 Compare 执行');await expect(lab).toContainText('明确执行与数据授权');
  const before=await (await page.request.get(`/v1/conversations/${id}`)).json();const download=page.waitForEvent('download');await lab.getByRole('button',{name:'导出当前权限下的 mock 记录'}).click();await download;
  const after=await (await page.request.get(`/v1/conversations/${id}`)).json();expect(after.state_version).toBe(before.state_version);expect(after.runs[0].run_id).toBe(before.runs[0].run_id);await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'在 Lab 检查',exact:true}).last()).toBeFocused();
 });
 
 test('unparsed file can be stopped and deleted without leaving raw history',async({page})=>{
- await conversation(page);await page.getByLabel('上传文本文件').setInputFiles({name:'deletable-synthetic.md',mimeType:'text/markdown',buffer:Buffer.from('UNPARSED_BROWSER_DELETE_SYNTHETIC')});await expect(page.locator('article').last()).toContainText('当前模拟不具备');
+ await conversation(page);await page.getByLabel('上传文本文件').setInputFiles({name:'deletable-synthetic.md',mimeType:'text/markdown',buffer:Buffer.from('UNPARSED_BROWSER_DELETE_SYNTHETIC')});await page.getByRole('button',{name:'提交附件',exact:true}).click();await expect(page.locator('article').last()).toContainText('当前模拟不具备');
  await page.getByRole('button',{name:'记忆管理',exact:true}).click();const memory=page.getByRole('dialog',{name:'记忆管理'});const file=memory.locator('.memory-card').filter({hasText:'deletable-synthetic.md'});await file.getByRole('button',{name:'停止使用文件'}).click();await expect(file).toContainText('STOPPED');await file.getByRole('button',{name:'删除文件'}).click();await expect(file).toHaveCount(0);await memory.getByRole('button',{name:'关闭记忆管理'}).click();await expect(page.locator('.messages')).not.toContainText('UNPARSED_BROWSER_DELETE_SYNTHETIC');
- await page.getByLabel('上传文本文件').setInputFiles({name:'invalid.txt',mimeType:'text/plain',buffer:Buffer.from([255,254,0])});await expect(page.getByRole('alert')).toContainText('有效 UTF-8');
+ await page.getByLabel('上传文本文件').setInputFiles({name:'invalid.txt',mimeType:'text/plain',buffer:Buffer.from([255,254,0])});await page.getByRole('button',{name:'提交附件',exact:true}).click();await expect(page.getByRole('alert')).toContainText('有效 UTF-8');
 });
 
 test('lost acknowledgement reuses the same event key instead of duplicating input',async({page})=>{
