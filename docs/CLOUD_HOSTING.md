@@ -16,7 +16,11 @@ Authorized engineering amendment: 2026-10-01 08:36 UTC. This is a Vercel deploym
 
 ## One-time setup and activation gates
 
-No hosted endpoint has been verified. Repository readiness is not a live website.
+The first Vercel bootstrap at `96fc1d237b8da51555897f6d93390c00c4134c8c` served static assets, but `/v1/development/status` failed with `FUNCTION_INVOCATION_FAILED`. Vercel discovered the imported internal `application` factory instead of the HTTP handler. Static readiness did not establish hosted usability; an unconfigured deployment must return a truthful status, never bypass setup or authentication.
+
+The entrypoint correction keeps only the explicit HTTP `handler` export, retains the same handler instance under Vercel's request wrapper, and opens/closes application resources inside each GET/POST dispatch. Readiness pings do not create an application. Access-log suppression remains below the host's `log_message` override. Existing owner, database, provider-budget, synthetic-only and production gates are unchanged.
+
+Verification adds `tests/test_vercel_entrypoint.py` for wrapper dispatch, cleanup, isolation and streaming, plus `scripts/smoke_vercel_entrypoint.py` against the actual pinned `vercel-runtime==0.22.1` streaming/IPC runtime in CI. The smoke runs with no inherited app configuration, checks readiness, HTTP 200 unconfigured status, private-route denial, one start/end pair per request and URL-log redaction. The cloud workspace blocks local socket creation, including an elevated retry; local unit checks do not substitute for that hosted-runtime test or the post-merge public endpoint check. No credentials, database provisioning or provider calls are part of this fix.
 
 The normal setup has **three sensitive entries**, all personally controlled by the owner. Model names, rates, output limit and build defaults are versioned in `control/cloud-profile.json` and `vercel.json`; they are not a user form. No model grant is enabled by default.
 
@@ -60,3 +64,5 @@ The metadata-only scripts/print_cloud_budget_policy.py --approved-grant helper c
 Safe blank deployment template: docs/CLOUD_ENV_TEMPLATE.txt (the existing .env.example remains local-mode only) (never commit a filled copy). Committed defaults: Vite, build npm run build:cloud, output dist, Python function maximum 300 seconds, DeepSeek official HTTPS endpoint, deepseek-v4-pro, thinking enabled/high, 8192 output-token cap and the existing reviewed peak-rate floor. Recheck official peak rates at new grant approval. The build copies/reuses only an exact verified three-file runtime slice and performs its real subprocess handshake.
 
 Cryptographic reference: [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). The existing server scrypt verifier remains supported; browser setup uses the fixed Web Crypto-compatible PBKDF2 parameters, not a fast unsalted hash.
+
+The first fix head passed the actual Vercel runtime smoke, real Postgres and seven cloud browser flows. Its broader browser suite passed all 75 tests but exceeded the eight-minute job budget; a retry exposed an intermittent existing source-return focus assertion (74/75 passed). The follow-on correction restores focus in the React commit phase and adds a delayed-frame regression instead of weakening assertions. The planning job receives a bounded 12-minute allowance for installation, the complete suite and retained visual artifacts. Exact final-head/main and public endpoint verification remain adoption gates.

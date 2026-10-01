@@ -16,7 +16,9 @@ concurrency:
 jobs:
   planning:
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    # Browser installation plus the full visual evidence upload exceeded 8m;
+    # keep all assertions and artifacts, with a bounded infrastructure margin.
+    timeout-minutes: 12
     env:
       PRODUCT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       PRODUCT_REPOSITORY: ${{ github.repository }}
@@ -234,6 +236,10 @@ jobs:
           persist-credentials: false
       - name: Install pinned cloud database client
         run: python3 -m pip install -r requirements.lock
+      - name: Exercise actual Vercel Python streaming entrypoint without configuration
+        run: |
+          python3 -m pip install vercel-runtime==0.22.1
+          python3 scripts/smoke_vercel_entrypoint.py
       - name: Acquire only reviewed provider-free runtime
         run: |
           python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-cloud-runtime"

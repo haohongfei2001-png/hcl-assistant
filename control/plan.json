@@ -467,8 +467,8 @@
     }
   },
   "writer": {
-    "branch": "product/chat-interface-refinement",
-    "scope": "U1-01_CHAT_INTERFACE_REFINEMENT",
+    "branch": "fix/vercel-python-entrypoint",
+    "scope": "C1-01_HOSTED_ENTRYPOINT_MAINTENANCE",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
