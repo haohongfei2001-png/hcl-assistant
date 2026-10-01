@@ -4,18 +4,22 @@ on:
     inputs:
       model:
         description: Explicit approved DeepSeek model ID (no fallback)
+        default: deepseek-v4-pro
         required: true
         type: string
       input_usd_per_million:
         description: Current official maximum/cache-miss input USD per million
+        default: '1.32'
         required: true
         type: string
       output_usd_per_million:
         description: Current official maximum output USD per million
+        default: '3.96'
         required: true
         type: string
       grant:
         description: Explicit product grant hcla-20261001-six-requests-usd10
+        default: hcla-20261001-six-requests-usd10
         required: true
         type: string
 permissions:
