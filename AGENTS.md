@@ -7,11 +7,11 @@
 先读README、STATUS、DEVELOPMENT_PLAN、Master Plan1.2、docs/DOCUMENT_AUTHORITY.md、UX_SPEC、VISUAL_SYSTEM、contracts、PRODUCT_REFINEMENT_WORK_PACKAGES和ACCEPTANCE_MATRIX；再核对remote main、open PR和writer。普通用户先聊天；Explain/Inspector按需，Lab是高级研究环境。
 
 当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。<!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-02_REVISION_EVIDENCE_MEMORY_LOOP**
+**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-02。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
 
-revision/change/evidence/source/history/memory control loop。验收：R13、R14、R15、R16
+bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。

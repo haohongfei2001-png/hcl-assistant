@@ -2,14 +2,14 @@
 
 ## Current product direction and next task
 
-**Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02/03尚未实现。
+**Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03尚未实现。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: P1-02_REVISION_EVIDENCE_MEMORY_LOOP**
+**NEXT_READY: P1-03_INTEGRATED_SYNTHETIC_ACCEPTANCE**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-02。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：P1-03。
 
-revision/change/evidence/source/history/memory control loop。验收：R13、R14、R15、R16
+bounded inspect/settings and integrated original synthetic acceptance。验收：R17、R18、R19、R20
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -33,7 +33,7 @@ revision/change/evidence/source/history/memory control loop。验收：R13、R14
 
 ## Refinement evidence and remaining work
 
-P0-01的临时/删除/多标签页/完整文件/精确更正/实际依据/唯一队列契约已完成受限synthetic验证，见 [包证据](docs/P0_01_EVIDENCE.md)。最终采用须PR8精确head及main检查。已保留原始失败与修复迭代。P1-01共享Assistant-first界面、输入/阅读/恢复及Pages静态bundle见 [包证据](docs/P1_01_EVIDENCE.md)，最终采用以PR9的head/main检查为准。下一步P1-02修订/依据/记忆闭环；P1-03仍未实现。
+P0-01的临时/删除/多标签页/完整文件/精确更正/实际依据/唯一队列契约已完成受限synthetic验证，见 [包证据](docs/P0_01_EVIDENCE.md)。最终采用须PR8精确head及main检查。已保留原始失败与修复迭代。P1-01共享Assistant-first界面、输入/阅读/恢复及Pages静态bundle见 [包证据](docs/P1_01_EVIDENCE.md)，最终采用以PR9的head/main检查为准。P1-02受限修订/依据/历史/导出闭环见 [包证据](docs/P1_02_EVIDENCE.md)，最终采用以PR10的head/main检查为准。下一步P1-03整体synthetic验收与只读检查。
 
 ## Production gate and compatibility record
 
@@ -47,6 +47,8 @@ L3四门槛仍未满足：I06_DISPOSITION、PINNED_PERMITTED_RUNTIME_ARTIFACT、
 
 Owner 已批准最新三张产品状态稿和两张数字形象稿。设计身份 CONTINUUM-V1-20261001，目录见 [Design Adoption](docs/design/continuum-v1/README.md)。当前仓库状态为 **PENDING_BINARY_IMPORT_AND_REVIEW**：五张原PNG已在会话交付包保留并校验，但尚未在此分支完成二进制入库与回读；不能声称资产已齐、已正式采用或 V1 已实现。规格/计划草稿不覆盖 main。
 
-本次读基线 main fa2cd0bf，P0-01/P1-01 完成事实保留；未合入的 P1-02/PR10 保持原 writer 与实现归属。本次文档工作没有修改应用、测试、workflow、runtime或研究机制，没有触发生产/能力启用。唯一当前任务不变，后续 V1 工作归入既有 P1-03 的三个顺序交付切片；无第二队列。
+初读基线为 fa2cd0bf。准备期间 PR10 已合入 **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f**；本次协调保留其全部应用、测试、记录和 P1-02 COMPLETE / P1-03 NEXT_READY 投影，不把新状态覆盖回初读基线。采用说明中对 fa2cd0bf/当时 PR10 执行的描述是读取历史，当前事实以本节和唯一队列为准。本次不接管其 writer，原 writer 元数据随 main 原样保留。
 
-两套形象候选 M-01/M-02 同时保留，selected_companion=null，不因未选唯一形象阻塞共同界面。原图中的示例文案、数字、引用、文件/工具按钮仅是视觉示例；真实状态来自现有实现/回执。V01–V10 实際视觉对照与交互演示均 NOT_IMPLEMENTED / NOT_VERIFIED；旧包 CI 不替代这些新验收。
+V1 实施增量属于同一 P1-03 的三个顺序交付切片，不另起队列；仅在原图入库与本采用PR的门槛满足后生效。原 P1-03 的 Inspector/Settings/整体synthetic范围和 R17–R20 义务仍保留。两套形象 M-01/M-02 同时保留，selected_companion=null，未选唯一形象不阻塞共同界面。
+
+本次相对协调后 main 只改变设计规格、资产清单及计划元数据；合并继承的 P1-02 代码不归功于本次。无应用/测试/workflow/runtime或研究机制修改，无生产/能力启用。原图中的示例文案、数字、引用、文件/工具按钮不成为事实。V01–V10 的实际视觉对照与交互演示均 NOT_IMPLEMENTED / NOT_VERIFIED；旧包 CI 不替代新验收。

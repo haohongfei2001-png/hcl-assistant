@@ -1,0 +1,1 @@
+export type HistoryHit={conversation_id:string;run_id:string;title:string;snippet:string;historical?:boolean;scope?:string;related_changes?:{action:string;old?:{content:string}[];new?:{content:string}[]}[]};

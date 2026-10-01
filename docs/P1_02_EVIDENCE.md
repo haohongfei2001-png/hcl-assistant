@@ -1,0 +1,23 @@
+# P1-02 revision, evidence and memory loop
+
+Baseline: adopted shared-shell mainfa2cd0bf, exact-main CI36786708016 PASS. Single writer PR10. Original synthetic fixtures only; no research/confirmation/private inputs, provider, real semantics, production activation, Judge or agent work.
+
+Answer-level citations and Explain sources now bind only actual claim sources, not the wider selected context. Direct arithmetic has no fabricated background evidence; frozen historical sources are narrowed using their own recorded claims, never current information. Development runtime's explicit source path remains separate.
+
+Pages revisions now preserve immutable content/type versions: correction, from-now supersession, downgrade to guess and isolated hypothetical branch are distinct. Historical classification is frozen; older missing classifications are explicitly unverified. Hypotheses do not write back to actual background. Forward deletion/stop closure includes descendants/branches while preserving independent authored sources. Existing14 model contracts remain unchanged, with20 additional revision contracts.
+
+Shared search reads current-permission history plus explicit same-conversation changes, locates original runs and never treats historical text as current fact. Exports refetch current policy/locked storage. Read-only local change projections use actual revision receipts, not ordinary version increments; same-content corrections do not invent insight. Existing browser source/evidence panels gain a return path, exact version/source text and bounded scope. Local revision/claim changes broadcast identifiers only to invalidate other-tab UI caches; they do not send bodies or invoke providers.
+
+Actual local verification before first hosted batch:166Python tests PASS after new history tests;34Node preview contracts; both builds and static Pages boundary. Hosted browser and independent review remain pending. R13–R16 completion requires exact-head and exact-main acceptance; R17–R20 not claimed here.
+
+Initial hosted headdec0fdf CI36788331968 failed5/39 journeys (34passed). Four failures exposed clipped More-menu actions when short/direct replies had no evidence CTA; disclosure actions now stay in normal flow inside the scroll container. One Pages historical check selected the registration acknowledgement rather than the actual background-answer run; it now binds to that original run ID and retains the original-source assertion.
+
+Independent review found a delayed local export could deliver a pre-revocation response after another tab deleted its source; export-generation/scope guards now cancel it, with a two-tab browser regression. Identical Pages corrections now preserve original records and explicitly report NO_CHANGE without a material-change CTA; an additional Node/browser regression checks that behavior. All previous assertions remain.
+
+## Verified checkpoint
+
+Exact09c1ffb6973231c871bbb2a249d246b697d4d8bd: [CI36791363067](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36791363067) PASS with41 browser journeys,166Python (including35Node preview contracts), both builds, static bundle boundary and original pinned-development smoke. Independent scoped review cleared claim/evidence, export-generation and no-op semantics.
+
+Final consolidation also ties attachment filename badges to their accepted source identity and purges them on deletion/cross-tab invalidation; unrelated unsent/reading files are not assigned that origin. Two targeted browser regressions retain the filename/body removal assertions. Final43-browser exact-head plus exact-main acceptance remains required.
+
+R13–R16 checkpoint complete: answer/evidence/exact-source/return/correction; genuine revision-receipt changes without version-only insights; immutable correction/from-now/guess/hypothesis; current-permission search/export and deletion propagation. Unsupported/free-language semantics and missing historical classification stay explicit. R17–R20 remain pending.
