@@ -53,9 +53,9 @@ PR #6在本次采用期间已由另一执行者合入 `e2a72050e184e61f45b17de3f
 
 ## 6. Continuum V1 增量，不另建队列
 
-最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。正式采用须完整原图入库核验及原有审查/合并门槛，缺图的草稿不授权启动新视觉实施。
+最新批准的三张界面稿和两张形象稿见 [设计采用目录](docs/design/continuum-v1/README.md)。五张原图已按 manifest 入库并完成 blob 回读；本采用变更合入 main 后成为正式视觉基准。视觉采用不等于 P1-03 实现完成。
 
-初读基线 fa2cd0bf 的 P1-02/PR10 已在准备期间合入 main **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f**。本次协调保留其全部代码、回执、writer来源和 P1-02 COMPLETE / P1-03 NEXT_READY；不恢复旧任务。设计文档中的初读基线/当时并行PR描述只作历史，当前状态以上方机器镜像和 STATUS 为准。本次不认领 implementation 包。
+本采用变更直接基于并已协调 main **905ff1fbb3b2264757931e8d9ff5fdff54e7a32f**，保留其全部 P1-02 代码、回执和 COMPLETE 状态。唯一 NEXT_READY 为 P1-03；本次文档/资产采用不实现应用代码，P1-03 implementation writer 由后续实现工作按单 writer 规则认领。
 
 新视觉工作归入仍未完成的 **P1-03**，按 V1-A 共享外观/首页/长对话 → V1-B 依据/来源/修订/锚点返回 → V1-C 双形象/响应式/Inspector与Settings/整体截图及交互验收推进。三切片范围、参考图和验收条件在 [P1-03包定义](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md#continuum-v1p1-03-内的三个依赖交付切片) 中；切片不是另外的 NEXT_READY、独立队列或并行 writer。
 
