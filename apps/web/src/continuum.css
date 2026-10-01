@@ -100,7 +100,7 @@
 .continuum-shell .message-menu {position:static;max-width:100%;min-width:min(180px,100%);background:#fff;border:1px solid #d7e1f7;border-radius:14px;box-shadow:var(--continuum-shadow);margin:6px 0;padding:6px}
 .continuum-shell .turn-notice {color:#835600;background:#fff7e7;border:1px solid #eee0b9;border-radius:10px;padding:10px 12px;font-size:14px;line-height:23px}
 .continuum-shell .composer {position:relative;isolation:isolate;flex-shrink:0;min-width:0;padding:16px 18px 12px;border:1px solid #d9e0ec;border-radius:24px;background:#fff;box-shadow:0 8px 28px rgba(85,104,144,.06),inset 0 1px 0 #fff}
-.continuum-shell .composer:focus-within {border-color:#a6b7f3;box-shadow:0 0 0 2px #cbd6ff,0 10px 30px #738bba12}
+.continuum-shell .composer:focus-within {border-color:var(--continuum-focus);box-shadow:0 0 0 2px #cbd6ff,0 10px 30px #738bba12}
 .continuum-shell .composer textarea {min-width:0;min-height:0;max-height:none;padding:3px 8px 10px;color:#1e2d54;background:transparent;font-size:16px;line-height:27px;scrollbar-width:thin}
 .continuum-shell .composer textarea::placeholder {color:#61729a;opacity:1}
 .continuum-shell .composer textarea:focus-visible {outline:0}
@@ -353,5 +353,5 @@
 }
 
 /* Keep the help phrase and short mobile introduction readable at narrow widths. */
-.continuum-shell .home-copy h1 span {display:inline-block;white-space:nowrap}
+.continuum-shell .home-copy h1 span {display:inline-block;max-width:100%}
 @media(max-width:479px){.continuum-shell .home-copy>p:not(.home-greeting){text-wrap:balance}}
