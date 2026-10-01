@@ -55,6 +55,9 @@ class Handler(BaseHTTPRequestHandler):
   try:
    class FixtureHandler(make_handler(app)):
     def do_POST(self):
+     if self.path=='/v1/fixture/reset-throttle' and self.client_address[0]=='127.0.0.1':
+      with psycopg.connect(DSN,autocommit=True) as admin:admin.execute('DELETE FROM hcla.login_attempts')
+      self.json(200,{'fixture_reset':True});return
      mode=self.headers.get('X-HCLA-Fixture-Completion')
      if mode in {'delay','interrupt'}:self.wfile=CompletionWriter(self.wfile,mode)
      return super().do_POST()

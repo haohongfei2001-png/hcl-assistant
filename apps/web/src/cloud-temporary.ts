@@ -1,30 +1,31 @@
 // Temporary bodies/snapshots live only in this tab's RAM. No browser persistence.
 import type {Conversation,Run} from './api';
 type Packet={view:{conversation:Conversation;state_version:number;runs:Run[];events:unknown[]};context:Record<string,unknown>;sources:{id:string;version:number;sha256:string;deleted?:boolean}[];explains:Record<string,unknown>;inspections:Record<string,unknown>;snapshot:unknown};
-type Entry={conversation:Conversation;packet:Packet;requestId?:string;done?:Promise<void>;error?:Error;listeners:Set<()=>void>;unavailable?:boolean};
+type Entry={conversation:Conversation;packet:Packet;requestId?:string;done?:Promise<void>;error?:Error;listeners:Set<()=>void>;unavailable?:boolean;controller?:AbortController};
 const entries=new Map<string,Entry>();
-const runOwners=new Map<string,Entry>();
+const runOwners=new Map<string,string>();
+let epoch=0;
 let enabled=false;
 export function setCloudTemporary(value:boolean){enabled=value}
-function entryForRun(id:string){return runOwners.get(id)}
-export function clearTemporary(){entries.clear();runOwners.clear()}
+function entryForRun(id:string){const conversation=runOwners.get(id);return conversation?entries.get(conversation):undefined}
+export function clearTemporary(){epoch++;for(const entry of entries.values())entry.controller?.abort();entries.clear();runOwners.clear()}
 function notify(entry:Entry){for(const listener of entry.listeners)listener()}
 async function execute(entry:Entry,request:unknown){
  if(entry.unavailable)throw new Error('409: 临时连接已中断，请新建对话');
  if(entry.requestId)throw new Error('409: 请先停止当前回答，再提交临时对话修订');
- const requestId=crypto.randomUUID();entry.requestId=requestId;entry.error=undefined;
+ const requestId=crypto.randomUUID(),generation=epoch;entry.requestId=requestId;entry.error=undefined;const controller=new AbortController();entry.controller=controller;
  let accepted:(run:Run)=>void=()=>{},rejected:(e:Error)=>void=()=>{};
  const acceptedPromise=new Promise<Run>((resolve,reject)=>{accepted=resolve;rejected=reject});
  entry.done=(async()=>{
   let wasAccepted=false;
   try{
-   const response=await fetch('/v1/temporary/execute',{method:'POST',headers:{'Content-Type':'application/json','X-HCLA-Request':'1'},body:JSON.stringify({conversation_id:entry.conversation.id,request_id:requestId,request,snapshot:entry.packet.snapshot})});
-   if(!response.ok){const value=await response.json();throw new Error(`${response.status}: ${value.error}`)}
+   const response=await fetch('/v1/temporary/execute',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json','X-HCLA-Request':'1'},body:JSON.stringify({conversation_id:entry.conversation.id,request_id:requestId,request,snapshot:entry.packet.snapshot})});
+   if(!response.ok){const value=await response.json();if(response.status===409&&/Temporary (state changed|request already consumed|conversation already started|conversation expired)/.test(value.error||''))entry.unavailable=true;throw new Error(`${response.status}: ${value.error}`)}
    const reader=response.body!.getReader(),decoder=new TextDecoder();let buffer='';let complete=false;
    while(true){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let boundary;
-    while((boundary=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);const line=block.split('\n').find(l=>l.startsWith('data: '));if(!line)continue;const event=JSON.parse(line.slice(6));
+    while((boundary=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);const line=block.split('\n').find(l=>l.startsWith('data: '));if(!line)continue;if(generation!==epoch||entries.get(entry.conversation.id)!==entry)throw new Error('会话已退出');const event=JSON.parse(line.slice(6));
      if(event.type==='cloud.accepted'||event.type==='cloud.run'){
-      const run=event.payload as Run;runOwners.set(run.run_id,entry);
+      const run=event.payload as Run;runOwners.set(run.run_id,entry.conversation.id);
       const privacy=(request as {event?:{revisions?:{action:string}[]}}).event?.revisions?.some(r=>['DELETE','STOP_USING'].includes(r.action));
       if(privacy&&!wasAccepted){entry.packet={view:{conversation:entry.conversation,state_version:run.state_version_after,runs:[],events:[]},context:{records:[],managed_records:[],managed_sources:[]},sources:[],explains:{},inspections:{},snapshot:null}}
       entry.packet.view.state_version=run.state_version_after;entry.packet.view.runs=entry.packet.view.runs.some(r=>r.run_id===run.run_id)?entry.packet.view.runs.map(r=>r.run_id===run.run_id?run:r):[...entry.packet.view.runs,run];
@@ -34,9 +35,9 @@ async function execute(entry:Entry,request:unknown){
     }
    }
    if(!complete)throw new Error('临时连接中断，内容无法从服务器恢复；请新建对话，不会自动重复模型请求');
-  }catch(error){entry.error=error instanceof Error?error:new Error('临时请求未完成');
+  }catch(error){if(generation!==epoch){if(!wasAccepted)rejected(new Error('会话已退出'));return}entry.error=error instanceof Error?error:new Error('临时请求未完成');
    // Any ambiguous accepted request may have revoked data. Never serve the old snapshot or provisional answer.
-   if(wasAccepted||!/^(?:400|401|403|409|413|422|429):/.test(entry.error.message)){entry.unavailable=true;entry.packet={view:{conversation:entry.conversation,state_version:0,runs:[],events:[]},context:{records:[],managed_records:[],managed_sources:[]},sources:[],explains:{},inspections:{},snapshot:null}}
+   if(entry.unavailable||wasAccepted||!/^(?:400|401|403|409|413|422|429):/.test(entry.error.message)){entry.unavailable=true;entry.packet={view:{conversation:entry.conversation,state_version:0,runs:[],events:[]},context:{records:[],managed_records:[],managed_sources:[]},sources:[],explains:{},inspections:{},snapshot:null}}
    if(!wasAccepted)rejected(entry.error);notify(entry)}
   finally{entry.requestId=undefined}
  })();

@@ -7,11 +7,11 @@
 先读README、STATUS、DEVELOPMENT_PLAN、Master Plan1.2、docs/DOCUMENT_AUTHORITY.md、UX_SPEC、VISUAL_SYSTEM、contracts、PRODUCT_REFINEMENT_WORK_PACKAGES和ACCEPTANCE_MATRIX；再核对remote main、open PR和writer。普通用户先聊天；Explain/Inspector按需，Lab是高级研究环境。
 
 当前唯一产品队列为 `control/plan.json.product_development`，与Development Plan/Status一致。<!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: C1-01_CLOUD_HOSTING_ADAPTATION**
+**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：C1-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-isolated Postgres storage, HTTPS owner sessions, request-owned durable execution, atomic budget and offline cloud acceptance。验收：C01、C02、C03、C04、C05、C06
+当前6包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。

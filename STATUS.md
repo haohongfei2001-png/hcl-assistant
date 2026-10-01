@@ -5,11 +5,11 @@
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03核心已采用；Continuum V1及整体synthetic验收在a1251e3d/run36809090489通过267 Python、24 Node和66 browser，独立源代码/视觉审查无阻塞项。本PR完成实现验收记录，采用仍须final-head和exact-main核验。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: C1-01_CLOUD_HOSTING_ADAPTATION**
+**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：C1-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-isolated Postgres storage, HTTPS owner sessions, request-owned durable execution, atomic budget and offline cloud acceptance。验收：C01、C02、C03、C04、C05、C06
+当前6包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -17,6 +17,10 @@ isolated Postgres storage, HTTPS owner sessions, request-owned durable execution
 当前实施状态由以上队列与各包证据共同界定。当前机器队列是 `control/plan.json.product_development`；细节见 [Development Plan](DEVELOPMENT_PLAN.md) 与 [Authority](docs/DOCUMENT_AUTHORITY.md)。
 
 长期终局：Understand → Revise → Judge → Help → Act。**Judge = LONG_TERM_GOAL_ONLY / NOT_IMPLEMENTED_AS_GENERAL_CAPABILITY / NOT_VALIDATED / NOT_PRODUCTION_ENABLED**。未新增Judge运行时能力、已启用manifest项或agent权限。
+
+## Cloud adaptation checkpoint
+
+C1-01 offline implementation and real Postgres/direct-stream browser evidence are recorded in [cloud evidence](docs/C1_01_EVIDENCE.md). The shared cloud route retains actual synthetic HCL preparation in request/tab memory, without persisting temporary bodies. Owner HTTPS authentication, durable ordinary history, fenced request execution and conservative usage accounting are implemented. Final-head/exact-main adoption remains required; no hosted URL, new provider grant, external account or real-private-data activation is implied.
 
 ## Implemented baseline and evidence
 

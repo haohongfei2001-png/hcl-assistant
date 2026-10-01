@@ -1,22 +1,29 @@
 # C1-01 cloud adaptation evidence
 
-Baseline: PR16 main 1dc14fe207495cf587f8c33ca11f793f9d456803. Changes are product-owned cloud hosting adaptation; the reviewed runtime lock and capability manifest are unchanged.
+Baseline: PR16 main 1dc14fe207495cf587f8c33ca11f793f9d456803. Product-owned cloud hosting adaptation only; reviewed runtime lock and capability manifest unchanged. PR17 tracks the implementation and final exact-SHA adoption.
 
-## Verified locally so far
+## Actual verification
 
-- Existing complete Python suite plus new cloud unit tests: 281 tests, PASS with 9 cloud-Postgres tests skipped in this generic invocation (those run separately against real Postgres)
-- PGlite was used only for initial SQL compatibility; it is not concurrency evidence. Its default single-connection listener rejected multi-connection tests; those failures were retained and the test was moved to an actual disposable PostgreSQL 16.2 process
-- Real PostgreSQL independent-connection tests: initial 9 passed, including one-dispatch racing callers, durable budget lock, expired-owner fencing, session revocation, cross-tenant denial and temporary state round trip
-- Additional actual pinned HCL temporary preparation and validation-error head-preservation regressions passed in the expanded run
-- npm run build passed: TypeScript, both Vite targets, Pages boundary scan and 24 Node tests
-- Local browser launch is NOT verified: the bundled browser download returned invalid zip payloads; system Chromium then failed because this executor disallows its Unix socket, including a reviewed elevated retry. No app assertion was reached in those attempts. Hosted exact-SHA CI runs the complete baseline browser suite and separate cloud/Postgres browser flow
+- Complete generic Python suite: 285 tests, PASS, with 13 database cases explicitly skipped in that generic invocation and run separately against real Postgres
+- Actual disposable PostgreSQL 16.2 locally: 13/13 PASS, including independent-instance one-dispatch races, immutable/no-self-bootstrap budget, expired-owner fencing, durable silent-thinking cancellation with unknown transport charge retained, session revocation/throttling, cross-tenant denial, raw-copy deletion, snapshot round trips/replay denial and validation-error preservation
+- The actual reviewed three-file HCL runtime executed in the temporary cloud path, returned EXECUTED and used-in-answer true on an original synthetic fixture. All Postgres tables were inspected for the source canary: no temporary body persisted. Provider bytes were injected local fixtures, not live calls
+- TypeScript, both Vite builds, Pages boundary scan and 24 Node tests PASS
+- Hosted head 45abced3087201379856e8c325fd11bbe266ba80: [run 36841847839](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36841847839) passed both planning and cloud-postgres jobs (67 baseline browser journeys passed; cloud cases intentionally skipped there). Cloud job passed 18 Python tests (5 unit + 13 real Postgres) and five direct-proxy browser flows: owner login/reload/logout, temporary pinned HCL/refresh loss, multi-turn privacy deletion, and body invalidation before delayed or interrupted stream completion
+- Final hardening adds a sixth browser flow: logout during a delayed temporary stream must not resurrect body-bearing state. Independent read-only reproduction deliberately ignored AbortSignal and confirmed handledAfterLogout=false / bodyRetainedAfterLogout=false
 
-## Review corrections
+Final package adoption remains conditional on PR17 final-head CI, merge and exact-main CI. A prior green SHA is not substituted for the final code.
 
-Independent read-only review identified two temporary-state bugs during development: consuming the snapshot before input validation, and retaining an old client packet after an interrupted privacy mutation. Validation now occurs first in the volatile Controller; only then does a database CAS consume the head. Privacy acceptance clears cached bodies, and ambiguous stream interruption clears/poisons the tab entry. A non-ASCII login comparison edge was also fixed.
+## Failures retained and fixed
 
-Temporary mutations during active generation are refused with a Stop-first explanation. This is a disclosed bounded limitation, not a false deletion success. Temporary interruption may lose the conversation because no body is persisted remotely.
+- Initial PGlite compatibility tests could not establish concurrency: its default single-connection listener rejected simultaneous connections. Switched to actual disposable PostgreSQL 16.2; PGlite is not claimed as concurrency evidence
+- Local Chromium download returned invalid zip payloads; system Chromium could not create its Unix socket, including a reviewed elevated retry. No application assertion ran in those attempts. Hosted CI supplied the actual browser evidence
+- First hosted cloud browser run d2034020 failed login because the loopback-only test adapter lost header case-insensitivity; fixed the fixture, preserved the production HTTPS boundary, and switched to an unbuffered Vite proxy
+- Independent review found premature temporary-head consumption, stale cached bodies after interrupted deletion, delayed React redaction, and a late-packet logout race. All were corrected and covered with backend/browser or independent in-memory regressions
 
-## Remaining acceptance
+Temporary mutation while generation is active is explicitly refused with a Stop-first explanation; it is not reported as a successful deletion. Temporary interruption may lose the conversation because no body is persisted remotely. A stale or consumed snapshot is poisoned locally rather than served as valid state.
 
-Draft implementation, final regression additions, cloud browser proof, independent final review and exact-head/exact-main CI remain required before completion. Actual hosted endpoint, configured owner project/credentials and a new live provider budget remain separately gated. No Supabase/Vercel account was mutated; no real provider request was made; no exposed key was read or used.
+## Scope and handoff
+
+Zero real provider calls. No credentials or live cloud account/database were read or mutated; no paid resource, public service or new grant was provisioned. The exposed historical key was not retrieved or used. No TodayAction data reuse, hidden reasoning storage, efficacy claim or production HCL activation.
+
+Offline hosting adaptation is the completed package scope. The actual HTTPS deployment, isolated owner project/credentials, newly approved model budget and any real-private-data authorization remain external gates. Ordinary application use after secure operator setup requires URL/login/chat, not developer forms or a local terminal.

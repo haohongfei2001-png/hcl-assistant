@@ -15,7 +15,7 @@ export async function api<T>(path:string,body?:unknown):Promise<T>{
 export async function stream(runId:string,onEvent:()=>void,signal:AbortSignal){
  if(await temporaryStream(runId,onEvent,signal))return;
  // Explicit POST owns cloud execution. Reads/reconnects never dispatch a provider.
- const execution=requestBound?rawApi(`/v1/runs/${runId}/execute`,{}).catch(()=>undefined):Promise.resolve();
+ if(requestBound)void rawApi(`/v1/runs/${runId}/execute`,{}).catch(()=>undefined);
  let after=0;
  for(let attempts=0;attempts<6;attempts++){
   try{
@@ -24,7 +24,7 @@ export async function stream(runId:string,onEvent:()=>void,signal:AbortSignal){
    while(true){const {value,done}=await reader.read(); if(done)break; pending+=decoder.decode(value,{stream:true}); let boundary;
     while((boundary=pending.indexOf('\n\n'))>=0){const block=pending.slice(0,boundary);pending=pending.slice(boundary+2);const line=block.split('\n').find(l=>l.startsWith('data: '));if(line){const event=JSON.parse(line.slice(6));if(event.seq>after){after=event.seq;onEvent();}}}
    }
-   const run=await api<Run>(`/v1/runs/${runId}`); if(!run.pending){await execution;return;}
+   const run=await api<Run>(`/v1/runs/${runId}`); if(!run.pending)return;
   }catch(e){if(signal.aborted)return;if(attempts===5)throw e;}
  }
  throw new Error('Stream stopped. Reload history to recover the recorded run.');
