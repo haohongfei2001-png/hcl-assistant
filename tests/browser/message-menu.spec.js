@@ -14,8 +14,8 @@ async function evidence(page,info,before,after){mkdirSync(info.outputDir,{recurs
 for(const kind of ['same-line','wrap','complete'])test(`an open message action keeps its pointer gesture through a ${kind} stream update`,async({page},info)=>{
  const calls=await openFixture(page);await page.getByLabel('更多消息操作').click();const action=page.getByRole('button',{name:'查看合成测试回执',exact:true});await expect(action).toBeVisible();
  const before=await action.boundingBox();expect(before).not.toBeNull();const point={x:before.x+before.width/2,y:before.y+before.height/2};
- await page.mouse.move(point.x,point.y);await page.mouse.down();await page.evaluate(kind=>window.__menuFixture.update(kind),kind);await frames(page);const after=await action.boundingBox();await page.mouse.up();
- try{expect(Math.abs(after.y-before.y)).toBeLessThanOrEqual(2);await expect(page.getByRole('dialog',{name:'合成测试回执'})).toBeVisible();expect(await page.evaluate(()=>window.__menuFixture.clicks())).toBe(1);expect(calls).toEqual([])}
+ await page.mouse.move(point.x,point.y);await page.mouse.down();await page.evaluate(kind=>window.__menuFixture.update(kind),kind);await frames(page);const after=await action.boundingBox();const hit=await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.closest('button')?.textContent,point);await page.mouse.up();
+ try{expect(Math.abs(after.y-before.y)).toBeLessThanOrEqual(2);expect(hit).toBe('查看合成测试回执');await expect(page.getByRole('dialog',{name:'合成测试回执'})).toBeVisible();expect(await page.evaluate(()=>window.__menuFixture.clicks())).toBe(1);expect(calls).toEqual([])}
  finally{await evidence(page,info,before,after)}
 });
 
