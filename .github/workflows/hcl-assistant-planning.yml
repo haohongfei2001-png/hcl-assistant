@@ -216,7 +216,9 @@ jobs:
 
   cloud-postgres:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # Run36931353634 spent 9m on install plus 25 journeys; preserve the full
+    # recovery/race suite with a bounded setup margin, without dropping checks.
+    timeout-minutes: 12
     services:
       postgres:
         image: postgres:16
@@ -250,7 +252,7 @@ jobs:
           python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-cloud-runtime"
           echo "HCL_DEVELOPMENT_ARTIFACT=$RUNNER_TEMP/hcla-cloud-runtime" >> "$GITHUB_ENV"
       - name: Real Postgres independent-instance and temporary-state regressions
-        run: python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres tests.test_cloud_trial tests.test_cloud_members -v
+        run: python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres tests.test_cloud_trial tests.test_cloud_members tests.test_cloud_recovery -v
       - name: Shared cloud UI with local injected provider fixture
         run: |
           npm ci --ignore-scripts

@@ -7,7 +7,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-当前9包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+当前10包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -31,6 +31,7 @@
 | U1-01 | six-point Continuum chat interface refinement | C1-01 | COMPLETE |
 | M1-01 | 普通账号、隔离与自动续期 | U1-01 | COMPLETE |
 | U2-01 | 消费级账号入口与首次聊天 | M1-01 | COMPLETE |
+| M2-01 | 有界密码找回与登录撤销 | U2-01 | COMPLETE |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 

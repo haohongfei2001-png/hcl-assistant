@@ -14,6 +14,10 @@
     {
       "source": "/v1/:path*",
       "destination": "/api/index"
+    },
+    {
+      "source": "/account/recovery",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -35,6 +39,15 @@
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/account/recovery",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
         }
       ]
     }

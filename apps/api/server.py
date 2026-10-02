@@ -88,13 +88,22 @@ def handler(application):
 
         def json(self, status, obj, cookie=None):
             payload=json.dumps(obj,ensure_ascii=False).encode()
-            self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(payload)));
+            self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.send_header('Referrer-Policy','no-referrer'); self.send_header('Content-Length',str(len(payload)));
             if cookie:self.send_header('Set-Cookie',cookie)
             self.end_headers(); self.wfile.write(payload)
 
         def do_POST(self):
             try:
                 path=self.request_path()
+                if path.startswith('/v1/account/recovery/'):
+                    recovery=getattr(self.application,'recovery_auth',None)
+                    if recovery is None:raise Fault(503,'账号找回服务尚未开放')
+                    recovery.boundary(self,mutation=True);data=self.body();cookie=self.headers.get('Cookie')
+                    if path=='/v1/account/recovery/start':
+                        token,result=recovery.begin(data,cookie);self.json(202,result,recovery.cookie(token));return
+                    if path=='/v1/account/recovery/exchange':self.json(200,recovery.exchange(data,cookie));return
+                    if path=='/v1/account/recovery/complete':self.json(200,recovery.complete(data,cookie),recovery.clear_cookie());return
+                    raise Fault(404,'Unknown recovery route')
                 if path.startswith('/v1/account/'):
                     auth=getattr(self.application,'member_auth',None)
                     if auth is None:raise Fault(503,'普通账号服务尚未启用')
@@ -179,6 +188,11 @@ def handler(application):
         def do_GET(self):
             try:
                 path=self.request_path()
+                if path.startswith('/v1/account/recovery/'):
+                    if path!='/v1/account/recovery/status':raise Fault(404,'Unknown recovery route')
+                    recovery=getattr(self.application,'recovery_auth',None)
+                    if recovery is None:self.json(200,{'available':False,'ready':False});return
+                    recovery.boundary(self);self.json(200,recovery.status(self.headers.get('Cookie')));return
                 if path.startswith('/v1/account/'):
                     if path!='/v1/account/status':raise Fault(404,'Unknown account route')
                     auth=getattr(self.application,'member_auth',None)

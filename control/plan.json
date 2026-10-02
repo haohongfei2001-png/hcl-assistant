@@ -221,8 +221,8 @@
     "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
     "next_package_id": null,
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
-    "current_request_scope": "AUTHORIZED_CONSUMER_PRODUCT_JOURNEYS_ZERO_PROVIDER",
-    "current_executor_stop_after": "U2-01_EXACT_MAIN_VERIFIED",
+    "current_request_scope": "AUTHORIZED_DISABLED_PASSWORD_RECOVERY_ZERO_PROVIDER",
+    "current_executor_stop_after": "M2-01_EXACT_MAIN_VERIFIED",
     "implementation_started": true,
     "implementation_requires_separate_work": false,
     "execution_scope": "SYNTHETIC_PRODUCT_REFINEMENT_AND_GATED_DEVELOPMENT_CHAT",
@@ -448,6 +448,24 @@
           "U10"
         ],
         "evidence": "docs/U2_01_EVIDENCE.md; reviewed source 0f69943; final exact-head/main checks required"
+      },
+      {
+        "id": "M2-01",
+        "task": "M2-01_BOUNDED_PASSWORD_RECOVERY",
+        "depends_on": [
+          "U2-01"
+        ],
+        "state": "COMPLETE",
+        "delta": "默认关闭的密码找回、服务端 PKCE、一次性恢复与登录撤销、跨会话隔离和错误恢复",
+        "acceptance": [
+          "M07",
+          "M08",
+          "M09",
+          "M10",
+          "M11",
+          "M12"
+        ],
+        "evidence": "docs/M2_01_EVIDENCE.md; reviewed source 5345736; run36941191007 passed both jobs; final exact-head/main checks required"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -505,11 +523,17 @@
       "paid_billing_implemented": false,
       "live_provider_calls_authorized": false,
       "document": "docs/MEMBER_ACCOUNTS.md"
+    },
+    "password_recovery": {
+      "implementation_authorized": true,
+      "live_activation_authorized": false,
+      "live_mail_authorized": false,
+      "document": "docs/PASSWORD_RECOVERY.md"
     }
   },
   "writer": {
-    "branch": "fix/history-recovery",
-    "scope": "U2-01_HISTORY_RECOVERY_FOLLOWUP",
+    "branch": "product/m2-01-password-recovery",
+    "scope": "M2-01_BOUNDED_PASSWORD_RECOVERY",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

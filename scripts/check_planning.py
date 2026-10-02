@@ -149,6 +149,7 @@ CURRENT_PACKAGES = (
     ('U1-01', 'U1-01_CHAT_INTERFACE_REFINEMENT', list(range(1, 7))),
     ('M1-01', 'M1-01_MEMBER_ACCOUNTS_AND_ISOLATION', list(range(1, 7))),
     ('U2-01', 'U2-01_CONSUMER_ACCOUNT_ENTRY_AND_FIRST_CHAT', list(range(7, 11))),
+    ('M2-01', 'M2-01_BOUNDED_PASSWORD_RECOVERY', list(range(7, 13))),
 )
 L3_STOP = 'STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED'
 
@@ -178,13 +179,15 @@ def validate_current_queue(plan: dict[str, Any]) -> dict[str, Any]:
     require(cloud.get('implementation_authorized') is True, 'cloud engineering authorization required')
     for key in ('provisioning_authorized', 'credential_creation_authorized', 'live_provider_calls_authorized', 'existing_app_data_reuse_allowed', 'deployment_verified'):
         require(cloud.get(key) is False, 'cloud code authorization cannot imply activation: ' + key)
+    recovery=q.get('password_recovery',{})
+    require(recovery.get('implementation_authorized') is True and recovery.get('live_activation_authorized') is False and recovery.get('live_mail_authorized') is False,'recovery engineering cannot activate Auth or mail')
     rows = q.get('packages', [])
     require([r.get('id') for r in rows] == [r[0] for r in CURRENT_PACKAGES], 'canonical refinement package boundaries')
     pending = []
     for index, (row, expected) in enumerate(zip(rows, CURRENT_PACKAGES)):
         require(row.get('task') == expected[1], 'refinement task identity')
         require(row.get('depends_on') == ([] if index == 0 else [CURRENT_PACKAGES[index - 1][0]]), 'unknown/changed refinement dependency')
-        require(row.get('acceptance') == [f'{"M" if expected[0] == "M1-01" else "U" if expected[0] in {"U1-01", "U2-01"} else "C" if expected[0] == "C1-01" else "D" if expected[0] == "D1-01" else "R"}{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
+        require(row.get('acceptance') == [f'{"M" if expected[0] in {"M1-01", "M2-01"} else "U" if expected[0] in {"U1-01", "U2-01"} else "C" if expected[0] == "C1-01" else "D" if expected[0] == "D1-01" else "R"}{i:02d}' for i in expected[2]], 'refinement acceptance obligations changed')
         require(row.get('state') in {'COMPLETE', 'NEXT_READY', 'WAITING_DEPENDENCY'}, 'unknown refinement state')
         require(bool(row.get('delta')), 'refinement delta required')
         if row['state'] == 'COMPLETE':

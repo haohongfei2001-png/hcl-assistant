@@ -34,9 +34,9 @@ trial_config=replace(config,budget_id='offline-browser-trial',max_cost_usd=Decim
 trial_window=TrialWindow(int(time.time())-1,int(time.time())-1+14400)
 trial_mode=False
 trial_expired=False
-member_mode=False
+member_mode=False;recovery_mode=False
 with psycopg.connect(DSN,autocommit=True) as admin:
- admin.execute('TRUNCATE hcla.member_sessions,hcla.member_login_attempts,hcla.member_budget_attempts,hcla.member_entitlements,hcla.budget_policy,hcla.budget_attempts,hcla.login_attempts,hcla.sessions,hcla.execution,hcla.temporary_heads,hcla.idempotency,hcla.events,hcla.records,hcla.sources,hcla.objects,hcla.accounts')
+ admin.execute('TRUNCATE hcla.member_recovery,hcla.member_auth_generations,hcla.member_sessions,hcla.member_login_attempts,hcla.member_budget_attempts,hcla.member_entitlements,hcla.budget_policy,hcla.budget_attempts,hcla.login_attempts,hcla.sessions,hcla.execution,hcla.temporary_heads,hcla.idempotency,hcla.events,hcla.records,hcla.sources,hcla.objects,hcla.accounts')
  admin.execute('INSERT INTO hcla.budget_policy VALUES(1,%s)',(DevelopmentBudget._policy(SimpleNamespace(config=config)),))
  admin.execute('TRUNCATE hcla.trial_budget_policy,hcla.trial_budget_attempts')
  admin.execute('INSERT INTO hcla.trial_budget_policy VALUES(1,%s)',(trial_policy(trial_config,trial_window),))
@@ -67,11 +67,15 @@ class Handler(BaseHTTPRequestHandler):
  def __init__(self,*args,**kwargs):
   connection=psycopg.connect(DSN,autocommit=True,row_factory=dict_row,prepare_threshold=None);connection.execute('SET ROLE hcla_app')
   selected=trial_config if trial_mode else config
-  cfg=CloudConfig('', 'https://hcla.example.test','owner',verifier,'1'*64,selected,trial_window if trial_mode else None)
+  cfg=CloudConfig('', 'https://hcla.example.test','owner',verifier,'1'*64,selected,trial_window if trial_mode else None,member_recovery=recovery_mode)
   adapter=DeepSeekAdapter(base_url=selected.base_url,model=selected.model,api_key=selected.api_key,transport_factory=FakeTransport,wall_timeout=10)
   app=CloudApplication(cfg,store=PostgresLedger('',connection=connection),adapter=adapter,runtime=os.environ.get('HCL_DEVELOPMENT_ARTIFACT'),member_provider=FakeMemberProvider() if member_mode else None)
   app.development_auth=FixtureAuth(app.stores.persistent,cfg.origin,cfg.login,cfg.verifier)
-  if app.member_auth:app.member_auth=FixtureMemberAuth(app.stores.persistent,cfg.origin,cfg.state_key,FakeMemberProvider())
+  if app.member_auth:
+   app.member_auth=FixtureMemberAuth(app.stores.persistent,cfg.origin,cfg.state_key,FakeMemberProvider())
+   if recovery_mode:
+    from packages.cloud.recovery import RecoveryAuth
+    app.recovery_auth=RecoveryAuth(app.member_auth,cfg.state_key)
   if app.trial_auth:
    app.trial_auth=FixtureTrialAuth(cfg.origin,cfg.state_key,app.live_chat_service.budget)
    actual_clock=app.trial_auth.budget.clock
@@ -79,22 +83,29 @@ class Handler(BaseHTTPRequestHandler):
   try:
    class FixtureHandler(make_handler(app)):
     def do_POST(self):
-     global trial_mode,trial_expired,member_mode
-     if self.path=='/v1/fixture/member-mode' and self.client_address[0]=='127.0.0.1':
-      trial_mode=False;member_mode=True
+     global trial_mode,trial_expired,member_mode,recovery_mode
+     if self.path in {'/v1/fixture/member-mode','/v1/fixture/recovery-mode'} and self.client_address[0]=='127.0.0.1':
+      trial_mode=False;member_mode=True;recovery_mode=self.path.endswith('recovery-mode');FakeMemberProvider.reset()
       with psycopg.connect(DSN,autocommit=True) as admin:
-       admin.execute('TRUNCATE hcla.member_sessions,hcla.member_login_attempts,hcla.member_budget_attempts,hcla.member_entitlements,hcla.budget_attempts,hcla.execution,hcla.temporary_heads,hcla.idempotency,hcla.events,hcla.records,hcla.sources,hcla.objects,hcla.accounts')
+       admin.execute('TRUNCATE hcla.member_recovery,hcla.member_auth_generations,hcla.member_sessions,hcla.member_login_attempts,hcla.member_budget_attempts,hcla.member_entitlements,hcla.budget_attempts,hcla.execution,hcla.temporary_heads,hcla.idempotency,hcla.events,hcla.records,hcla.sources,hcla.objects,hcla.accounts')
        for subject in FakeMemberProvider.identities.values():
         tenant=VerifiedPrincipal(FakeMemberProvider.issuer,subject,1).tenant
         admin.execute("INSERT INTO hcla.member_entitlements(tenant,grant_id,enabled,starts_at,expires_at,temporary_enabled,persistent_enabled,max_requests,max_cost_usd) VALUES(%s,'offline-browser-member',true,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour',true,true,100,1000)",(tenant,))
       self.json(200,{'fixture_members':True});return
+     if self.path=='/v1/fixture/recovery-link' and self.client_address[0]=='127.0.0.1':
+      data=self.body();email=data.get('email')
+      if email not in FakeMemberProvider.identities:raise ValueError('Synthetic identity required')
+      self.json(200,{'path':'/account/recovery?code='+FakeMemberProvider.recovery_code(email)});return
+     if self.path=='/v1/fixture/recovery-expire' and self.client_address[0]=='127.0.0.1':
+      with psycopg.connect(DSN,autocommit=True) as admin:admin.execute("UPDATE hcla.member_recovery SET expires_at=clock_timestamp()-interval '1 second'")
+      self.json(200,{'fixture_expired':True});return
      if self.path in {'/v1/fixture/member-renew','/v1/fixture/member-expire'} and self.client_address[0]=='127.0.0.1':
       with psycopg.connect(DSN,autocommit=True) as admin:
        if self.path.endswith('member-renew'):admin.execute("UPDATE hcla.member_sessions SET expires_at=clock_timestamp()+interval '30 seconds'")
        else:admin.execute("UPDATE hcla.member_sessions SET expires_at=clock_timestamp()-interval '2 seconds',absolute_expires_at=clock_timestamp()-interval '1 second'")
       self.json(200,{'fixture_changed':True});return
      if self.path=='/v1/fixture/trial-mode' and self.client_address[0]=='127.0.0.1':
-      trial_mode=True;trial_expired=False;member_mode=False;self.json(200,{'fixture_trial':True});return
+      trial_mode=True;trial_expired=False;member_mode=False;recovery_mode=False;self.json(200,{'fixture_trial':True});return
      if self.path=='/v1/fixture/trial-expire' and self.client_address[0]=='127.0.0.1':
       trial_expired=True;self.json(200,{'fixture_expired':True});return
      if self.path=='/v1/fixture/reset-throttle' and self.client_address[0]=='127.0.0.1':
