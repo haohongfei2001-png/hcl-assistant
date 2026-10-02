@@ -185,3 +185,10 @@ test('status polling is serialized so old authentication cannot overwrite a newe
  // A real interval fires while this read is blocked; it must share the one read.
  await page.waitForTimeout(10500);expect(count).toBe(1);release();await expect(page.getByLabel('用户邮箱')).toBeVisible();await expect(page.getByLabel('消息',{exact:true})).toHaveCount(0);
 });
+
+test('logout unmount aborts a held selected-history read without returning the old account body',async({page})=>{
+ await page.addInitScript(()=>{window.__selectedMemberAborts=0;const original=window.fetch.bind(window);window.fetch=(input,options)=>{if(/\/v1\/member\/conversations\/[^/?]+$/.test(String(input)))options?.signal?.addEventListener('abort',()=>window.__selectedMemberAborts++,{once:true});return original(input,options)}});
+ await enter(page);await send(page,'原创合成：LOGOUT_HELD_HISTORY_BODY');const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeFocused();await page.evaluate(()=>window.__selectedMemberAborts=0);let entered,release;const waiting=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve);
+ await page.route(`**/v1/member/conversations/${id}`,async route=>{const response=await route.fetch();entered();await gate;await route.fulfill({response}).catch(()=>{})});
+ try{await page.locator(`[data-conversation="${id}"]`).click();await waiting;await logout(page);await expect.poll(()=>page.evaluate(()=>window.__selectedMemberAborts)).toBe(1);release();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await expect(page.getByLabel('用户邮箱')).toBeVisible();await expect(page.locator('body')).not.toContainText('LOGOUT_HELD_HISTORY_BODY');await expect(page.getByLabel('消息',{exact:true})).toHaveCount(0)}finally{release()}
+});

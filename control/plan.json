@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "fix/runtime-publish-exit",
-    "scope": "RUNTIME_SYNC_PUBLISH_EXIT_PROPAGATION",
+    "branch": "fix/history-read-recovery",
+    "scope": "P1-02_SELECTED_HISTORY_READ_RECOVERY",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
