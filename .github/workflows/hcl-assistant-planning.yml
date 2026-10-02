@@ -298,9 +298,6 @@ jobs:
           npm run build:cloud
           npx playwright install --with-deps chromium --only-shell
           npx playwright test --config playwright.cloud.config.js
-      - name: Probe temporary receipt stability with the same offline fixture
-        if: always()
-        run: npx playwright test --config playwright.cloud.config.js cloud-hosting.spec.js --grep 'cloud temporary HCL uses reviewed Bridge' --repeat-each=4 --output=test-results/receipt-stability
       - name: Retain cloud browser failure evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

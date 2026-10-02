@@ -62,13 +62,13 @@ function App({live=false,cloud=false,trial=false,onLogout,account}:{live?:boolea
    dispatchNavigation=navigation.current;const run=await api<Run>(filename?'/v1/sources':`/v1/conversations/${c.id}/events`,body);accepted=true;onAccepted?.();attempt.current=null;exportEpoch.current++;channel.current?.postMessage({type:'changed'});if(relevant()){setVersion(run.state_version_after);setRuns(old=>old.some(r=>r.run_id===run.run_id)?old.map(r=>r.run_id===run.run_id?run:r):[...old,run]);if(!filename&&draftValue.current===submitted)draft('');if(filename){attachmentOrigin.current=run.input_source_ref.source_id;setAttachment({name:filename,status:'registered'})}}
    if(cancelRequested.current){await api(`/v1/runs/${run.run_id}/cancel`,{});if(relevant())await load(c,draftValue.current)}else if(relevant())await watch(run,c);if(relevant())focusComposerAfterRun(input.current);
   }catch(e){
-   const owned=relevant(),message=String(e),token=navigation.current;if(owned)setError(message);
+   const owned=relevant(),rawMessage=String(e),message=rawMessage==='TypeError: Failed to fetch'?(accepted?'连接暂时中断，请查看已记录的输入':'连接暂时中断，草稿已保留'):rawMessage,token=navigation.current;if(owned)setError(message);
    if(/\b(?:400|401|403|409|413|422|429):/.test(message))attempt.current=null;
    if(target&&owned){
     setReconciling(true);
     // The accepted write may be unknown. Reconcile read-only before making the
     // same-key explicit retry available; navigation aborts this bounded read.
-    const controller=new AbortController();abort.current?.abort();abort.current=controller;reconciliationAbort.current=controller;const timeout=setTimeout(()=>controller.abort(),15000);setError(message+'；正在核对提交状态，草稿会保留');
+    const controller=new AbortController();abort.current?.abort();abort.current=controller;reconciliationAbort.current=controller;const timeout=setTimeout(()=>controller.abort(),15000);setError(message+'；正在核对提交状态，请稍候');
     try{const state=await api<{state_version:number;runs:Run[]}>(`/v1/conversations/${target.id}`,undefined,controller.signal);if(token===navigation.current&&relevant()){setVersion(state.state_version);setRuns(state.runs)}}
     catch{/* Draft/key remain recoverable; never retry an unknown event blindly. */}
     finally{clearTimeout(timeout);controller.abort();if(abort.current===controller)abort.current=null;if(reconciliationAbort.current===controller)reconciliationAbort.current=null;if(token===navigation.current&&relevant()){setReconciling(false);setError(message);setBusy(false)}}

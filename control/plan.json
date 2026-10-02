@@ -533,8 +533,8 @@
   },
   "writer": {
     "branch": "fix/search-focus-commit",
-    "scope": "P1-02_HISTORY_SEARCH_FOCUS_RELIABILITY",
-    "status": "IN_PROGRESS"
+    "scope": "P1-02_NAVIGATION_AND_INTERRUPTED_CHAT_RELIABILITY",
+    "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
