@@ -27,6 +27,7 @@ class QwenConfig:
     output_cny_per_million: Decimal
     max_output_tokens: int
     smoke: dict | None = field(default=None, repr=False)
+    monthly: dict | None = field(default=None, repr=False)
     provider_id = 'qwen'
     input_token_reservation = INPUT_TOKEN_RESERVATION
 
@@ -45,6 +46,7 @@ class QwenConfig:
                 'output_cny_per_million': _money(self.output_cny_per_million),
                 'max_completion_tokens': self.max_output_tokens}
         if self.smoke is not None:result['smoke']=dict(self.smoke)
+        if self.monthly is not None:result['monthly']=dict(self.monthly)
         return result
 
     def authorize_request(self, request, conversation):
@@ -64,7 +66,7 @@ class QwenConfig:
         fields = {'provider', 'model', 'region', 'currency', 'base_url', 'budget_id',
                   'max_requests', 'max_cost_cny', 'input_cny_per_million',
                   'output_cny_per_million', 'max_completion_tokens'}
-        if not isinstance(grant, dict) or set(grant) not in (fields, fields|{'smoke'}):
+        if not isinstance(grant, dict) or not fields<=set(grant) or set(grant)-fields-{'smoke','monthly'}:
             raise ValueError('Explicit bounded Qwen CNY grant required')
         if (grant['provider'] != 'qwen' or grant['model'] != MODEL
                 or grant['region'] != REGION or grant['currency'] != 'CNY'):
@@ -93,17 +95,23 @@ class QwenConfig:
         if values['input_cny_per_million'] < 12 or values['output_cny_per_million'] < 36:
             raise ValueError('Reviewed Beijing price floors required')
         smoke=grant.get('smoke')
+        monthly=grant.get('monthly')
+        if 'monthly' in grant:
+            if (monthly!={'timezone':'Asia/Shanghai','scope':'OWNER_ONLY','limit_cny':'500'}
+                    or values['max_cost_cny']!=500 or grant['max_requests']>1000000 or 'smoke' not in grant):
+                raise ValueError('Approved owner-only Shanghai monthly CNY500 contract required')
+            monthly=dict(monthly)
         if 'smoke' in grant:
             import re
             if (not isinstance(smoke,dict) or set(smoke)!={'scope','input_sha256','query_sha256'}
-                    or smoke['scope']!='OWNER_ONLY_SYNTHETIC_SMOKE' or grant['max_requests']!=1
+                    or smoke['scope']!='OWNER_ONLY_SYNTHETIC_SMOKE' or (monthly is None and grant['max_requests']!=1)
                     or not all(isinstance(smoke[k],str) and re.fullmatch('[0-9a-f]{64}',smoke[k]) for k in ('input_sha256','query_sha256'))):
                 raise ValueError('Exact owner-only one-call synthetic smoke required')
             smoke=dict(smoke)
         return cls(api_key, grant['base_url'].rstrip('/'), MODEL, REGION, 'CNY',
                    grant['budget_id'], grant['max_requests'],
                    values['max_cost_cny'], values['input_cny_per_million'],
-                   values['output_cny_per_million'], cap, smoke)
+                   values['output_cny_per_million'], cap, smoke, monthly)
 
     def policy(self):
         policy = {
@@ -122,4 +130,7 @@ class QwenConfig:
             'reasoning_effort': 'xhigh', 'refund_policy': 'NEVER',
         }
         if self.smoke is not None:policy['smoke']=dict(self.smoke)
+        if self.monthly is not None:
+            policy.update(version=2,monthly=dict(self.monthly),refund_policy='CONTROLLER_PUBLISHED_VERIFIED_USAGE_ONLY',
+                          month_end_admission_margin_seconds=300,initial_smoke_max_completion_tokens=self.max_output_tokens)
         return json.dumps(policy, sort_keys=True, separators=(',', ':'))

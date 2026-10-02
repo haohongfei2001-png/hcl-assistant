@@ -213,6 +213,10 @@ def handler(application):
                         except Fault:pass
                     self.json(200,{'enabled':self.application.real_chat,'authenticated':authenticated,'configuration':self.application.configuration,'production_enabled':False,'cloud':getattr(self.application,'cloud',False),'request_bound':getattr(self.application,'request_bound',False)});return
                 tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); parts=path.strip('/').split('/')
+                if path=='/v1/development/budget':
+                    if not getattr(self.application,'cloud',False) or tenant!='hcla-owner':raise Fault(403,'Owner budget status required')
+                    service=self.application.live_chat_service
+                    self.json(200,service.budget.snapshot() if service else {'enabled':False});return
                 if path=='/v1/development/runtime':
                     result=self.application.development_bridge.handshake() if self.application.development_bridge is not None else {'handshake_status':'FAILED','errors':['DEVELOPMENT_BRIDGE_NOT_CONFIGURED'],'production_enabled':False}
                 elif path=='/v1/conversations': result=self.application.stores.conversations(tenant)

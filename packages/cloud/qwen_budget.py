@@ -12,6 +12,7 @@ class CnyReservation:
     granted: bool
     reserved_cost_cny: Decimal
     outcome: str
+    period: str | None = None
 
 
 class QwenCloudBudget:

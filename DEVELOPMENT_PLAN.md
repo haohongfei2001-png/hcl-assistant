@@ -90,3 +90,5 @@ Owner explicitly requested ordinary-user registration/login development while th
 ## Beijing Qwen provider preparation amendment (2026-10-02)
 
 Owner's later HCLA-only request adds the bounded default-closed Model Studio Beijing `qwen3.8-max` provider preparation described in [Qwen contract](docs/QWEN_PROVIDER.md), with one writer recorded in control/plan.json. This does not reopen historical packages, change HCL research/runtime or authorize live activation. Native-CNY policy/member grants remain separate from immutable DeepSeek USD records and the expired guest trial. Exact-head review and offline checks precede any activation request.
+
+The owner's later CNY 500/month approval supersedes the separate one-off smoke funding proposal. Complete the additive monthly owner-only ledger and staged smoke-to-owner flow in the same final provider candidate, with exact-tree review and hosted PostgreSQL/browser gates. The initial verification and normal owner usage share one period cap; see [monthly contract](docs/QWEN_MONTHLY_BUDGET.md).

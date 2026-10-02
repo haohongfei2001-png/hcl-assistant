@@ -80,3 +80,7 @@ M2-01 adds one disabled, bounded ordinary-account recovery flow after U2-01. Fol
 ## Beijing Qwen preparation amendment (2026-10-02)
 
 Owner requested HCLA-only Model Studio Beijing pay-as-you-go `qwen3.8-max` integration. The sole writer may implement this default-closed provider option, immutable native-CNY budget and offline tests. See [Qwen contract](docs/QWEN_PROVIDER.md). Existing DeepSeek USD histories, expired guest trial, HCL research/runtime, synthetic-only/private-data and production gates remain unchanged. This code slice authorizes no live key entry by an agent, grant installation, database migration, provider calls or activation.
+
+## Shanghai monthly owner budget amendment (2026-10-02)
+
+Owner approved HCLA testing and owner use within a shared CNY 500 per Asia/Shanghai calendar month. Implement the immutable monthly authorization, guarded period accounting, safe verified settlement and owner-only staged activation in [monthly budget](docs/QWEN_MONTHLY_BUDGET.md). First smoke and ordinary owner use share this cap; no separate renewed smoke grant, public member/guest opening, HCL core change or automatic recharge. Actual migration/security actions still require the appropriate action-time approval, and final exact-tree review/Postgres/browser CI precedes activation.

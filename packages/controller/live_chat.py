@@ -30,7 +30,7 @@ def validate(controller, request, conversation):
     if request.get('synthetic_input_confirmed') is not True:
         raise Fault(403,'Development chat requires original synthetic input confirmation')
     service.ready()
-    authorize=getattr(service.config,'authorize_request',None)
+    authorize=getattr(service.budget,'authorize_request',None) or getattr(service.config,'authorize_request',None)
     if authorize:authorize(request,conversation)
     return True
 
@@ -139,6 +139,9 @@ class LiveChat:
                 reservation=self.budget.reserve(run_id,current['run_receipt']['attempt_id'],message_bytes+512)
                 if not reservation.granted:raise Fault(409,'PROVIDER_ATTEMPT_ALREADY_RESERVED')
                 reserved=True
+                if getattr(self.config,'monthly',None):
+                    current['run_receipt']['usage']['budget']={'currency':'CNY','period':reservation.period,
+                        'timezone':'Asia/Shanghai','max_cost_cny':'500','reserved_cny':format(reservation.reserved_cost_cny,'f')}
                 current['run_receipt']['provider']['requested_model']=self.adapter.model
                 current['run_receipt']['usage']['adapter_invocations']=1
                 # Mark dispatch as uncertain before handing control to transport; restart cannot assert zero.
@@ -151,7 +154,8 @@ class LiveChat:
                     if not current['pending'] or cancel.is_set():cancel.set();return
                     if not valid(controller,tenant,run):cancel.set();return
                     controller.emit(current,'answer.delta',{'text':text});store.put(tenant,'run',current)
-            result=self.adapter.generate(messages,max_tokens=self.config.max_output_tokens,cancel_event=cancel,on_delta=delta)
+            output_cap=self.budget.dispatch_output_tokens() if hasattr(self.budget,'dispatch_output_tokens') else self.config.max_output_tokens
+            result=self.adapter.generate(messages,max_tokens=output_cap,cancel_event=cancel,on_delta=delta)
             usage=result.usage if all(k in result.usage for k in ('prompt_tokens','completion_tokens')) else {}
             if getattr(self.config,'provider_id','deepseek')=='qwen' and not result.usage_consistent:
                 usage={}  # Observed contradictory counters are not accounting evidence.
@@ -188,12 +192,13 @@ class LiveChat:
                 current['pending']=False;receipt['finished_at']=now();store.put(tenant,'run',current)
                 settle=getattr(self.budget,'reconcile_completed',None)
                 usage=result.usage
+                settlement_cancelled=(cancel.is_set_for_settlement() if getattr(self.config,'monthly',None) and hasattr(cancel,'is_set_for_settlement') else cancel.is_set()) if settle else False
                 if (settle and getattr(result,'usage_consistent',False) and receipt['outcome']=='COMPLETED' and result.transport_stopped and result.send_state=='sent'
                         and all(type(usage.get(k)) is int and usage[k]>0 for k in ('prompt_tokens','completion_tokens','total_tokens'))
                         and usage['total_tokens']==usage['prompt_tokens']+usage['completion_tokens']
-                        and usage['prompt_tokens']<=1048576 and usage['completion_tokens']<=self.config.max_output_tokens
+                        and usage['prompt_tokens']<=getattr(self.config,'input_token_reservation',1048576) and usage['completion_tokens']<=getattr(self.config,'reserved_output_tokens',self.config.max_output_tokens)
                         and (usage.get('reasoning_tokens') is None or type(usage['reasoning_tokens']) is int and 0<=usage['reasoning_tokens']<=usage['completion_tokens'])
-                        and not cancel.is_set() and valid(controller,tenant,run)):
+                        and not settlement_cancelled and valid(controller,tenant,run)):
                     settle(run_id,run['run_receipt']['attempt_id'])
         except Exception as exc:
             # Without a returned transport-stop handshake, retain the active lock.

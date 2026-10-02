@@ -1,5 +1,9 @@
 # Beijing Qwen provider preparation
 
+Current activation target: [the approved monthly owner budget](QWEN_MONTHLY_BUDGET.md).
+The separate one-call funding examples below are historical preparation only;
+first smoke and ordinary owner use now share CNY500 per Shanghai calendar month.
+
 ## Authority and activation state
 
 Owner requested HCLA-only integration on 2026-10-02: Alibaba Cloud Model Studio,

@@ -36,7 +36,10 @@ trial_mode=False
 trial_expired=False
 member_mode=False;recovery_mode=False
 with psycopg.connect(DSN,autocommit=True) as admin:
- admin.execute('TRUNCATE hcla.member_recovery,hcla.member_auth_generations,hcla.member_sessions,hcla.member_login_attempts,hcla.member_budget_attempts,hcla.member_entitlements,hcla.budget_policy,hcla.budget_attempts,hcla.login_attempts,hcla.sessions,hcla.execution,hcla.temporary_heads,hcla.idempotency,hcla.events,hcla.records,hcla.sources,hcla.objects,hcla.accounts')
+ # Earlier disposable integration tests may install other provider fixtures.
+ # Reset every test table together; never carry a Qwen grant into DeepSeek UI tests.
+ tables=admin.execute("SELECT tablename FROM pg_tables WHERE schemaname='hcla' AND tablename<>'schema_version'").fetchall()
+ admin.execute(psycopg.sql.SQL('TRUNCATE {}').format(psycopg.sql.SQL(',').join(psycopg.sql.Identifier('hcla',row[0]) for row in tables)))
  admin.execute('INSERT INTO hcla.budget_policy VALUES(1,%s)',(DevelopmentBudget._policy(SimpleNamespace(config=config)),))
  admin.execute('TRUNCATE hcla.trial_budget_policy,hcla.trial_budget_attempts')
  admin.execute('INSERT INTO hcla.trial_budget_policy VALUES(1,%s)',(trial_policy(trial_config,trial_window),))

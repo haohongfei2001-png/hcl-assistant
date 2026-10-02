@@ -56,6 +56,18 @@ class DurableCancellation:
         self.store=store;self.run_id=run_id;self.temporary=temporary
         self.local=threading.Event();self._lock=threading.RLock();self.next_check=0
     def set(self): self.local.set()
+    def is_set_for_settlement(self):
+        """Fresh cancellation evidence without mistaking our own COMPLETED
+        publication for cancellation. Caller still validates source/policy state
+        in the same transaction; SQL settlement independently checks the lease.
+        """
+        if self.local.is_set():return True
+        try:
+            with self.store.lock:
+                row=self.store.db.execute('SELECT cancelled FROM execution WHERE run_id=?',(self.run_id,)).fetchone()
+                if row is None or row['cancelled']:self.local.set()
+        except Exception:self.local.set()
+        return self.local.is_set()
     def is_set(self):
         if self.local.is_set(): return True
         if time.monotonic() < self.next_check: return self.local.is_set()
