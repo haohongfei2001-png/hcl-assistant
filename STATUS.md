@@ -87,3 +87,11 @@ Existing search, message-menu and interrupted-send journeys have bounded correct
 HCLA-only `qwen3.8-max` provider preparation is in review with separate native-CNY accounting. Default closed; no live Qwen call, key, grant, migration or deployment activation is implied. The old DeepSeek guest trial remains expired. Contract and verification scope: [Qwen provider](docs/QWEN_PROVIDER.md).
 
 The current Qwen activation target is the owner-approved shared CNY 500/month Shanghai calendar budget, including tests. Period-scoped implementation and final review/CI are in progress; no live one-off smoke grant or monthly migration has been installed. The user chose open registration with verified active paid membership required for model use; no payment provider or live Auth activation is implied. See [shared monthly contract](docs/QWEN_SHARED_MONTHLY_BUDGET.md).
+
+## Ordinary account entry and membership feedback candidate
+
+A bounded source candidate separates ordinary `/` entry from explicit `/admin`
+maintenance login and shows server-reported paid-membership expiry. Known expiry
+blocks further sending while preserving the signed-in member, history and draft.
+Evidence and remaining gates: [entry separation](docs/MEMBER_ENTRY_SEPARATION.md).
+This candidate does not enable live registration/email, checkout, grants or Qwen.

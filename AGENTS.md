@@ -90,3 +90,13 @@ Owner approved HCLA testing and owner use within a shared CNY 500 per Asia/Shang
 Owner clarified this is a reusable multiuser product and explicitly chose one shared CNY500 per Asia/Shanghai month across all eligible authenticated users and integration tests, never500 per user. The first exact owner synthetic smoke remains a capability validation gate, then existing verified member sessions and server-owned CNY permissions share the same atomic global ceiling. Preserve actor privacy, immutable accounting, no anonymous spending, no automatic provider retries/fallback and HCL core isolation. The earlier uninstalled owner-only policy is obsolete. Code/tests/review are authorized; live schema/permission/config steps remain subject to their exact activation approval. See docs/QWEN_SHARED_MONTHLY_BUDGET.md.
 
 Owner further chose open registration with active verified paid membership required for model access. No automatic free entitlement/trial, client self-grant, payment provider or pricing is authorized. Registration and payment are distinct; shared CNY500 remains the all-user ceiling.
+
+## Ordinary entry and membership feedback follow-on (2026-10-02)
+
+The authorized consumer route uses `/` for ordinary accounts and `/admin` for
+explicit maintenance login, including when live account activation is still
+closed. Add truthful paid-membership/expiry feedback and synthetic regression
+coverage without creating a price, checkout, entitlement, credential or live Auth
+configuration. Server admission/expiry/revocation and the shared atomic CNY500
+budget remain authoritative. See docs/MEMBER_ENTRY_SEPARATION.md. Exact-head
+review/Postgres/browser checks and exact-main adoption are still required.
