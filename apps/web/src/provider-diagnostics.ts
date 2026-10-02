@@ -9,6 +9,7 @@ export function providerDiagnostics(value:unknown):{label:string;value:string}[]
  const code=provider.error_code;if(typeof code==='string'&&Object.hasOwn(reasons,code))facts.push({label:'诊断原因',value:reasons[code]+'（'+code+'）'});
  const state=provider.send_state;facts.push({label:'请求发送状态',value:state==='sent'?'已发送':state==='not_sent'?'未发送':'未知'});
  const status=provider.http_status;if(typeof status==='number'&&Number.isInteger(status)&&status>=100&&status<=599)facts.push({label:'HTTP 状态',value:String(status)});
+ const counts=object(provider.stream_counts);for(const [key,label] of [['chunks','已接收数据片段'],['reasoning_chunks','思考片段数（不含内容）'],['answer_chunks','回答片段数']] as const){const count=counts[key];if(typeof count==='number'&&Number.isSafeInteger(count)&&count>=0&&count<=10000000)facts.push({label,value:String(count)})}
  const finish=provider.finish_reason;if(typeof finish==='string'&&['stop','length','content_filter','tool_calls','insufficient_system_resource'].includes(finish))facts.push({label:'结束原因',value:finish});
  const latency=usage.latency_ms;if(typeof latency==='number'&&Number.isSafeInteger(latency)&&latency>=0&&latency<=3600000)facts.push({label:'本次耗时（毫秒）',value:String(latency)});
  if(Array.isArray(receipt.errors)&&receipt.errors.includes('TRANSPORT_TERMINATION_UNCONFIRMED'))facts.push({label:'连接状态',value:'尚未确认停止，保留原请求的预算占用'});

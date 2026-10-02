@@ -1,5 +1,6 @@
 """Opt-in cloud application; each invocation owns its connections and work."""
 import os
+import time
 from pathlib import Path
 from packages.store.ledger import Ledger, Fault
 from packages.store.registry import Stores
@@ -12,6 +13,7 @@ from packages.cloud.config import CloudConfig
 from packages.cloud.postgres import PostgresLedger,TENANT
 from packages.cloud.budget import CloudBudget
 from packages.cloud.lifecycle import Lifecycle,DurableCancellation
+from packages.cloud.timing import PROVIDER_WALL_SECONDS,REQUEST_PROVIDER_DEADLINE_SECONDS
 from packages.cloud.diagnostics import StartupCode,StartupDiagnostics,close_after_startup_failure
 
 class CloudStores(Stores):
@@ -42,7 +44,8 @@ class CloudApplication:
     cloud=True
     request_bound=True
     real_chat=True
-    def __init__(self,config,*,store=None,adapter=None,runtime=None,startup=None,member_provider=None):
+    def __init__(self,config,*,store=None,adapter=None,runtime=None,startup=None,member_provider=None,request_deadline=None):
+        request_deadline=request_deadline if request_deadline is not None else time.monotonic()+REQUEST_PROVIDER_DEADLINE_SECONDS
         startup=startup or StartupDiagnostics()
         self.cloud_config=config
         store=store or PostgresLedger(config.database_url,startup=startup)
@@ -83,7 +86,7 @@ class CloudApplication:
                 budget=TrialBudget(store,c,trial) if trial else CloudBudget(store,c)
                 if trial:self.trial_auth=TrialAuth(config.origin,config.state_key,budget)
                 startup.mark(StartupCode.PROVIDER_ADAPTER)
-                adapter=adapter or DeepSeekAdapter(base_url=c.base_url,model=c.model,api_key=c.api_key,wall_timeout=60)
+                adapter=adapter or DeepSeekAdapter(base_url=c.base_url,model=c.model,api_key=c.api_key,wall_timeout=PROVIDER_WALL_SECONDS,request_deadline=request_deadline)
                 self.live_chat_service=LiveChat(c,budget,adapter,cancellation_factory=lambda identity:TrialCancellation(DurableCancellation(store,identity),budget) if trial else DurableCancellation(store,identity))
             self.configuration={'configured':True,'provider_enabled':config.provider is not None}
             if self.trial_auth:self.configuration['temporary_trial']=True
@@ -154,13 +157,14 @@ class Unconfigured:
     def close(self): pass
 
 def application(env=None):
+    request_deadline=time.monotonic()+REQUEST_PROVIDER_DEADLINE_SECONDS
     env=os.environ if env is None else env
     # Fail closed; never select local SQLite/mock on a cloud setup error.
     startup=StartupDiagnostics()
     try:
         startup.mark(StartupCode.CONFIG)
         config=CloudConfig.from_env(env)
-        return CloudApplication(config,runtime=env.get('HCL_DEVELOPMENT_ARTIFACT','.hcla-runtime'),startup=startup)
+        return CloudApplication(config,runtime=env.get('HCL_DEVELOPMENT_ARTIFACT','.hcla-runtime'),startup=startup,request_deadline=request_deadline)
     except Exception:
         startup.report()
         return Unconfigured()

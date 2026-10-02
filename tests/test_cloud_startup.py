@@ -178,6 +178,22 @@ class CloudStartupTests(unittest.TestCase):
             stack.enter_context(patch.object(cloud_server, name, mocked))
         return store, temporary, stack
 
+    def test_absolute_provider_deadline_includes_application_setup(self):
+        provider=SimpleNamespace(base_url='https://api.deepseek.com',model='deepseek-v4-pro',api_key=SENTINEL)
+        _,_,stack=self.application_patches(provider=provider)
+        clock=[100.0]
+        def slow_config(env):
+            clock[0]+=200
+            return self.config
+        cloud_server.CloudConfig.from_env.side_effect=slow_config
+        with patch.object(cloud_server,'time',SimpleNamespace(monotonic=lambda:clock[0])):
+            app=cloud_server.application({})
+        self.assertNotIsInstance(app,cloud_server.Unconfigured)
+        kwargs=cloud_server.DeepSeekAdapter.call_args.kwargs
+        self.assertEqual(kwargs['wall_timeout'],180)
+        self.assertEqual(kwargs['request_deadline'],340)
+        stack.close()
+
     def test_every_application_phase_is_fail_closed_with_partial_cleanup(self):
         for stage, code in [('CloudStores','TEMPORARY_STORE'), ('CloudAuth','OWNER_AUTH'),
                             ('RuntimeBridge','RUNTIME_BRIDGE'), ('Lifecycle','LIFECYCLE'),

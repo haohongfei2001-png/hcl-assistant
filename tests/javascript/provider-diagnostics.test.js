@@ -16,3 +16,7 @@ test('arbitrary upstream strings and invalid numeric metadata never enter the re
 test('unconfirmed transport keeps its reservation truthful without inventing a charge or retry',()=>{
  const facts=providerDiagnostics({errors:['TRANSPORT_TERMINATION_UNCONFIRMED'],provider:{send_state:'unknown'},usage:{latency_ms:-1}});assert.equal(facts.length,2);assert.match(facts[1].value,/保留原请求的预算占用/);assert(!JSON.stringify(facts).includes('免费'));
 });
+
+test('stream diagnostics show only bounded numeric counts, never reasoning content',()=>{
+ const facts=providerDiagnostics({provider:{stream_counts:{chunks:3,reasoning_chunks:2,answer_chunks:0,body:'PRIVATE_HIDDEN_TEXT'}}});assert(facts.some(x=>x.label==='思考片段数（不含内容）'&&x.value==='2'));assert(!JSON.stringify(facts).includes('PRIVATE_HIDDEN_TEXT'));assert.equal(providerDiagnostics({provider:{stream_counts:{chunks:-1,reasoning_chunks:'HIDDEN',answer_chunks:Infinity}}}).length,1);
+});

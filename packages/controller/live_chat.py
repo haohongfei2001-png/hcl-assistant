@@ -147,7 +147,7 @@ class LiveChat:
             if result.transport_stopped:self.budget.finish(run_id,run['run_receipt']['attempt_id'],{'SUCCEEDED':'completed','PARTIAL':'unknown','FAILED':'failed','CANCELLED':'cancelled','UNKNOWN':'unknown'}[result.outcome],input_tokens=usage.get('prompt_tokens'),output_tokens=usage.get('completion_tokens'))
             with store.transaction():
                 current=store.get(tenant,'run',run_id);receipt=current['run_receipt']
-                receipt['provider']={'requested_model':result.requested_model,'actual_model':result.actual_model,'request_id':result.request_id,'finish_reason':result.finish_reason,'send_state':result.send_state,'thinking':'enabled','reasoning_effort':'high','error_code':result.error_code,'http_status':result.http_status}
+                receipt['provider']={'requested_model':result.requested_model,'actual_model':result.actual_model,'request_id':result.request_id,'finish_reason':result.finish_reason,'send_state':result.send_state,'thinking':'enabled','reasoning_effort':'high','error_code':result.error_code,'http_status':result.http_status,'stream_counts':dict(result.stream_counts)}
                 receipt['usage'].update(provider_calls=1 if result.send_state=='sent' else 0 if result.send_state=='not_sent' else None,input_tokens=result.usage.get('prompt_tokens'),output_tokens=result.usage.get('completion_tokens'),reasoning_tokens=result.usage.get('reasoning_tokens'),provider_usage=result.usage,latency_ms=round((time.monotonic()-started)*1000))
                 # Do not claim a charge is zero or known merely from a configured upper bound.
                 allowed=current['pending'] and not cancel.is_set() and result.transport_stopped and valid(controller,tenant,run)

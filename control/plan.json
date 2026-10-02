@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "fix/guest-run-diagnostics",
-    "scope": "C1-01_GUEST_RUN_DIAGNOSTICS",
+    "branch": "fix/cloud-provider-deadline",
+    "scope": "C1-01_BOUNDED_PROVIDER_DEADLINE",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
