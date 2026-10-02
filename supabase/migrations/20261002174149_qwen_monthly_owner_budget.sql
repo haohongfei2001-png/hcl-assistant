@@ -75,6 +75,9 @@ END $body$;
 CREATE TRIGGER immutable_qwen_monthly_period BEFORE INSERT OR UPDATE OR DELETE ON qwen_monthly_periods
  FOR EACH ROW EXECUTE FUNCTION guard_qwen_monthly_period();
 
+-- The original owner-only deployment has no execution.tenant column. Treat only
+-- an ABSENT column as that legacy owner schema; an explicit NULL/member tenant
+-- is never owner. SECURITY INVOKER, existing RLS and owner context remain intact.
 CREATE FUNCTION guard_qwen_monthly_attempt() RETURNS trigger
  LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog,hcla AS $body$
 DECLARE p record; a record; cfg jsonb; expected numeric; actual numeric; total numeric; attempts bigint; ready boolean;
@@ -98,7 +101,7 @@ BEGIN
     OR EXISTS(SELECT 1 FROM hcla.trial_budget_attempts WHERE outcome='active')
     OR EXISTS(SELECT 1 FROM hcla.qwen_budget_attempts WHERE outcome='active')
     OR EXISTS(SELECT 1 FROM hcla.qwen_monthly_attempts WHERE outcome='active') THEN RAISE EXCEPTION 'provider_active_slot_held'; END IF;
-  IF NOT EXISTS(SELECT 1 FROM hcla.execution WHERE run_id=NEW.execution_run_id AND owner=NEW.execution_owner AND tenant='hcla-owner' AND expires_at>hcla.qwen_monthly_clock() AND NOT cancelled AND NOT finished) THEN RAISE EXCEPTION 'execution_owner_required'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM hcla.execution e WHERE e.run_id=NEW.execution_run_id AND e.owner=NEW.execution_owner AND (NOT (to_jsonb(e) ? 'tenant') OR to_jsonb(e)->>'tenant'='hcla-owner') AND e.expires_at>hcla.qwen_monthly_clock() AND NOT e.cancelled AND NOT e.finished) THEN RAISE EXCEPTION 'execution_owner_required'; END IF;
   expected=((cfg->>'input_token_reservation')::numeric*(cfg->>'input_cny_per_million')::numeric+(NEW.output_cap+10)*(cfg->>'output_cny_per_million')::numeric)/1000000;
   IF NEW.reserved_cny<>expected OR NEW.charged_cny<>expected THEN RAISE EXCEPTION 'monthly_reservation_mismatch'; END IF;
   SELECT COALESCE(sum(charged_cny),0),count(*) INTO total,attempts FROM hcla.qwen_monthly_attempts WHERE period_key=NEW.period_key;
@@ -116,7 +119,7 @@ BEGIN
     OR ROW(NEW.input_tokens,NEW.output_tokens,NEW.actual_cny) IS DISTINCT FROM ROW(OLD.input_tokens,OLD.output_tokens,OLD.actual_cny)
     OR NEW.input_tokens IS NULL OR NEW.input_tokens<=0 OR NEW.input_tokens>(cfg->>'input_token_reservation')::bigint
     OR NEW.output_tokens<=0 OR NEW.output_tokens>NEW.output_cap+10 OR actual>OLD.reserved_cny OR NEW.charged_cny<>actual
-    OR NOT EXISTS(SELECT 1 FROM hcla.execution WHERE run_id=NEW.execution_run_id AND owner=NEW.execution_owner AND tenant='hcla-owner' AND expires_at>hcla.qwen_monthly_clock() AND NOT cancelled AND NOT finished)
+    OR NOT EXISTS(SELECT 1 FROM hcla.execution e WHERE e.run_id=NEW.execution_run_id AND e.owner=NEW.execution_owner AND (NOT (to_jsonb(e) ? 'tenant') OR to_jsonb(e)->>'tenant'='hcla-owner') AND e.expires_at>hcla.qwen_monthly_clock() AND NOT e.cancelled AND NOT e.finished)
    THEN RAISE EXCEPTION 'verified_completed_settlement_required'; END IF;
   END IF;
  END IF;
