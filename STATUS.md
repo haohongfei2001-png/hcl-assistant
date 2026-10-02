@@ -5,11 +5,11 @@
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03核心已采用；Continuum V1及整体synthetic验收在a1251e3d/run36809090489通过267 Python、24 Node和66 browser，独立源代码/视觉审查无阻塞项。本PR完成实现验收记录，采用仍须final-head和exact-main核验。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: M2-01_BOUNDED_PASSWORD_RECOVERY**
+**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M2-01。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
 
-默认关闭的密码找回、服务端 PKCE、一次性恢复与登录撤销、跨会话隔离和错误恢复。验收：M07、M08、M09、M10、M11、M12
+当前10包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->

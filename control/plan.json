@@ -217,9 +217,9 @@
     "authority": "SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE",
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
-    "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
-    "next_ready": "M2-01_BOUNDED_PASSWORD_RECOVERY",
-    "next_package_id": "M2-01",
+    "phase": "ASSISTANT_FIRST_REFINEMENT_COMPLETE",
+    "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
+    "next_package_id": null,
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
     "current_request_scope": "AUTHORIZED_DISABLED_PASSWORD_RECOVERY_ZERO_PROVIDER",
     "current_executor_stop_after": "M2-01_EXACT_MAIN_VERIFIED",
@@ -455,7 +455,7 @@
         "depends_on": [
           "U2-01"
         ],
-        "state": "NEXT_READY",
+        "state": "COMPLETE",
         "delta": "默认关闭的密码找回、服务端 PKCE、一次性恢复与登录撤销、跨会话隔离和错误恢复",
         "acceptance": [
           "M07",
@@ -465,7 +465,7 @@
           "M11",
           "M12"
         ],
-        "evidence": "docs/M2_01_EVIDENCE.md"
+        "evidence": "docs/M2_01_EVIDENCE.md; reviewed source 5345736; run36941191007 passed both jobs; final exact-head/main checks required"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -534,7 +534,7 @@
   "writer": {
     "branch": "product/m2-01-password-recovery",
     "scope": "M2-01_BOUNDED_PASSWORD_RECOVERY",
-    "status": "IN_PROGRESS"
+    "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
