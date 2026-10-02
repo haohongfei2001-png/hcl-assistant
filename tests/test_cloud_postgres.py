@@ -197,6 +197,18 @@ class CloudPostgresTests(unittest.TestCase):
             self.assertNotIn('CLOUD_PERSISTENT_DELETE_CANARY',str(self.admin.execute('SELECT * FROM hcla.'+row['tablename']).fetchall()))
         other=self.app();old=other.controller(other.stores.persistent).read(TENANT,run['run_id'])
         self.assertTrue(old['redacted']);self.assertIsNone(old['answer'])
+    def test_execution_lease_survives_delayed_answer_beyond_old_window(self):
+        app=self.app();_,run=self.accepted(app)
+        owner=app.lifecycle.claim(run['run_id'])
+        self.admin.execute("UPDATE hcla.execution SET expires_at=expires_at-interval '150 seconds' WHERE run_id=%s",(run['run_id'],))
+        app.lifecycle.recover()
+        row=self.admin.execute('SELECT owner,finished FROM hcla.execution WHERE run_id=%s',(run['run_id'],)).fetchone()
+        self.assertEqual(row['owner'],owner);self.assertFalse(row['finished'])
+        app.stores.persistent.fence=(run['run_id'],owner)
+        with app.stores.persistent.transaction():pass
+        app.stores.persistent.fence=None
+        self.assertTrue(app.controller(app.stores.persistent).read(TENANT,run['run_id'])['pending'])
+
     def test_silent_thinking_cancel_never_publishes_or_refunds_unknown_transport(self):
         started=threading.Event();release=threading.Event()
         class Silent(FakeTransport):

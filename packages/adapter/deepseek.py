@@ -50,6 +50,7 @@ class DeepSeekResult:
     error_code: str | None = None
     http_status: int | None = None
     transport_stopped: bool = False
+    stream_counts: dict[str, int] = field(default_factory=dict)
 
 
 class _ProtocolError(Exception):
@@ -210,7 +211,8 @@ class DeepSeekAdapter:
     def __init__(self, *, base_url: str, model: str, api_key: str,
                  connect_timeout: float = 10.0, wall_timeout: float = 120.0,
                  max_output_bytes: int = 262144, transport_factory: Callable | None = None,
-                 thinking_enabled: bool = True, reasoning_effort: str = "high"):
+                 thinking_enabled: bool = True, reasoning_effort: str = "high",
+                 request_deadline: float | None = None):
         self.endpoint = _endpoint(base_url, transport_factory is not None)
         if not isinstance(model, str) or _TOKEN.fullmatch(model) is None:
             raise ValueError("explicit_model_required")
@@ -219,6 +221,9 @@ class DeepSeekAdapter:
         for value in (connect_timeout, wall_timeout):
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
                 raise ValueError("positive_finite_deadline_required")
+        if request_deadline is not None and (isinstance(request_deadline, bool) or not isinstance(request_deadline, (int, float)) or not math.isfinite(request_deadline)):
+            raise ValueError("finite_request_deadline_required")
+        self.request_deadline = request_deadline
         if type(max_output_bytes) is not int or max_output_bytes < 1:
             raise ValueError("positive_output_limit_required")
         if type(thinking_enabled) is not bool:
@@ -249,6 +254,7 @@ class DeepSeekAdapter:
         cancel = cancel_event if cancel_event is not None else threading.Event()
         content: list[str] = []
         actual_model = request_id = finish_reason = None
+        counts = {"chunks": 0, "reasoning_chunks": 0, "answer_chunks": 0}
         usage: dict[str, int] = {}
         complete_usage = None
         usage_invalid = False
@@ -291,7 +297,7 @@ class DeepSeekAdapter:
                                   usage=dict(usage), send_state=state,
                                   usage_consistent=complete_usage is not None and not usage_invalid,
                                   error_code=error, http_status=http_status,
-                                  transport_stopped=transport_stopped)
+                                  transport_stopped=transport_stopped, stream_counts=dict(counts))
 
         if cancel.is_set():
             return result("CANCELLED", "cancelled")
@@ -315,7 +321,9 @@ class DeepSeekAdapter:
             return result("FAILED", "invalid_request")
         clean_messages.clear()
         started = time.monotonic()
-        deadline = started + self.wall_timeout
+        deadline = min(started + self.wall_timeout, self.request_deadline) if self.request_deadline is not None else started + self.wall_timeout
+        if started >= deadline:
+            return result("FAILED", "wall_timeout")
         connect_deadline = started + self.connect_timeout
         events: queue.Queue = queue.Queue(maxsize=8)
 
@@ -432,6 +440,7 @@ class DeepSeekAdapter:
                         continue
                     if not isinstance(chunk, dict):
                         raise _ProtocolError("invalid_chunk")
+                    counts["chunks"] += 1
                     # Extract only allowlisted public metadata and numeric usage.
                     raw_usage=chunk.pop("usage",None)
                     if raw_usage is not None:
@@ -471,6 +480,8 @@ class DeepSeekAdapter:
                     if not isinstance(delta, dict):
                         raise _ProtocolError("invalid_delta")
                     # Reasoning is discarded before anything can reach a callback.
+                    if isinstance(delta.get("reasoning_content"), str) and delta["reasoning_content"]:
+                        counts["reasoning_chunks"] += 1
                     delta.pop("reasoning_content", None)
                     text = delta.pop("content", None)
                     tools = bool(delta.pop("tool_calls", None) or delta.pop("function_call", None))
@@ -485,6 +496,7 @@ class DeepSeekAdapter:
                     if text is not None and not isinstance(text, str):
                         raise _ProtocolError("invalid_content")
                     if text:
+                        counts["answer_chunks"] += 1
                         if previously_finished:
                             raise _ProtocolError("content_after_finish")
                         if actual_model is None:

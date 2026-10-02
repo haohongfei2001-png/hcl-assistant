@@ -4,7 +4,9 @@ import time
 from packages.store.ledger import Fault, now, uid
 from packages.controller.interaction import Controller
 
-LEASE_SECONDS=120  # Adapter wall deadline is 60s; Vercel maxDuration is 300s.
+from packages.cloud.timing import EXECUTION_LEASE_SECONDS
+
+LEASE_SECONDS=EXECUTION_LEASE_SECONDS  # Absolute provider cutoff is earlier; no replay after expiry.
 
 class Lifecycle:
     def __init__(self, store): self.store=store
