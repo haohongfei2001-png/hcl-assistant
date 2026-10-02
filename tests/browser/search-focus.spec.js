@@ -17,7 +17,7 @@ test('search result focuses its exact run after the target is committed later th
  await page.evaluate(()=>window.__focusFixture.resolve('A'));await expect(page.getByRole('dialog',{name:'搜索对话'})).toHaveCount(0);await frames(page);
  await expect(page.locator('[data-run="run-A"]')).toHaveCount(0);
  await page.evaluate(()=>window.__focusFixture.mount('A'));
- try{await expect(page.locator('[data-run="run-A"]')).toBeFocused()}
+ try{await expect(page.locator('[data-run="run-A"]')).toBeFocused();await expect(page.locator('[data-run="run-A"]')).toBeInViewport()}
  finally{await page.screenshot({path:info.outputPath('search-delayed-commit.png'),fullPage:true,animations:'disabled'})}
  expect(calls).toEqual([]);
 });
