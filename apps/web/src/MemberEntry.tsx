@@ -5,7 +5,7 @@ import './account-entry.css';
 import {RecoveryEntry} from './RecoveryEntry';
 import type {MemberGeneration} from './MemberMembership';
 
-type Status={recovery_available?:boolean;available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{membership_required?:boolean;enabled:boolean;expires_at?:number;temporary?:boolean;persistent?:boolean;reason?:string|null}};
+type Status={recovery_available?:boolean;available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;readiness_required?:boolean;readiness_available?:boolean;entitlements?:{membership_required?:boolean;enabled:boolean;expires_at?:number;temporary?:boolean;persistent?:boolean;reason?:string|null;access_kind?:'PAID_MEMBERSHIP'|'TEST_ONLY';test_max_requests?:number;test_max_cost_cny?:string;test_chat_enabled?:boolean}};
 export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean,logoutPending:boolean,generation:MemberGeneration)=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode;notice?:string;provider?:'deepseek'|'qwen'}){
  const [status,setStatus]=useState<Status|null>(null),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[register,setRegister]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  const scope=useRef(''),channel=useRef<BroadcastChannel|null>(null),live=useRef(true),revision=useRef(0);
@@ -63,10 +63,11 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
  if(status?.authenticated&&status.account_scope){
   const expired=typeof entitlementDeadline==='number'&&entitlementDeadline*1000<=Date.now();
   const enabled=Boolean(status.entitlements?.enabled&&!expired);
-  const reason=expired?'会员或账号使用权限已到期，已有记录仍可查看':status.entitlements?.reason||'账号使用权限尚未开通';
+  const reason=expired?'会员或测试使用权限已到期，已有记录仍可查看':status.entitlements?.reason||'账号使用权限尚未开通';
   const generation:MemberGeneration={model:Boolean(status.model_enabled&&enabled),temporary:Boolean(enabled&&status.entitlements?.temporary),persistent:Boolean(enabled&&status.entitlements?.persistent),
-   ...(!enabled&&(expired||status.entitlements?.membership_required)?{reason}:{}),
-   ...(status.entitlements?.membership_required?{membership:{enabled,...(typeof entitlementDeadline==='number'&&Number.isSafeInteger(entitlementDeadline)&&entitlementDeadline>0?{expires_at:entitlementDeadline}:{})}}:{})};
+   readinessRequired:Boolean(status.readiness_required),readinessAvailable:Boolean(enabled&&status.readiness_available&&!renewing&&!busy),
+   ...(!enabled&&(expired||status.entitlements?.membership_required)?{reason}:status.readiness_required?{reason:status.readiness_available?'先完成一次模型连接验证，验证费用计入已有共享额度':'模型连接验证尚未获准或已用完；不会自动重试'}:{}),
+   ...(status.entitlements?.membership_required?{membership:{enabled,...(status.entitlements.access_kind?{access_kind:status.entitlements.access_kind}:{}),...(status.entitlements.access_kind==='TEST_ONLY'?{test_max_requests:status.entitlements.test_max_requests,test_max_cost_cny:status.entitlements.test_max_cost_cny,test_chat_enabled:status.entitlements.test_chat_enabled}:{}),...(typeof entitlementDeadline==='number'&&Number.isSafeInteger(entitlementDeadline)&&entitlementDeadline>0?{expires_at:entitlementDeadline}:{})}}:{})};
   return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||logoutError||(renewing?'正在恢复账号登录，当前内容暂时只读':!enabled?reason:!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,generation);
  }
  async function submit(event:React.FormEvent){

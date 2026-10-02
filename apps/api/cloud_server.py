@@ -125,11 +125,13 @@ class CloudApplication:
         self.member_context=(principal.tenant,session_key)
         from packages.cloud.entitlements import Entitlements,MemberBudget,MemberCancellation
         qwen=getattr(self.cloud_config,'selected_provider','deepseek')=='qwen'
-        self.entitlements=(QwenEntitlements if qwen else Entitlements)(self.stores.persistent)
         self.controllers={};self.lifecycle.recover()
         service=self.live_chat_service
         # The separately authorized public trial never grants member spending.
-        shared=bool(service and getattr(service.config,'monthly',None) and service.config.monthly['scope']=='AUTHENTICATED_SHARED' and service.budget.smoke_ready())
+        shared_policy=bool(service and getattr(service.config,'monthly',None) and service.config.monthly['scope']=='AUTHENTICATED_SHARED')
+        readiness=bool(shared_policy and not service.budget.smoke_ready())
+        self.entitlements=QwenEntitlements(self.stores.persistent,readiness=readiness,readiness_authorization=service.budget.member_readiness() if readiness else None) if qwen else Entitlements(self.stores.persistent)
+        shared=bool(shared_policy and (not readiness or service.budget.member_readiness()))
         if shared:
             budget=QwenMonthlyMemberBudget(service.budget,self.entitlements,self.member_auth,session_key,'CONVERSATION')
             self.live_chat_service=LiveChat(service.config,budget,service.adapter,cancellation_factory=lambda identity:MemberCancellation(DurableCancellation(self.stores.persistent,identity),self.member_auth,session_key,self.entitlements,'CONVERSATION'))
@@ -148,14 +150,18 @@ class CloudApplication:
         from packages.cloud.entitlements import Entitlements
         qwen=getattr(self.cloud_config,'selected_provider','deepseek')=='qwen'
         service=self.live_chat_service
-        shared=bool(service and getattr(service.config,'monthly',None) and service.config.monthly['scope']=='AUTHENTICATED_SHARED' and service.budget.smoke_ready())
+        shared_policy=bool(service and getattr(service.config,'monthly',None) and service.config.monthly['scope']=='AUTHENTICATED_SHARED')
+        readiness=bool(shared_policy and not service.budget.smoke_ready())
+        shared=bool(shared_policy and not readiness)
         smoke_only=bool(service and not shared and (getattr(service.config,'smoke',None) or getattr(service.config,'monthly',None)))
-        rights=({'enabled':False,'temporary':False,'persistent':False,'reason':'千问人民币额度尚未启用'}
-                if qwen and (self.live_chat_service is None or smoke_only) else
-                (QwenEntitlements if qwen else Entitlements)(self.stores.persistent).status())
+        # Account rights stay truthful even when model configuration/readiness is
+        # unavailable. A TEST_ONLY grant must never be presented as paid status.
+        rights=(QwenEntitlements(self.stores.persistent,readiness=readiness) if qwen else Entitlements(self.stores.persistent)).status()
+        readiness_available=bool(readiness and service.budget.member_readiness() and rights.get('enabled') and rights.get('temporary'))
         return {'available':True,'authenticated':True,'expires_at':principal.expires_at,
                 'account_scope':principal.tenant,
                 'renewable':True,
+                'readiness_required':readiness,'readiness_available':readiness_available,
                 'entitlements':rights,'model_enabled':self.live_chat_service is not None and not self.trial_auth and not smoke_only and bool(rights.get('enabled'))}
     def execute(self,tenant,run_id):
         if self.trial_auth:raise Fault(403,'Trial grant supports only temporary request-bound conversations')
