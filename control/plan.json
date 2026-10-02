@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "fix/runtime-sync-browser-budget",
-    "scope": "UPSTREAM_SYNC_BROWSER_ACCEPTANCE_BUDGET",
+    "branch": "fix/provider-timing-receipt",
+    "scope": "BOUNDED_PROVIDER_TIMING_AND_FAILURE_VISIBILITY",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

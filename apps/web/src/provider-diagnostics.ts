@@ -10,8 +10,16 @@ export function providerDiagnostics(value:unknown):{label:string;value:string}[]
  const state=provider.send_state;facts.push({label:'请求发送状态',value:state==='sent'?'已发送':state==='not_sent'?'未发送':'未知'});
  const status=provider.http_status;if(typeof status==='number'&&Number.isInteger(status)&&status>=100&&status<=599)facts.push({label:'HTTP 状态',value:String(status)});
  const counts=object(provider.stream_counts);for(const [key,label] of [['chunks','已接收数据片段'],['reasoning_chunks','思考片段数（不含内容）'],['answer_chunks','回答片段数']] as const){const count=counts[key];if(typeof count==='number'&&Number.isSafeInteger(count)&&count>=0&&count<=10000000)facts.push({label,value:String(count)})}
+ const timing=object(provider.stream_timing_ms);for(const [key,label] of [['headers_ms','收到响应头'],['first_byte_ms','收到首批数据'],['first_event_ms','首个数据事件'],['first_reasoning_ms','首个思考片段（不含内容）'],['first_answer_ms','首个回答片段'],['last_event_ms','最后数据事件'],['last_event_age_ms','结束前无新数据事件时长']] as const){const ms=timing[key];if(typeof ms==='number'&&Number.isSafeInteger(ms)&&ms>=0&&ms<=3600000)facts.push({label:label+'（毫秒）',value:String(ms)})}
  const finish=provider.finish_reason;if(typeof finish==='string'&&['stop','length','content_filter','tool_calls','insufficient_system_resource'].includes(finish))facts.push({label:'结束原因',value:finish});
  const latency=usage.latency_ms;if(typeof latency==='number'&&Number.isSafeInteger(latency)&&latency>=0&&latency<=3600000)facts.push({label:'本次耗时（毫秒）',value:String(latency)});
  if(Array.isArray(receipt.errors)&&receipt.errors.includes('TRANSPORT_TERMINATION_UNCONFIRMED'))facts.push({label:'连接状态',value:'尚未确认停止，保留原请求的预算占用'});
  return facts;
+}
+
+// Same fixed allowlist as the full receipt; absent metadata stays unknown.
+export function providerFailureSummary(value:unknown):string{
+ const facts=providerDiagnostics(value),labels=['诊断原因','请求发送状态','本次耗时（毫秒）'];
+ const summary=facts.filter(f=>labels.includes(f.label)).map(f=>`${f.label}：${f.value}`).join('；');
+ return summary+'。不会自动重复请求；费用未知不代表免费。';
 }
