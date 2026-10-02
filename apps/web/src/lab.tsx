@@ -1,12 +1,24 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {Dialog} from './panels';
+import {accountPath,requireMemberReady} from './api';
+import {temporaryApi} from './cloud-temporary';
 import {InspectionView} from './InspectionView';
 import {projectLocalInspection,type InspectionViewModel} from './inspection-model';
 
 type LoadedInspection={raw:unknown;view:InspectionViewModel};
 async function readInspection(path:string,runId:string,signal:AbortSignal):Promise<LoadedInspection>{
- const response=await fetch(path,{method:'GET',cache:'no-store',headers:{'Content-Type':'application/json'},signal});
+ if(signal.aborted)throw new DOMException('Inspection aborted','AbortError');
+ requireMemberReady(path);
+ // Current-tab temporary projections are authoritative for their own runs. A
+ // missing guest projection throws locally; it must not fall through to owner data.
+ const local=await temporaryApi(path,undefined,async()=>{throw new Error('Inspection cannot use an unscoped fallback')});
+ if(signal.aborted)throw new DOMException('Inspection aborted','AbortError');
+ requireMemberReady(path);
+ if(local.handled)return {raw:local.value,view:projectLocalInspection(local.value,runId)};
+ const response=await fetch(accountPath(path),{method:'GET',cache:'no-store',headers:{'Content-Type':'application/json'},signal});
  const raw:unknown=await response.json();
+ if(signal.aborted)throw new DOMException('Inspection aborted','AbortError');
+ requireMemberReady(path);
  if(!response.ok)throw new Error(`检查记录读取失败（HTTP ${response.status}）；未使用缓存导出`);
  return {raw,view:projectLocalInspection(raw,runId)};
 }

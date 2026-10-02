@@ -4,18 +4,19 @@ let member=false;
 let memberReady=true;
 export function configureCloud(value:boolean,trial=false,account=false){requestBound=value;member=account;memberReady=true;setCloudTemporary(value,trial,account)}
 export function setMemberReady(value:boolean){memberReady=value}
+export function requireMemberReady(path:string){const target=accountPath(path);if(!memberReady&&target.startsWith('/v1/member/')&&!target.endsWith('/cancel'))throw new Error('503: 正在恢复账号登录，请稍候')}
 export function accountPath(path:string){return member&&path.startsWith('/v1/')&&!/^\/v1\/(?:account|development|trial)\//.test(path)?'/v1/member/'+path.slice(4):path}
 export type Conversation={id:string; title:string; topic_id:string|null; memory:string};
 export type Ref={source_id:string; version:number; sha256:string; span?:number[]};
 export type Change={action:string;old:{record_id:string;content:string;kind:string;source_refs:Ref[]}[];new:{record_id:string;content:string;kind:string;source_refs:Ref[]}[];impact:string;actual_changed:boolean;not_reevaluated_count:number;invalidated_count:number};
 export type Run={changes?:Change[];run_id:string; input_text?:string; input_filename?:string; conversation_id:string; state_version_after:number; input_source_ref:Ref; pending:boolean; outdated:boolean; redacted?:boolean; answer:null|{answer_id:string; text:string; citation_refs:Ref[]}; stream:{seq:number; type:string; payload:{text?:string}}[]; run_receipt:{outcome:string; route:string; mode?:string; development_only?:boolean;actual_treatment?:string;provider?:{requested_model:string|null;actual_model:string|null;request_id:string|null;finish_reason:string|null;send_state:string};usage?:{provider_calls:number|null;input_tokens:number|null;output_tokens:number|null;cost:{amount:number|null;currency:string}};operations?:{selected:boolean;executed:boolean|null;result_produced:boolean|null;used_in_answer:boolean|null}[]}; errors:string[]};
 async function rawApi<T>(path:string,body?:unknown,signal?:AbortSignal):Promise<T>{
- const target=accountPath(path);if(!memberReady&&target.startsWith('/v1/member/')&&!target.endsWith('/cancel'))throw new Error('503: 正在恢复账号登录，请稍候');
+ const target=accountPath(path);requireMemberReady(path);
  const response=await fetch(target,{method:body===undefined?'GET':'POST',signal,headers:{'Content-Type':'application/json','X-HCLA-Request':'1'},body:body===undefined?undefined:JSON.stringify(body)});
  const data=await response.json(); if(!response.ok)throw new Error(`${response.status}: ${data.error}`); return data;
 }
 export async function api<T>(path:string,body?:unknown,signal?:AbortSignal):Promise<T>{
- if(member&&!memberReady&&path.startsWith('/v1/')&&!/^\/v1\/(?:account|development|trial)\//.test(path)&&!path.endsWith('/cancel'))throw new Error('503: 正在恢复账号登录，请稍候');
+ requireMemberReady(path);
  const temporary=await temporaryApi(path,body,(next,value)=>rawApi(next,value,signal));return temporary.handled?temporary.value as T:rawApi<T>(path,body,signal);
 }
 export async function stream(runId:string,onEvent:()=>void,signal:AbortSignal){
