@@ -24,7 +24,10 @@ test('search result focuses its exact run after the target is committed later th
 
 test('an older unresolved search selection cannot steal focus from a newer result',async({page},info)=>{
  const calls=await openFixture(page);await search(page);await hit(page,'A').click();await hit(page,'B').click();
- await page.evaluate(()=>{window.__focusFixture.mount('B');window.__focusFixture.resolve('B')});await expect(page.getByRole('dialog',{name:'搜索对话'})).toHaveCount(0);await expect(page.locator('[data-run="run-B"]')).toBeFocused();
+ await page.evaluate(()=>window.__focusFixture.mount('B'));await expect(page.locator('[data-run="run-B"]')).toHaveCount(1);await page.evaluate(()=>window.__focusFixture.resolve('B'));await expect(page.getByRole('dialog',{name:'搜索对话'})).toHaveCount(0);await frames(page);
+ // Establish the newer deliberate focus independently, so this assertion isolates
+ // the older selection's late finalizer rather than repeating the commit test.
+ await page.locator('[data-run="run-B"]').focus();await expect(page.locator('[data-run="run-B"]')).toBeFocused();
  await page.evaluate(()=>window.__focusFixture.resolve('A'));await frames(page);
  try{await expect(page.locator('[data-run="run-B"]')).toBeFocused()}
  finally{await page.screenshot({path:info.outputPath('search-newer-result.png'),fullPage:true,animations:'disabled'})}

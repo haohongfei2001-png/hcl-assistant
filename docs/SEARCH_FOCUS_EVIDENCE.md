@@ -10,6 +10,10 @@ Source review found that the shell focuses the target in one animation frame aft
 
 ## Controlled browser reproduction
 
-The first draft mounts the real AssistantShell with a browser-only synthetic parent that can resolve navigation separately from committing its target. It checks delayed target commitment, older-versus-newer search selection, and preserved ordinary dismissal plus newer input intent. The fixture makes zero application API calls and is served only through the test's intercepted HTML route; it is not a production entry. The existing end-to-end revision-loop focus assertion remains unchanged. Hosted reproduction is pending.
+The first draft mounts the real AssistantShell with a browser-only synthetic parent that can resolve navigation separately from committing its target. It checks delayed target commitment, older-versus-newer search selection, and preserved ordinary dismissal plus newer input intent. The fixture makes zero application API calls and is served only through the test's intercepted HTML route; it is not a production entry. The existing end-to-end revision-loop focus assertion remains unchanged. [Run36955000662](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36955000662) at head `896091faa69d8bb1cfb3fdf4c42418048bc96144` reproduced missing committed-target focus in two controlled cases;81 other general browser cases passed. The second setup is being narrowed to isolate an older finalizer after a newer deliberate target focus, independently of the first commit-timing failure.
 
 No live Auth/email, credential, schema, entitlement, provider call, trial clock or runtime-lock change is part of this work. Exact-head review/browser/capture evidence and exact-main gates remain required.
+
+## Separate intermittent receipt view
+
+The same run also repeated the previously retained cloud receipt-dialog miss from main run36952102582, with39 other cloud journeys passing. The existing expectation and invocation are unchanged. Cloud failures now retain traces/screenshots, and four repeats of only that existing fake-provider journey collect bounded click/dialog event metadata. This is a diagnostic product-only probe, not a full upstream sync rerun; no candidate or live activation is implied.
