@@ -534,7 +534,7 @@
   "writer": {
     "branch": "fix/history-read-recovery",
     "scope": "P1-02_SELECTED_HISTORY_READ_RECOVERY",
-    "status": "IN_PROGRESS"
+    "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
