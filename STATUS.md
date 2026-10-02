@@ -86,4 +86,4 @@ Existing search, message-menu and interrupted-send journeys have bounded correct
 
 HCLA-only `qwen3.8-max` provider preparation is in review with separate native-CNY accounting. Default closed; no live Qwen call, key, grant, migration or deployment activation is implied. The old DeepSeek guest trial remains expired. Contract and verification scope: [Qwen provider](docs/QWEN_PROVIDER.md).
 
-The current Qwen activation target is the owner-approved shared CNY 500/month Shanghai calendar budget, including tests. Period-scoped implementation and final review/CI are in progress; no live one-off smoke grant or monthly migration has been installed. See [monthly contract](docs/QWEN_MONTHLY_BUDGET.md).
+The current Qwen activation target is the owner-approved shared CNY 500/month Shanghai calendar budget, including tests. Period-scoped implementation and final review/CI are in progress; no live one-off smoke grant or monthly migration has been installed. The user chose open registration with verified active paid membership required for model use; no payment provider or live Auth activation is implied. See [shared monthly contract](docs/QWEN_SHARED_MONTHLY_BUDGET.md).

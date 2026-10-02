@@ -8,6 +8,19 @@ from packages.store.ledger import Fault
 class QwenEntitlements(Entitlements):
     table = 'qwen_member_entitlements'
 
+    def current(self):
+        with self.store.transaction():
+            row=super().current()
+            if not (row and row['paid_membership'] and row['payment_verification'] in {'ADMIN_VERIFIED','TRUSTED_PAYMENT_EVENT'} and row['paid_evidence_digest'] and row['paid_verified_at']):return None
+            verified=self.store.db.execute('SELECT paid_verified_at<=clock_timestamp() AS verified FROM qwen_member_entitlements WHERE tenant=? AND grant_id=?',(self.store.tenant,row['grant_id'])).fetchone()
+            return row if verified and verified['verified'] else None
+
+    def status(self):
+        result=super().status()
+        result['membership_required']=True
+        if not result['enabled']:result['reason']='会员未开通、已到期或已停用；注册账号不包含模型使用权限'
+        return result
+
 
 class QwenMemberBudget:
     currency = 'CNY'
@@ -82,3 +95,48 @@ class QwenMemberBudget:
 
     def close(self):
         pass
+
+
+class QwenMonthlyMemberBudget:
+    """Existing member rights restrict, never replenish, the shared monthly pool.
+
+    Audit and charges live once in the actor-isolated monthly attempt row. There
+    is no independently funded per-member monthly ledger or mirrored settlement.
+    """
+    currency='CNY'
+    def __init__(self,operator,entitlements,auth,session_key,memory):
+        self.operator=operator;self.config=operator.config;self.store=operator.store
+        self.entitlements=entitlements;self.auth=auth;self.session_key=session_key;self.memory=memory
+        self._grant_id=None
+    def _require(self):
+        if not self.auth.active(self.session_key):raise BudgetError('account_session_expired')
+        try:grant=self.entitlements.require(self.memory)
+        except Fault:raise BudgetError('account_entitlement_required') from None
+        if self._grant_id is not None and grant['grant_id']!=self._grant_id:raise BudgetError('account_entitlement_changed')
+        return grant
+    def authorize_request(self,request,conversation):
+        actual=conversation.get('memory')
+        if actual not in {'TEMPORARY','CONVERSATION','TOPIC'} or (actual=='TEMPORARY')!=(self.memory=='TEMPORARY'):
+            raise BudgetError('account_memory_scope_mismatch')
+        self.memory=actual
+        with self.store.transaction():
+            self._require()
+            self.operator.authorize_request(request,conversation)
+    def dispatch_output_tokens(self):return self.operator.dispatch_output_tokens()
+    def smoke_ready(self):return self.operator.smoke_ready()
+    def reserve(self,run_id,attempt_id,input_bytes):
+        with self.store.transaction():
+            grant=self._require();self._grant_id=grant['grant_id']
+            if not self.operator.smoke_ready():raise BudgetError('owner_smoke_required')
+            self.operator.member_grant_id=self._grant_id;self.operator.memory_scope=self.memory
+            return self.operator.reserve(run_id,attempt_id,input_bytes)
+    def finish(self,*args,**kwargs):
+        # Terminal accounting must be recorded even if access was revoked while
+        # transport ran. Only verified settlement below can release reservation.
+        return self.operator.finish(*args,**kwargs)
+    def reconcile_completed(self,*args,**kwargs):
+        with self.store.transaction():
+            self._require()
+            return self.operator.reconcile_completed(*args,**kwargs)
+    def snapshot(self):return self.operator.snapshot()
+    def close(self):pass

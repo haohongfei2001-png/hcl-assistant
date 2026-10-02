@@ -141,7 +141,7 @@ class LiveChat:
                 reserved=True
                 if getattr(self.config,'monthly',None):
                     current['run_receipt']['usage']['budget']={'currency':'CNY','period':reservation.period,
-                        'timezone':'Asia/Shanghai','max_cost_cny':'500','reserved_cny':format(reservation.reserved_cost_cny,'f')}
+                        'timezone':'Asia/Shanghai','scope':self.config.monthly['scope'],'max_cost_cny':'500','reserved_cny':format(reservation.reserved_cost_cny,'f')}
                 current['run_receipt']['provider']['requested_model']=self.adapter.model
                 current['run_receipt']['usage']['adapter_invocations']=1
                 # Mark dispatch as uncertain before handing control to transport; restart cannot assert zero.

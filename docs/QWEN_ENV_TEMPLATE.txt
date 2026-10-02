@@ -1,7 +1,9 @@
-# INACTIVE TEMPLATE. Existing HCLA Vercel project only, approved environment only.
-# Owner enters the key directly in secure environment settings, never in this file.
-HCLA_QWEN_API_KEY=
-# Do not select Qwen or install a grant until explicit bounded CNY activation approval.
+# Current target: open registration, verified PAID members, one SHARED CNY500/month.
+# See QWEN_SHARED_MONTHLY_BUDGET.md. This file is documentation, not live authorization.
+# The user already saved HCLA_QWEN_API_KEY securely in Production; never re-enter/read it.
 # HCLA_PROVIDER=qwen
-# HCLA_QWEN_MODEL_GRANT=<approved non-secret JSON described in QWEN_MONTHLY_BUDGET.md>
-# No public frontend variables, inherited USD grant, trial renewal or automatic calls.
+# HCLA_QWEN_MODEL_GRANT=<canonical version3 AUTHENTICATED_SHARED grant after exact review and live approval>
+# Region cn-beijing, model qwen3.8-max, currency CNY, total500 for all users/tests.
+# First exact owner synthetic smoke, then only active server-verified paid members.
+# No separate per-user500, no public anonymous/free model access, no payment provider configured.
+# Keep signup/email/origin configuration gated until verified; registration itself grants no entitlement.

@@ -73,7 +73,7 @@ def handler(application):
             if not getattr(self.application,'cloud',False):raise Fault(404,'Unknown API route')
             if getattr(self.application,'member_auth',None) is None:raise Fault(503,'普通账号服务尚未启用')
             canonical='/v1/'+path[len('/v1/member/'):]
-            if not re.fullmatch(r'/v1/(?:conversations(?:/[^/]+(?:/events)?)?|topics|history/search|runs/[^/]+(?:/(?:events|execute|cancel|retry))?|context|sources(?:/[^/]+)?|answers/[^/]+/explain|lab/(?:runs|export)/[^/]+|temporary/(?:execute|cancel))',canonical):
+            if not re.fullmatch(r'/v1/(?:budget|conversations(?:/[^/]+(?:/events)?)?|topics|history/search|runs/[^/]+(?:/(?:events|execute|cancel|retry))?|context|sources(?:/[^/]+)?|answers/[^/]+/explain|lab/(?:runs|export)/[^/]+|temporary/(?:execute|cancel))',canonical):
                 raise Fault(404,'Unknown account route')
             self.member_tenant=self.application.authenticate_member(self)
             return canonical
@@ -213,6 +213,10 @@ def handler(application):
                         except Fault:pass
                     self.json(200,{'enabled':self.application.real_chat,'authenticated':authenticated,'configuration':self.application.configuration,'production_enabled':False,'cloud':getattr(self.application,'cloud',False),'request_bound':getattr(self.application,'request_bound',False)});return
                 tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); parts=path.strip('/').split('/')
+                if path=='/v1/budget':
+                    if not getattr(self.application,'cloud',False):raise Fault(403,'Cloud budget status required')
+                    service=self.application.live_chat_service
+                    self.json(200,service.budget.snapshot() if service else {'enabled':False});return
                 if path=='/v1/development/budget':
                     if not getattr(self.application,'cloud',False) or tenant!='hcla-owner':raise Fault(403,'Owner budget status required')
                     service=self.application.live_chat_service

@@ -88,7 +88,7 @@ class QwenPostgresTests(unittest.TestCase):
         other = VerifiedPrincipal(issuer,'00000000-0000-0000-0000-000000000002',9999999999)
         a,b = principal.tenant,other.tenant
         for tenant in (a,b):
-            self.admin.execute("INSERT INTO hcla.qwen_member_entitlements(tenant,grant_id,enabled,starts_at,expires_at,temporary_enabled,persistent_enabled,max_requests,max_cost_cny) VALUES(%s,'separate-cny',true,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour',true,true,1,13)", (tenant,))
+            self.admin.execute("INSERT INTO hcla.qwen_member_entitlements(tenant,grant_id,enabled,starts_at,expires_at,temporary_enabled,persistent_enabled,max_requests,max_cost_cny,paid_membership,payment_verification,paid_evidence_digest,paid_verified_at) VALUES(%s,'separate-cny',true,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour',true,true,1,13,true,'ADMIN_VERIFIED',repeat('a',64),clock_timestamp())", (tenant,))
         store = self.store()
         # Explicit test principal binding; no real Auth or bearer credentials.
         store.bind_member(principal)

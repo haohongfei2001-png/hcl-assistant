@@ -1,4 +1,8 @@
-# HCLA owner monthly Qwen budget
+# HCLA owner monthly Qwen budget (historical preparation)
+
+Superseded before any live installation by the user's 2026-10-02 shared-budget
+decision. Current activation target: [shared monthly contract](QWEN_SHARED_MONTHLY_BUDGET.md).
+Do not install the earlier OWNER_ONLY activation bundle.
 
 ## Authorization and supersession
 

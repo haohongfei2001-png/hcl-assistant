@@ -4,8 +4,8 @@ import {clearTemporary} from './cloud-temporary';
 import './account-entry.css';
 import {RecoveryEntry} from './RecoveryEntry';
 
-type Status={recovery_available?:boolean;available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{enabled:boolean;temporary?:boolean;persistent?:boolean;reason?:string|null}};
-export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean,logoutPending:boolean,generation:{model:boolean;temporary:boolean;persistent:boolean})=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode}){
+type Status={recovery_available?:boolean;available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{membership_required?:boolean;enabled:boolean;temporary?:boolean;persistent?:boolean;reason?:string|null}};
+export function MemberEntry({children,onOwner,extra,provider}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean,logoutPending:boolean,generation:{model:boolean;temporary:boolean;persistent:boolean;reason?:string})=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode;provider?:'deepseek'|'qwen'}){
  const [status,setStatus]=useState<Status|null>(null),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[register,setRegister]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  const scope=useRef(''),channel=useRef<BroadcastChannel|null>(null),live=useRef(true),revision=useRef(0);
  const [recover,setRecover]=useState(false);
@@ -48,7 +48,7 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
   finally{clearTimeout(timeout);if(live.current&&epoch===revision.current)setBusy(false)}
  }
  if(recover)return <RecoveryEntry initialEmail={email} onBack={()=>setRecover(false)}/>;
- if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||logoutError||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,{model:Boolean(status.model_enabled),temporary:Boolean(status.entitlements?.enabled&&status.entitlements.temporary),persistent:Boolean(status.entitlements?.enabled&&status.entitlements.persistent)});
+ if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||logoutError||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,{model:Boolean(status.model_enabled),temporary:Boolean(status.entitlements?.enabled&&status.entitlements.temporary),persistent:Boolean(status.entitlements?.enabled&&status.entitlements.persistent),...(status.entitlements?.membership_required&&!status.entitlements.enabled?{reason:status.entitlements.reason||'会员未开通，注册账号不包含模型使用权限'}:{})});
  async function submit(event:React.FormEvent){
   event.preventDefault();if(busy||!status?.available)return;setBusy(true);setError('');setMessage('');
   const epoch=++revision.current;flight.current?.controller.abort();authFlight.current?.abort();
@@ -61,7 +61,7 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
   }catch{if(live.current&&epoch===revision.current)setError(controller.signal.aborted?'连接等待过久，请重新检查连接后再试；不会自动重复提交':register?'暂时无法创建账号，请检查输入或稍后重试':'登录未完成，请确认邮箱已验证、账号密码正确，或稍后重试')}
   finally{clearTimeout(timeout);if(authFlight.current===controller){authFlight.current=null;if(live.current){setPassword('');setShowPassword(false);setBusy(false)}}}
  }
- return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="account-heading"><div className="account-brand">HCL <span>Assistant</span></div>{extra}
+ return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="account-heading"><div className="account-brand">HCL <span>Assistant</span></div>{provider==='qwen'&&<p className="account-hint">注册并验证邮箱后仍需开通有效会员，才能使用模型；所有会员与测试共用平台每月500元总额度。</p>}{extra}
   <h1 id="account-heading">{register?'创建你的账号':'继续你的对话'}</h1><p className="account-intro">登录后，在你的设备上继续自己的对话。当前仅开放合成内容体验，请勿输入真实私密资料。</p>
   {error&&<p className="account-feedback" role="alert">{error}</p>}{message&&<p className="account-feedback" role="status">{message}</p>}
   {!status?<p role="status">正在检查账号服务…</p>:!status.available?<div className="account-unavailable">{!serviceError&&<p>普通账号服务暂未开放，请稍后再来</p>}<button className="account-secondary" disabled={busy} onClick={()=>void refresh()}>重新检查连接</button></div>:<form onSubmit={event=>void submit(event)}>
