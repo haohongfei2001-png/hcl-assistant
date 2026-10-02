@@ -30,10 +30,12 @@ def validate(controller, request, conversation):
     if request.get('synthetic_input_confirmed') is not True:
         raise Fault(403,'Development chat requires original synthetic input confirmation')
     service.ready()
+    authorize=getattr(service.config,'authorize_request',None)
+    if authorize:authorize(request,conversation)
     return True
 
 
-def initialize(run):
+def initialize(run, config=None):
     run['live_chat']=True
     run['route']='DEVELOPMENT_CHAT'
     run['operation_receipts']=run['operation_receipts'] if run.get('development_request') else []
@@ -42,7 +44,7 @@ def initialize(run):
     receipt=run['run_receipt']
     receipt.update(mode='REAL_DEVELOPMENT',development_only=True,production_enabled=False,
                    evidence_class='DEVELOPMENT_CHAT_NOT_EFFICACY',route=run['route'],actual_treatment='PENDING' if run.get('development_request') else 'NO_TREATMENT',operations=copy.deepcopy(run['operation_receipts']))
-    receipt['usage']={'provider_calls':0,'adapter_invocations':0,'input_tokens':None,'output_tokens':None,'reasoning_tokens':None,'cost':{'amount':None,'currency':'USD','source':'UNKNOWN'},'latency_ms':None}
+    receipt['usage']={'provider_calls':0,'adapter_invocations':0,'input_tokens':None,'output_tokens':None,'reasoning_tokens':None,'cost':{'amount':None,'currency':getattr(config,'currency','USD'),'source':'UNKNOWN'},'latency_ms':None}
     receipt['provider']={'requested_model':None,'actual_model':None,'request_id':None,'finish_reason':None,'send_state':'not_sent'}
 
 
@@ -91,6 +93,11 @@ class LiveChat:
             # Earlier generated answers are deliberately not replayed as authority.
         query=run.get('development_request',{}).get('query')
         messages.append({'role':'user','content':run['input_text']+(('\nQuestion: '+query) if query else '')})
+        # Qwen's prepared contract rejects the complete final prompt instead of
+        # silently pruning history to make an unapproved request fit.
+        if (getattr(self.config,'provider_id','deepseek')=='qwen'
+                and len(json.dumps(messages,ensure_ascii=False).encode())+512>8192):
+            raise Fault(413,'Development prompt exceeds 8 KiB including context')
         # Keep recent conversation context within explicit byte cap, never truncate current input.
         while len(json.dumps(messages,ensure_ascii=False).encode())+512>8192 and len(messages)>2:messages.pop(1);history_refs.pop(0)
         if len(json.dumps(messages,ensure_ascii=False).encode())+512>8192:raise Fault(413,'Development prompt exceeds 8 KiB including context')
@@ -103,6 +110,7 @@ class LiveChat:
             run=store.get(tenant,'run',run_id)
             if not run['pending'] or run.get('executing'):return
             run['executing']=True;controller.live_cancellations[run_id]=cancel
+            run['run_receipt']['usage']['cost']['currency']=getattr(self.config,'currency','USD')
             store.put(tenant,'run',run)
         try:
             self.ready()
@@ -127,7 +135,8 @@ class LiveChat:
                 messages,bindings=self.messages(controller,tenant,current,outputs)
                 run['history_source_refs']=current['history_source_refs']
                 current['run_receipt']['history_source_refs']=copy.deepcopy(current['history_source_refs'])
-                reservation=self.budget.reserve(run_id,current['run_receipt']['attempt_id'],len(json.dumps(messages,ensure_ascii=False).encode())+512)
+                message_bytes=len(json.dumps(messages,ensure_ascii=False).encode())
+                reservation=self.budget.reserve(run_id,current['run_receipt']['attempt_id'],message_bytes+512)
                 if not reservation.granted:raise Fault(409,'PROVIDER_ATTEMPT_ALREADY_RESERVED')
                 reserved=True
                 current['run_receipt']['provider']['requested_model']=self.adapter.model
@@ -144,10 +153,14 @@ class LiveChat:
                     controller.emit(current,'answer.delta',{'text':text});store.put(tenant,'run',current)
             result=self.adapter.generate(messages,max_tokens=self.config.max_output_tokens,cancel_event=cancel,on_delta=delta)
             usage=result.usage if all(k in result.usage for k in ('prompt_tokens','completion_tokens')) else {}
+            if getattr(self.config,'provider_id','deepseek')=='qwen' and not result.usage_consistent:
+                usage={}  # Observed contradictory counters are not accounting evidence.
             if result.transport_stopped:self.budget.finish(run_id,run['run_receipt']['attempt_id'],{'SUCCEEDED':'completed','PARTIAL':'unknown','FAILED':'failed','CANCELLED':'cancelled','UNKNOWN':'unknown'}[result.outcome],input_tokens=usage.get('prompt_tokens'),output_tokens=usage.get('completion_tokens'))
             with store.transaction():
                 current=store.get(tenant,'run',run_id);receipt=current['run_receipt']
-                receipt['provider']={'requested_model':result.requested_model,'actual_model':result.actual_model,'request_id':result.request_id,'finish_reason':result.finish_reason,'send_state':result.send_state,'thinking':'enabled','reasoning_effort':'high','error_code':result.error_code,'http_status':result.http_status,'stream_counts':dict(result.stream_counts),'stream_timing_ms':dict(result.stream_timing_ms)}
+                receipt['provider']={'requested_model':result.requested_model,'actual_model':result.actual_model,'request_id':result.request_id,'finish_reason':result.finish_reason,'send_state':result.send_state,'thinking':'enabled' if getattr(self.adapter,'thinking_enabled',True) else 'disabled','reasoning_effort':getattr(self.adapter,'reasoning_effort','high'),'error_code':result.error_code,'http_status':result.http_status,'stream_counts':dict(result.stream_counts),'stream_timing_ms':dict(result.stream_timing_ms)}
+                if getattr(self.config,'provider_id','deepseek')=='qwen':
+                    receipt['provider'].update(provider='qwen',region=self.config.region,currency=self.config.currency,max_completion_tokens=self.config.max_output_tokens,reserved_output_tokens=self.config.reserved_output_tokens,serialized_messages_bytes=message_bytes,admission_input_bytes=message_bytes+512,input_token_reservation=self.config.input_token_reservation,input_token_basis='DOCUMENTED_MAX_CONTEXT_NOT_TOKENIZER_ESTIMATE')
                 receipt['usage'].update(provider_calls=1 if result.send_state=='sent' else 0 if result.send_state=='not_sent' else None,input_tokens=result.usage.get('prompt_tokens'),output_tokens=result.usage.get('completion_tokens'),reasoning_tokens=result.usage.get('reasoning_tokens'),provider_usage=result.usage,latency_ms=round((time.monotonic()-started)*1000))
                 # Do not claim a charge is zero or known merely from a configured upper bound.
                 allowed=current['pending'] and not cancel.is_set() and result.transport_stopped and valid(controller,tenant,run)

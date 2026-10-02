@@ -86,3 +86,7 @@ Owner approved U1-01 following the screenshot review: compact growing composer, 
 ## Ordinary account amendment (2026-10-01 19:40 UTC)
 
 Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 delivered the bounded account engineering slice: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
+
+## Beijing Qwen provider preparation amendment (2026-10-02)
+
+Owner's later HCLA-only request adds the bounded default-closed Model Studio Beijing `qwen3.8-max` provider preparation described in [Qwen contract](docs/QWEN_PROVIDER.md), with one writer recorded in control/plan.json. This does not reopen historical packages, change HCL research/runtime or authorize live activation. Native-CNY policy/member grants remain separate from immutable DeepSeek USD records and the expired guest trial. Exact-head review and offline checks precede any activation request.

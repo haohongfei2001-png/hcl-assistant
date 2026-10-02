@@ -209,12 +209,27 @@ def _consistent_usage(value):
 
 
 class DeepSeekAdapter:
+    provider_id = 'deepseek'
+
+    def _endpoint(self, base_url, injected):
+        return _endpoint(base_url, injected)
+
+    def _request_payload(self, messages, max_tokens):
+        return {"model": self.model, "messages": messages,
+                "stream": True, "stream_options": {"include_usage": True},
+                "max_tokens": max_tokens,
+                "thinking": {"type": "enabled" if self.thinking_enabled else "disabled"},
+                "reasoning_effort": self.reasoning_effort}
+
+    def _completion_error(self, usage, consistent, max_tokens):
+        return None
+
     def __init__(self, *, base_url: str, model: str, api_key: str,
                  connect_timeout: float = 10.0, wall_timeout: float = 120.0,
                  max_output_bytes: int = 262144, transport_factory: Callable | None = None,
                  thinking_enabled: bool = True, reasoning_effort: str = "high",
                  request_deadline: float | None = None):
-        self.endpoint = _endpoint(base_url, transport_factory is not None)
+        self.endpoint = self._endpoint(base_url, transport_factory is not None)
         if not isinstance(model, str) or _TOKEN.fullmatch(model) is None:
             raise ValueError("explicit_model_required")
         if not isinstance(api_key, str) or not api_key or any(c.isspace() for c in api_key):
@@ -319,11 +334,7 @@ class DeepSeekAdapter:
                 return result("FAILED", "unsupported_message")
             clean_messages.append({"role": message["role"], "content": message["content"]})
         try:
-            body = json.dumps({"model": self.model, "messages": clean_messages,
-                               "stream": True, "stream_options": {"include_usage": True},
-                               "max_tokens": max_tokens,
-                               "thinking": {"type": "enabled" if self.thinking_enabled else "disabled"},
-                               "reasoning_effort": self.reasoning_effort}, ensure_ascii=False).encode("utf-8")
+            body = json.dumps(self._request_payload(clean_messages, max_tokens), ensure_ascii=False).encode("utf-8")
         except (ValueError, UnicodeError):
             return result("FAILED", "invalid_request")
         clean_messages.clear()
@@ -547,6 +558,9 @@ class DeepSeekAdapter:
                 return result("PARTIAL", "length")
             if finish_reason != "stop":
                 return result("FAILED", "finish_" + finish_reason)
+            completion_error = self._completion_error(usage, complete_usage is not None and not usage_invalid, max_tokens)
+            if completion_error:
+                return result("UNKNOWN", completion_error, discard=True)
             return result("SUCCEEDED")
         except _ProtocolError as error:
             code = str(error)

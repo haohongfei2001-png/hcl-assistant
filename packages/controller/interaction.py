@@ -26,9 +26,10 @@ class Controller:
         live=live_chat.validate(self,req,obj)
         memory=req.get('allowed_memory_scope',obj['memory'])
         if memory!=obj['memory']: raise Fault(403,'Memory scope must match conversation membership')
-        budget=req.get('model_resource_policy',{'adapter':'DEEPSEEK','max_provider_calls':1,'max_adapter_calls':1} if live else {})
+        provider_id=getattr(self.live_chat.config,'provider_id','deepseek').upper() if live else 'MOCK'
+        budget=req.get('model_resource_policy',{'adapter':provider_id,'max_provider_calls':1,'max_adapter_calls':1} if live else {})
         if live:
-            if budget.get('adapter')!='DEEPSEEK' or budget.get('max_provider_calls')!=1:raise Fault(403,'Development chat requires one explicitly permitted provider attempt')
+            if budget.get('adapter')!=provider_id or budget.get('max_provider_calls')!=1:raise Fault(403,'Development chat requires one explicitly permitted provider attempt')
         elif budget.get('max_provider_calls',0)!=0 or budget.get('adapter','MOCK')!='MOCK': raise Fault(403,'L1/L2 has no provider transport')
         if not 0<=budget.get('max_adapter_calls',1)<=1: raise Fault(400,'At most one mock adapter call per attempt')
         event=req.get('event',{}); text=event.get('text','')
@@ -83,7 +84,7 @@ class Controller:
                 result['selected_capability_ids']=['competing_explanations']
                 operation={'operation_id':uid(),'capability_id':'competing_explanations','input_versions':selected['source_versions'],'read_dependencies':selected['record_ids'],'output_ids':[r['record_id'] for r in selected['records'] if r['kind']=='SYSTEM_INTERPRETATION'],'status':'MOCK_AUTHORED_OUTPUT','cache_status':'NOT_REUSED','model_calls':0,'usage_refs':[],'selected':True,'executed':True,'result_produced':True,'used_in_answer':True,'cache_reused':False}
                 result['operation_receipts']=[operation]; result['run_receipt']['operations']=[operation]; result['run_receipt']['capabilities']=result['selected_capability_ids']
-            if live: live_chat.initialize(result)
+            if live: live_chat.initialize(result,self.live_chat.config)
             self.emit(result,'run.accepted',{})
             self.emit(result,'state.committed',{'accepted_change_ids':changes})
             return self.store.put(tenant,'run',result)

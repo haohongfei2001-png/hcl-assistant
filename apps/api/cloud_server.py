@@ -7,6 +7,9 @@ from packages.store.registry import Stores
 from packages.controller.interaction import Controller
 from packages.controller.live_chat import LiveChat
 from packages.adapter.deepseek import DeepSeekAdapter
+from packages.adapter.provider import create_adapter
+from packages.cloud.qwen_budget import QwenCloudBudget
+from packages.cloud.qwen_entitlements import QwenEntitlements,QwenMemberBudget
 from packages.runtime_bridge.bridge import RuntimeBridge
 from packages.cloud.auth import CloudAuth
 from packages.cloud.config import CloudConfig
@@ -83,12 +86,17 @@ class CloudApplication:
                 startup.mark(StartupCode.PROVIDER_BUDGET)
                 from packages.cloud.trial import TrialBudget,TrialAuth,TrialCancellation
                 trial=getattr(config,'trial',None)
-                budget=TrialBudget(store,c,trial) if trial else CloudBudget(store,c)
+                qwen=getattr(c,'provider_id','deepseek')=='qwen'
+                if qwen and trial:raise ValueError('Qwen guest trial is not authorized')
+                budget=QwenCloudBudget(store,c) if qwen else TrialBudget(store,c,trial) if trial else CloudBudget(store,c)
                 if trial:self.trial_auth=TrialAuth(config.origin,config.state_key,budget)
                 startup.mark(StartupCode.PROVIDER_ADAPTER)
-                adapter=adapter or DeepSeekAdapter(base_url=c.base_url,model=c.model,api_key=c.api_key,wall_timeout=PROVIDER_WALL_SECONDS,request_deadline=request_deadline)
+                adapter=adapter or create_adapter(c,deepseek_factory=DeepSeekAdapter,wall_timeout=PROVIDER_WALL_SECONDS,request_deadline=request_deadline)
                 self.live_chat_service=LiveChat(c,budget,adapter,cancellation_factory=lambda identity:TrialCancellation(DurableCancellation(store,identity),budget) if trial else DurableCancellation(store,identity))
             self.configuration={'configured':True,'provider_enabled':config.provider is not None}
+            if getattr(config,'selected_provider','deepseek')=='qwen':
+                self.configuration['provider']='qwen'
+                if config.provider and config.provider.smoke:self.configuration['owner_smoke_only']=True
             if self.trial_auth:self.configuration['temporary_trial']=True
             if self.member_auth:self.configuration['member_accounts']=True
         except Exception:
@@ -111,12 +119,13 @@ class CloudApplication:
             return principal.tenant
         self.member_context=(principal.tenant,session_key)
         from packages.cloud.entitlements import Entitlements,MemberBudget,MemberCancellation
-        self.entitlements=Entitlements(self.stores.persistent)
+        qwen=getattr(self.cloud_config,'selected_provider','deepseek')=='qwen'
+        self.entitlements=(QwenEntitlements if qwen else Entitlements)(self.stores.persistent)
         self.controllers={};self.lifecycle.recover()
         service=self.live_chat_service
         # The separately authorized public trial never grants member spending.
-        if service and not self.trial_auth:
-            budget=MemberBudget(service.budget,self.entitlements,self.member_auth,session_key,'CONVERSATION')
+        if service and not self.trial_auth and not getattr(service.config,'smoke',None):
+            budget=(QwenMemberBudget if qwen else MemberBudget)(service.budget,self.entitlements,self.member_auth,session_key,'CONVERSATION')
             self.live_chat_service=LiveChat(service.config,budget,service.adapter,cancellation_factory=lambda identity:MemberCancellation(DurableCancellation(self.stores.persistent,identity),self.member_auth,session_key,self.entitlements,'CONVERSATION'))
         else:self.live_chat_service=None
         return principal.tenant
@@ -128,11 +137,15 @@ class CloudApplication:
             if error.status==401:return {'available':True,'authenticated':False,'renewable':self.member_auth.renewable(cookie),'recovery_available':self.recovery_auth is not None}
             raise
         from packages.cloud.entitlements import Entitlements
-        rights=Entitlements(self.stores.persistent).status()
+        qwen=getattr(self.cloud_config,'selected_provider','deepseek')=='qwen'
+        smoke_only=bool(self.live_chat_service and getattr(self.live_chat_service.config,'smoke',None))
+        rights=({'enabled':False,'temporary':False,'persistent':False,'reason':'千问人民币额度尚未启用'}
+                if qwen and (self.live_chat_service is None or smoke_only) else
+                (QwenEntitlements if qwen else Entitlements)(self.stores.persistent).status())
         return {'available':True,'authenticated':True,'expires_at':principal.expires_at,
                 'account_scope':principal.tenant,
                 'renewable':True,
-                'entitlements':rights,'model_enabled':self.live_chat_service is not None and not self.trial_auth}
+                'entitlements':rights,'model_enabled':self.live_chat_service is not None and not self.trial_auth and not smoke_only}
     def execute(self,tenant,run_id):
         if self.trial_auth:raise Fault(403,'Trial grant supports only temporary request-bound conversations')
         store=self.stores.persistent;ctrl=self.controller(store)
