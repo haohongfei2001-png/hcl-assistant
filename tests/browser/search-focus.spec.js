@@ -12,10 +12,11 @@ async function search(page){await page.getByRole('button',{name:'搜索对话',e
 const hit=(page,id)=>page.locator('.search-hit').getByRole('button',{name:new RegExp('Original target '+id)});
 const frames=page=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 
-test('search result focuses its exact run after the target is committed later than navigation resolution',async({page},info)=>{
+for(const mobile of [false,true])test(`${mobile?'phone':'desktop'} search result focuses its exact run after the target is committed later than navigation resolution`,async({page},info)=>{
+ if(mobile)await page.setViewportSize({width:390,height:844});
  const calls=await openFixture(page);await search(page);await hit(page,'A').click();
  await page.evaluate(()=>window.__focusFixture.resolve('A'));await expect(page.getByRole('dialog',{name:'搜索对话'})).toHaveCount(0);await frames(page);
- await expect(page.locator('[data-run="run-A"]')).toHaveCount(0);
+ await expect(page.locator('[data-run="run-A"]')).toHaveCount(0);await expect(page.getByRole('button',{name:'搜索对话',exact:true})).toBeFocused();
  await page.evaluate(()=>window.__focusFixture.mount('A'));
  try{await expect(page.locator('[data-run="run-A"]')).toBeFocused();await expect(page.locator('[data-run="run-A"]')).toBeInViewport()}
  finally{await page.screenshot({path:info.outputPath('search-delayed-commit.png'),fullPage:true,animations:'disabled'})}
