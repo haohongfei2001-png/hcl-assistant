@@ -1,0 +1,19 @@
+import {test,expect} from '@playwright/test';
+test.use({trace:'retain-on-failure',screenshot:'only-on-failure'});
+async function create(page){const response=page.waitForResponse(r=>r.url().endsWith('/v1/conversations')&&r.request().method()==='POST');await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();const id=(await(await response).json()).id;await expect(page.locator('.chat-workspace')).toHaveAttribute('data-current-conversation',id);await expect(page.getByLabel('消息',{exact:true})).toBeFocused();return id}
+async function enter(page){await page.goto('/');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();return create(page)}
+async function holdReconciliation(page,id){
+ let committed=false,first=true,entered,release;const waiting=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve),keys=[];
+ await page.route(`**/v1/conversations/${id}/events`,async route=>{keys.push(route.request().postDataJSON().idempotency_key);if(first){first=false;await route.fetch();committed=true;await route.abort('failed')}else await route.continue()});
+ await page.route(`**/v1/conversations/${id}`,async route=>{if(!committed){await route.continue();return}committed=false;const response=await route.fetch();entered();await gate;await route.fulfill({response}).catch(()=>{})});return {waiting,release,keys};
+}
+test('lost acknowledgement keeps retry unavailable until its read-only reconciliation finishes',async({page},info)=>{
+ const id=await enter(page),held=await holdReconciliation(page,id),composer=page.getByLabel('消息',{exact:true});
+ try{await composer.fill('2+2');await composer.press('Enter');await held.waiting;await expect(page.getByRole('alert')).toBeVisible();await expect(composer).toHaveValue('2+2');await expect(page.getByRole('button',{name:'发送',exact:true})).toHaveCount(0);expect(held.keys).toHaveLength(1)}finally{await page.screenshot({path:info.outputPath('reconciliation-pending.png'),fullPage:true});held.release()}
+ await expect(page.getByRole('button',{name:'发送',exact:true})).toBeEnabled();await page.getByRole('button',{name:'发送',exact:true}).click();await expect(composer).toHaveValue('');expect(held.keys).toHaveLength(2);expect(held.keys[1]).toBe(held.keys[0]);const state=await(await page.request.get(`/v1/conversations/${id}`)).json();expect(state.events).toHaveLength(1);expect(state.runs).toHaveLength(1);
+});
+test('navigation aborts an old reconciliation before presenting an actionable send in another conversation',async({page},info)=>{
+ const old=await enter(page),next=await create(page);await page.locator(`[data-conversation="${old}"]`).click();await expect(page.locator('.chat-workspace')).toHaveAttribute('data-current-conversation',old);await expect(page.getByLabel('消息',{exact:true})).toBeFocused();const held=await holdReconciliation(page,old),composer=page.getByLabel('消息',{exact:true});let nextPosts=0;page.on('request',request=>{if(request.method()==='POST'&&request.url().endsWith(`/v1/conversations/${next}/events`))nextPosts++});
+ try{await composer.fill('2+2');await composer.press('Enter');await held.waiting;await page.locator(`[data-conversation="${next}"]`).click();await expect(page.locator('.chat-workspace')).toHaveAttribute('data-current-conversation',next);await composer.fill('3+3');await page.getByRole('button',{name:'发送',exact:true}).click();await expect.poll(()=>nextPosts).toBe(1);await expect(composer).toHaveValue('')}finally{held.release()}
+ await expect(page.locator('.chat-workspace')).toHaveAttribute('data-current-conversation',next);await expect(page.locator('.messages')).toContainText('3+3');await expect(page.locator('.messages')).not.toContainText('2+2');expect(nextPosts).toBe(1);await page.screenshot({path:info.outputPath('reconciliation-new-conversation.png'),fullPage:true});
+});
