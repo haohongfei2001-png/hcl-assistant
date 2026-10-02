@@ -15,6 +15,12 @@ for(const surface of ['local','pages']){
   for(let i=0;i<4;i++){await page.getByLabel('消息',{exact:true}).fill((surface==='local'?'报告[岚]：':'记录：')+`原创合成记录${i}。`+'这是一条用于校验阅读位置的原创合成说明，不能解释成真实人物经历。'.repeat(12));await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('article')).toHaveCount(i+1)}
   // An accepted article can precede the final streaming/watch update. Measure
   // the settled reading position, then prove it still matches actual activation.
+  if(surface==='local'){
+   // The fourth accumulated mock answer keeps emitting beyond five seconds.
+   // Wait for the recorded server completion, then independently require UI settle.
+   const run=await page.locator('article').last().getAttribute('data-run');
+   await expect.poll(async()=>{const response=await page.request.get(`/v1/runs/${run}`);expect(response.ok()).toBe(true);return (await response.json()).pending},{timeout:15000}).toBe(false);
+  }
   await expect(page.getByRole('button',{name:'停止',exact:true})).toHaveCount(0);
   const trigger=page.locator('article').nth(1).getByRole('button',{name:'查看依据',exact:true});await trigger.scrollIntoViewIfNeeded();await trigger.focus();const offset=()=>trigger.evaluate(el=>el.getBoundingClientRect().top-document.querySelector('.messages').getBoundingClientRect().top);
   await trigger.evaluate(el=>{delete window.__contextActivation;el.addEventListener('pointerdown',()=>{const root=document.querySelector('.messages');window.__contextActivation={offset:el.getBoundingClientRect().top-root.getBoundingClientRect().top,scrollTop:root.scrollTop}},{once:true})});

@@ -179,6 +179,35 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Retain focused search navigation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: search-focus-captures
+          path: |
+            product-export/test-results/search-focus*/**/*.png
+            product-export/test-results/search-focus*/**/*.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Retain focused message action evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: message-menu-captures
+          path: |
+            product-export/test-results/message-menu-*/**/*.png
+            product-export/test-results/message-menu-*/**/*.json
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Retain focused send reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: send-reconciliation-captures
+          path: product-export/test-results/send-reconciliation-*/**/*.png
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Retain lightweight Continuum reference and app captures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "fix/member-session-feedback",
-    "scope": "U2-01_LOGOUT_LIFECYCLE_RECOVERY",
+    "branch": "fix/search-focus-commit",
+    "scope": "P1-02_NAVIGATION_AND_INTERRUPTED_CHAT_RELIABILITY",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

@@ -76,3 +76,8 @@ Owner approved U1-01 following the screenshot review: compact growing composer, 
 ## Ordinary account amendment (2026-10-01 19:40 UTC)
 
 Owner explicitly requested ordinary-user registration/login development while the optional guest trial remains inactive. M1-01 delivered the bounded account engineering slice: verified account identity, tenant and operational isolation, server-owned entitlement and global-budget checks, and bounded automatic session continuity in the existing UI. This code work does not enable Supabase Auth, create live accounts/credentials, install membership grants, open public database rights, start the guest clock or authorize real private data. See [account contract](docs/MEMBER_ACCOUNTS.md).
+
+
+## Navigation and interrupted-chat reliability
+
+Existing search, message-menu and interrupted-send journeys have bounded corrections and deterministic failure-before-fix evidence in [the reliability record](docs/SEARCH_FOCUS_EVIDENCE.md). The reviewed implementation checkpoint passes102 general browser cases and40 cloud journeys, with separate Postgres/Python/JavaScript gates. Adoption is conditional on PR31's exact final-head and merge-commit checks. This is maintenance of the existing consumer flow; the single product queue and all live-service/production gates above remain unchanged.
