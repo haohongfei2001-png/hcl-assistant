@@ -20,3 +20,10 @@ test('development original HCL input reaches pinned preparation and explicit use
 test('development provider failure is not a mock answer or automatic paid retry',async({page})=>{
  await enter(page);await closeSettings(page);await send(page,'OFFLINE_ERROR');await expect(page.locator('.messages')).toContainText('FAILED');await expect(page.getByRole('button',{name:'重试',exact:true})).toHaveCount(0);await expect(page.locator('.assistant-message').last()).not.toContainText('原创离线自然语言');
 });
+
+test('unread selected history disables the advanced sample and its handler cannot post through the read gate',async({page})=>{
+ await enter(page);await closeSettings(page);await send(page,'原创合成：ADVANCED_HISTORY_READ_GATE');const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');await page.getByRole('button',{name:'＋ 新对话',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeFocused();let writes=0;page.on('request',request=>{if(request.method()==='POST'&&new URL(request.url()).pathname.endsWith('/events'))writes++});
+ await page.route(`**/v1/conversations/${id}`,route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Original selected read failure'})}));await page.locator(`[data-conversation="${id}"]`).click();await expect(page.getByRole('button',{name:'重新读取这段对话',exact:true})).toBeVisible();await page.getByRole('button',{name:'设置',exact:true}).click();const sample=page.getByRole('button',{name:'发送原创 HCL 合成样例（计一次调用）'});await expect(sample).toBeDisabled();
+ // Remove only the DOM disabled flag to exercise the independent handler guard.
+ await sample.evaluate(button=>{button.disabled=false;button.click()});await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));expect(writes).toBe(0);await closeSettings(page);await expect(page.locator('#send')).toBeDisabled();
+});
