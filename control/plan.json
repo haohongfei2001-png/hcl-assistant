@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "product/qwen-provider-preparation",
-    "scope": "BEIJING_QWEN_CNY_PROVIDER_PREPARATION_NO_LIVE_ACTIVATION",
+    "branch": "product/qwen-owner-schema-compat",
+    "scope": "QWEN_ORIGINAL_OWNER_SCHEMA_COMPATIBILITY_NO_LIVE_ACTIVATION",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

@@ -104,6 +104,10 @@ Use one coherent final deployment, not a live one-off smoke intermediate:
 
 1. Verify both frozen code/SQL reviews and exact-head PostgreSQL/browser CI.
 2. Check existing HCLA budget/attempt metadata, without reading body data/secrets.
+   The original owner-only cloud + trial schema is supported directly: no member
+   account/recovery migration or broader tenant RLS activation is required.
+   Monthly lease checks distinguish an absent legacy tenant column from an
+   explicit NULL or non-owner value, which remains rejected.
 3. With the required action-time approval for live database/security changes,
    apply the two additive Qwen migrations and install only the reviewed monthly
    authorization row. Do not install a one-off qwen_budget_policy grant.
@@ -131,3 +135,20 @@ The previous candidate's failed cloud-browser CI is retained: its fixture carrie
 a synthetic Qwen policy into DeepSeek browser tests. Only the guarded disposable
 localhost hcla_test fixture cleanup is corrected; production protection and test
 assertions are preserved.
+
+## Original deployment compatibility follow-up
+
+Production read-only preflight on 2026-10-02 found only the original owner/trial
+schema, with no execution.tenant column. The unapplied monthly migration now
+supports this owner-only shape without adding columns or changing existing RLS,
+roles or grants. Hosted CI first exercises initial cloud + trial + both Qwen
+migrations in a fresh guarded localhost hcla_test database, including temporary
+Mira smoke, verified settlement, ordinary owner continuation, unchanged legacy
+policies, and explicit NULL/member tenant rejection. The existing full member
+schema regression suite runs afterward. This does not enable membership.
+
+PR38 merged at 3034658 with the reviewed tree; its normal production auto-deploy
+was blocked by Vercel at 2026-10-02 18:28:45 UTC with “Deployment rate limited —
+retry in 24 hours.” No deployment retry, live schema/grant/config activation or
+provider call was made. The compatible follow-up must pass exact-head CI and
+review before any later coherent production setup.
