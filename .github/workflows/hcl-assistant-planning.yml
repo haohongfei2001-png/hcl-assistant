@@ -208,6 +208,16 @@ jobs:
           path: product-export/test-results/send-reconciliation-*/**/*.png
           retention-days: 7
           if-no-files-found: ignore
+      - name: Retain focused selected-history read evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: history-read-captures
+          path: |
+            product-export/test-results/history-read-recovery-*/**/*.png
+            product-export/test-results/history-read-recovery-*/**/*.json
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Retain lightweight Continuum reference and app captures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
