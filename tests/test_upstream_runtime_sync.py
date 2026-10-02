@@ -284,3 +284,56 @@ class SyncTests(unittest.TestCase):
         self.assertIn('VERIFIED_CANDIDATE', publisher); self.assertIn('persist-credentials: false', workflow)
         self.assertNotIn('pull_request_target', workflow); self.assertNotIn('secrets.', workflow)
         self.assertIn('workflow_dispatch:', (ROOT / '.github/workflows/hcl-assistant-planning.yml').read_text())
+
+
+class PublishWorkflowExitTests(unittest.TestCase):
+    """Run the checked-in publish shell with a local stub, never the publisher API."""
+
+    def run_publish_step(self, exit_code, *, summary_is_directory=False):
+        workflow = (ROOT / '.github/workflows/upstream-runtime-sync.yml').read_text()
+        step = workflow.split('      - name: Publish lock-only PR and dispatch exact-head acceptance\n', 1)[1]
+        lines = step.splitlines()
+        index = next(i for i, line in enumerate(lines) if line.strip().startswith('run:'))
+        value = lines[index].split('run:', 1)[1].strip()
+        if value == '|':
+            command = '\n'.join(line[10:] for line in lines[index + 1:] if line.startswith('          '))
+        else:
+            command = value
+        self.assertIn('python3 scripts/publish_runtime_sync.py', command)
+        self.assertIn('tee -a "$GITHUB_STEP_SUMMARY"', command)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); (root / 'scripts').mkdir()
+            (root / 'scripts/publish_runtime_sync.py').write_text(
+                'import sys\nprint("ORIGINAL_SYNTHETIC_PUBLISH_OUTPUT", flush=True)\n'
+                'print("ORIGINAL_SYNTHETIC_PUBLISH_DIAGNOSTIC", file=sys.stderr)\n'
+                f'raise SystemExit({exit_code})\n')
+            summary = root / 'original summary.md'
+            if summary_is_directory:
+                summary.mkdir()
+            # Match the runner's observed bash -e invocation. Supply no token,
+            # provider configuration, or inherited credential environment.
+            env = {'PATH': os.defpath, 'RUNNER_TEMP': str(root / 'runner'),
+                   'GITHUB_STEP_SUMMARY': str(summary)}
+            result = subprocess.run(['bash', '-e', '-c', command], cwd=root, env=env,
+                                    text=True, capture_output=True, timeout=5)
+            saved = summary.read_text() if summary.is_file() else None
+        self.assertIn('ORIGINAL_SYNTHETIC_PUBLISH_OUTPUT', result.stdout)
+        self.assertIn('ORIGINAL_SYNTHETIC_PUBLISH_DIAGNOSTIC', result.stderr)
+        return result, saved
+
+    def test_publish_step_preserves_publisher_failure_exit(self):
+        for code in (7, 23):
+            with self.subTest(exit_code=code):
+                result, saved = self.run_publish_step(code)
+                self.assertEqual(result.returncode, code)
+                self.assertIn('ORIGINAL_SYNTHETIC_PUBLISH_OUTPUT', saved)
+
+    def test_publish_step_preserves_success_and_summary(self):
+        result, saved = self.run_publish_step(0)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('ORIGINAL_SYNTHETIC_PUBLISH_OUTPUT', saved)
+
+    def test_publish_step_fails_when_summary_cannot_be_written(self):
+        result, saved = self.run_publish_step(0, summary_is_directory=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIsNone(saved)
