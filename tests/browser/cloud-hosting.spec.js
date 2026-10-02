@@ -1,5 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {pbkdf2Sync} from 'node:crypto';
+import {mkdirSync,writeFileSync} from 'node:fs';
+async function receiptEvidence(info,name,value){mkdirSync(info.outputDir,{recursive:true});const path=info.outputPath(name+'.json');writeFileSync(path,JSON.stringify(value));await info.attach(name,{path,contentType:'application/json'})}
 test.skip(!process.env.HCLA_TEST_POSTGRES_DSN,'Cloud browser fixture requires isolated Postgres');
 async function enter(page){
  await page.request.post('/v1/fixture/reset-throttle');
@@ -32,8 +34,8 @@ test('cloud temporary HCL uses reviewed Bridge and disappears on refresh',async(
  try{
  await enter(page);await page.getByLabel('记忆范围').selectOption('TEMPORARY');await page.getByRole('button',{name:'发送原创 HCL 合成样例（计一次调用）'}).click();await close(page);await expect(page.locator('.assistant-message').last()).toContainText('Ada');
  await page.getByLabel('更多消息操作').last().click();await page.getByRole('button',{name:'查看本次模型与 HCL 回执'}).last().click();await expect(page.getByRole('dialog',{name:'本次调用回执'})).toContainText('EXECUTED');await expect(page.getByRole('dialog',{name:'本次调用回执'})).toContainText('显式用于回答 true');
- await page.screenshot({path:info.outputPath('cloud-temporary-hcl-receipt.png'),fullPage:true});expect(await page.evaluate(()=>JSON.stringify({local:localStorage,session:sessionStorage}))).not.toContain('workshop');expect(await page.locator('body').textContent()).not.toContain('HIDDEN_REASONING_CANARY');const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');await info.attach('receipt-ui-before-reload',{body:JSON.stringify(await page.evaluate(()=>window.__receiptProbe)),contentType:'application/json'});await page.reload();await expect(page.locator(`[data-conversation="${id}"]`)).toHaveCount(0);
- }finally{await info.attach('receipt-ui-events',{body:JSON.stringify(await page.evaluate(()=>window.__receiptProbe).catch(()=>null)),contentType:'application/json'});await page.screenshot({path:info.outputPath('receipt-ui-settled.png'),fullPage:true,animations:'disabled'}).catch(()=>{})}
+ await page.screenshot({path:info.outputPath('cloud-temporary-hcl-receipt.png'),fullPage:true});expect(await page.evaluate(()=>JSON.stringify({local:localStorage,session:sessionStorage}))).not.toContain('workshop');expect(await page.locator('body').textContent()).not.toContain('HIDDEN_REASONING_CANARY');const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');await receiptEvidence(info,'receipt-ui-before-reload',await page.evaluate(()=>window.__receiptProbe));await page.reload();await expect(page.locator(`[data-conversation="${id}"]`)).toHaveCount(0);
+ }finally{await receiptEvidence(info,'receipt-ui-events',await page.evaluate(()=>window.__receiptProbe).catch(()=>null));await page.screenshot({path:info.outputPath('receipt-ui-settled.png'),fullPage:true,animations:'disabled'}).catch(()=>{})}
 });
 test('cloud temporary multi-turn uses tab state and privacy deletion clears sources',async({page})=>{
  await enter(page);await page.getByLabel('记忆范围').selectOption('TEMPORARY');await close(page);await send(page,'报告[云端合成]：TEMP_CLOUD_DELETE_CANARY');await send(page,'另一个原创合成问题');

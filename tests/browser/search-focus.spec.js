@@ -40,3 +40,24 @@ test('ordinary search dismissal restores its trigger and a newer input cancels p
  const composer=page.getByLabel('消息',{exact:true});await composer.click();await composer.fill('NEWER_USER_INPUT');await page.evaluate(()=>window.__focusFixture.mount('A'));await frames(page);
  await expect(composer).toBeFocused();await expect(composer).toHaveValue('NEWER_USER_INPUT');expect(calls).toEqual([]);
 });
+
+for(const kind of ['input','compositionstart'])test(`${kind} without a pointer or key cancels pending search focus`,async({page})=>{
+ const calls=await openFixture(page);await search(page);await hit(page,'A').click();await page.evaluate(()=>window.__focusFixture.resolve('A'));await expect(page.getByRole('dialog',{name:'搜索对话'})).toHaveCount(0);await frames(page);
+ const composer=page.getByLabel('消息',{exact:true});await composer.focus();
+ await page.evaluate(()=>{window.__pointerOrKey=0;for(const event of ['pointerdown','keydown'])window.addEventListener(event,()=>window.__pointerOrKey++,true)});
+ if(kind==='input')await composer.fill('NEWER_INPUT_WITHOUT_POINTER');else await composer.dispatchEvent('compositionstart');
+ expect(await page.evaluate(()=>window.__pointerOrKey)).toBe(0);await page.evaluate(()=>window.__focusFixture.mount('A'));await frames(page);await expect(composer).toBeFocused();
+ if(kind==='input')await expect(composer).toHaveValue('NEWER_INPUT_WITHOUT_POINTER');expect(calls).toEqual([]);
+});
+
+test('an unresolved committed-target focus intent expires without a late focus jump',async({page})=>{
+ const calls=await openFixture(page);await search(page);await hit(page,'A').click();await page.evaluate(()=>window.__focusFixture.resolve('A'));await expect(page.getByRole('dialog',{name:'搜索对话'})).toHaveCount(0);
+ await page.waitForTimeout(17000);await page.evaluate(()=>window.__focusFixture.mount('A'));await frames(page);await expect(page.locator('[data-run="run-A"]')).not.toBeFocused();expect(calls).toEqual([]);
+});
+
+test('failed search navigation remains recoverable without an automatic retry',async({page})=>{
+ const calls=await openFixture(page),errors=[];page.on('pageerror',error=>errors.push(error.message));await search(page);await hit(page,'A').click();await page.evaluate(()=>window.__focusFixture.reject('A'));
+ await expect(page.getByRole('dialog',{name:'搜索对话'})).toBeVisible();await expect(page.getByRole('alert')).toContainText('暂时无法打开这条结果');expect(await page.evaluate(()=>window.__focusFixture.requested())).toEqual(['A']);
+ await hit(page,'A').click();await page.evaluate(()=>{window.__focusFixture.mount('A');window.__focusFixture.resolve('A')});await expect(page.getByRole('dialog',{name:'搜索对话'})).toHaveCount(0);await expect(page.locator('[data-run="run-A"]')).toBeFocused();
+ expect(await page.evaluate(()=>window.__focusFixture.requested())).toEqual(['A','A']);expect(calls).toEqual([]);expect(errors).toEqual([]);
+});
