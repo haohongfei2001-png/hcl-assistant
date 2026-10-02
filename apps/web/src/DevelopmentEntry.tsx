@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 import {api,configureCloud} from './api';
 import {clearTemporary} from './cloud-temporary';
 import {MemberEntry} from './MemberEntry';
@@ -9,6 +9,9 @@ export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolea
  const [status,setStatus]=useState<DevelopmentStatus|null>(null),[secret,setSecret]=useState(''),[login,setLogin]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [trial,setTrial]=useState<TrialStatus|null>(null),[guest,setGuest]=useState(false);
  const [ownerMode,setOwnerMode]=useState(false);
+ const [connecting,setConnecting]=useState(false);
+ const live=useRef(true),revision=useRef(0);
+ const connection=useRef<{controller:AbortController;promise:Promise<void>}|null>(null);
  async function logoutOwner(){
   if(busy)return;setBusy(true);setError('');const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
   const complete=()=>{clearTemporary();setStatus(value=>value?{...value,authenticated:false}:value)};
@@ -17,11 +20,23 @@ export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolea
   finally{clearTimeout(timeout);setBusy(false)}
  }
  function leaveTrial(message=''){clearTemporary();configureCloud(true,false);setGuest(false);if(message)setTrial(value=>value?{...value,available:false,authenticated:false}:value);setError(message)}
- async function refresh(){try{
-  const next=await api<DevelopmentStatus>('/v1/development/status');configureCloud(Boolean(next.request_bound));setStatus(next);setError('');
-  if(next.configuration.temporary_trial&&!next.authenticated){const value=await api<TrialStatus>('/v1/trial/status');setTrial(value);if(value.available&&value.authenticated){configureCloud(true,true);setGuest(true)}}
- }catch{setError('暂时无法连接服务，请稍后重试')}}
- useEffect(()=>{void refresh()},[]);
+ async function refresh():Promise<void>{
+  if(connection.current)return connection.current.promise;
+  const epoch=++revision.current,controller=new AbortController();
+  const current={controller,promise:Promise.resolve()};connection.current=current;setConnecting(true);setError('');
+  const active=()=>live.current&&epoch===revision.current&&connection.current===current;
+  const timeout=setTimeout(()=>controller.abort(),15000);
+  current.promise=(async()=>{try{
+   const next=await api<DevelopmentStatus>('/v1/development/status',undefined,controller.signal);
+   const nextTrial=next.configuration.temporary_trial&&!next.authenticated?await api<TrialStatus>('/v1/trial/status',undefined,controller.signal):null;
+   if(!active())return;
+   const nextGuest=Boolean(nextTrial?.available&&nextTrial.authenticated);
+   configureCloud(Boolean(next.request_bound),nextGuest);setStatus(next);setTrial(nextTrial);setGuest(nextGuest);
+  }catch{if(active())setError(controller.signal.aborted?'连接等待过久，请检查连接后重试；不会自动重复请求':'暂时无法连接服务，请检查连接后重试')}
+  finally{clearTimeout(timeout);if(active()){connection.current=null;setConnecting(false)}}})();
+  return current.promise;
+ }
+ useEffect(()=>{live.current=true;void refresh();return()=>{live.current=false;revision.current++;connection.current?.controller.abort();connection.current=null}},[]);
  useEffect(()=>{
   if(!guest||!trial?.expires_at)return;
   let active=true;
@@ -36,11 +51,12 @@ export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolea
  if(status?.configuration.member_accounts&&!ownerMode)return <MemberEntry extra={trialEntry} onOwner={()=>setOwnerMode(true)}>{(logout,scope,notice,renewing,logoutPending,generation)=>children(true,true,logout,false,{scope,notice,renewing,logoutPending,generation})}</MemberEntry>;
  if(status?.authenticated)return children(true,Boolean(status.cloud),status.cloud?()=>void logoutOwner():undefined,false,status.cloud?{scope:'owner',notice:busy?'正在退出账号…':error,renewing:busy,logoutPending:busy}:undefined);
  const cloud=Boolean(status?.cloud);
- return <main className="development-entry"><h1>{cloud?'HCL Assistant':'HCL Assistant 开发态聊天'}</h1>
-  {error&&<p role="alert">{error}</p>}
-  {trialEntry}{status?.configuration.member_accounts&&ownerMode&&<button onClick={()=>{setOwnerMode(false);setSecret('')}}>返回用户登录</button>}
-  {!status?<button onClick={()=>void refresh()}>检查连接</button>:!status.configuration.configured?<><h2>{cloud?'服务尚未启用':'需要服务器配置'}</h2><p>{cloud?'管理员完成一次性配置后，即可在这里使用。请勿在聊天中提供密码或 API key。':'尚未接通真实聊天。请在服务器安全配置界面填写，不要把 API key 放到聊天或前端。'}</p>{!cloud&&<ul>{[...(status.configuration.missing||[]),...(status.configuration.invalid||[])].map(name=><li key={name}>{name}</li>)}</ul>}<button onClick={()=>void refresh()}>重新检查</button></>:<form onSubmit={async event=>{event.preventDefault();if(busy)return;setBusy(true);setError('');try{await api('/v1/development/login',cloud?{login,password:secret}:{access_token:secret});setSecret('');await refresh()}catch{setSecret('');setError(cloud?'登录失败或尝试过多，请检查账号和密码后重试':'登录失败或尝试过多，请检查本地访问口令后重试')}finally{setBusy(false)}}}>
-   <p>{trial?'管理员入口':'登录后继续你的原创合成内容对话'}</p>{cloud&&<label>账号<input autoComplete="username" value={login} onChange={event=>setLogin(event.target.value)}/></label>}<label>{cloud?'密码':'本地开发访问口令'}<input type="password" autoComplete={cloud?'current-password':'off'} value={secret} onChange={event=>setSecret(event.target.value)}/></label>{!cloud&&<p>这是本地访问口令，不是 DeepSeek API key；不会写入浏览器存储。</p>}<button disabled={busy||!secret||(cloud&&!login)}>{busy?'验证中…':cloud?'登录':'打开聊天'}</button>
+ return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="connection-heading"><div className="account-brand">HCL <span>Assistant</span></div><h1 id="connection-heading">{!status?'连接到你的对话':cloud?'管理员登录':'开发态聊天'}</h1>
+  {error&&<p className="account-feedback" role="alert">{error}</p>}
+  {connecting&&<p role="status">正在检查连接…</p>}
+  {trialEntry}{status?.configuration.member_accounts&&ownerMode&&<button className="account-switch" disabled={connecting} onClick={()=>{setOwnerMode(false);setSecret('')}}>返回用户登录</button>}
+  {!status?<button className="account-secondary" disabled={connecting} onClick={()=>void refresh()}>检查连接</button>:!status.configuration.configured?<><h2>{cloud?'服务尚未启用':'需要服务器配置'}</h2><p>{cloud?'管理员完成一次性配置后，即可在这里使用。请勿在聊天中提供密码或 API key。':'尚未接通真实聊天。请在服务器安全配置界面填写，不要把 API key 放到聊天或前端。'}</p>{!cloud&&<ul>{[...(status.configuration.missing||[]),...(status.configuration.invalid||[])].map(name=><li key={name}>{name}</li>)}</ul>}<button className="account-secondary" disabled={connecting} onClick={()=>void refresh()}>重新检查</button></>:<form onSubmit={async event=>{event.preventDefault();if(busy)return;setBusy(true);setError('');try{await api('/v1/development/login',cloud?{login,password:secret}:{access_token:secret});setSecret('');await refresh()}catch{setSecret('');setError(cloud?'登录失败或尝试过多，请检查账号和密码后重试':'登录失败或尝试过多，请检查本地访问口令后重试')}finally{setBusy(false)}}}>
+   <p className="account-intro">{trial?'管理员入口':'登录后继续你的原创合成内容对话'}</p>{cloud&&<label>账号<input autoComplete="username" value={login} onChange={event=>setLogin(event.target.value)}/></label>}<label>{cloud?'密码':'本地开发访问口令'}<input type="password" autoComplete={cloud?'current-password':'off'} value={secret} onChange={event=>setSecret(event.target.value)}/></label>{!cloud&&<p className="account-hint">这是本地访问口令，不是 DeepSeek API key；不会写入浏览器存储。</p>}<button className="account-primary" disabled={busy||connecting||!secret||(cloud&&!login)}>{busy?'验证中…':cloud?'登录':'打开聊天'}</button>
   </form>}
- </main>
+ </section></main>
 }
