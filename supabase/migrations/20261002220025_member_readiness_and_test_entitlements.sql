@@ -76,12 +76,12 @@ GRANT EXECUTE ON FUNCTION guard_qwen_member_authorization() TO hcla_app;
 -- Invoker-only grant verification; no grant writing or cross-tenant lookup.
 CREATE FUNCTION qwen_member_access(actor text,grant_key text,kind text,memory text,readiness boolean,evidence text DEFAULT NULL) RETURNS jsonb
  LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog,hcla AS $body$
-DECLARE entitlement record; overlaps bigint; policy text;
+DECLARE entitlement record; active_grant_count bigint; policy text;
 BEGIN
  IF actor IS DISTINCT FROM current_setting('hcla.tenant',true) OR actor !~ '^member-[0-9a-f]{64}$' OR memory NOT IN('TEMPORARY','CONVERSATION','TOPIC') THEN RAISE EXCEPTION 'member_actor_required'; END IF;
  SELECT (SELECT count(*) FROM hcla.qwen_member_entitlements WHERE tenant=actor AND enabled AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp())+
-        (SELECT count(*) FROM hcla.qwen_member_test_entitlements WHERE tenant=actor AND enabled AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp()) INTO overlaps;
- IF overlaps<>1 THEN RAISE EXCEPTION 'ambiguous_or_missing_member_access'; END IF;
+        (SELECT count(*) FROM hcla.qwen_member_test_entitlements WHERE tenant=actor AND enabled AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp()) INTO active_grant_count;
+ IF active_grant_count<>1 THEN RAISE EXCEPTION 'ambiguous_or_missing_member_access'; END IF;
  IF COALESCE(kind,'PAID_MEMBERSHIP')='PAID_MEMBERSHIP' THEN
   SELECT * INTO entitlement FROM hcla.qwen_member_entitlements WHERE tenant=actor AND grant_id=grant_key AND enabled AND paid_membership AND payment_verification IN('ADMIN_VERIFIED','TRUSTED_PAYMENT_EVENT') AND paid_evidence_digest IS NOT NULL AND paid_verified_at IS NOT NULL AND paid_verified_at<=clock_timestamp() AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp() AND CASE WHEN memory='TEMPORARY' THEN temporary_enabled ELSE persistent_enabled END;
   IF NOT FOUND OR (evidence IS NOT NULL AND entitlement.paid_evidence_digest IS DISTINCT FROM evidence) THEN RAISE EXCEPTION 'paid_membership_required'; END IF;
