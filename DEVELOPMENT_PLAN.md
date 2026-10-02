@@ -3,11 +3,11 @@
 唯一产品方案：[Master Plan 1.2](HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)、[UX](docs/UX_SPEC.md)、[Visual](docs/VISUAL_SYSTEM.md)。权威分工见 [Document Authority](docs/DOCUMENT_AUTHORITY.md)。本文件是唯一live产品开发队列，机器投影为 `control/plan.json.product_development`。
 
 <!-- CURRENT_PRODUCT_QUEUE_START -->
-**NEXT_READY: STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED**
+**NEXT_READY: M3-01_CONSUMER_MEMBERSHIP_AND_PAYMENTS**
 
-当前产品阶段：ASSISTANT_FIRST_REFINEMENT_COMPLETE。唯一当前任务：无，等待L3门槛。
+当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M3-01。
 
-当前10包已完成；L3四门槛未满足，停止交接，不自动新增provider调用、Judge或Act。
+完整普通用户会员购买、订单核验、主动续费与到期路径；CNY共享预算及隔离保持，商户和价格未选定，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -32,6 +32,7 @@
 | M1-01 | 普通账号、隔离与自动续期 | U1-01 | COMPLETE |
 | U2-01 | 消费级账号入口与首次聊天 | M1-01 | COMPLETE |
 | M2-01 | 有界密码找回与登录撤销 | U2-01 | COMPLETE |
+| M3-01 | Consumer membership/payment lifecycle; provider/prices/activation pending | M13–M19 | NEXT_READY |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 

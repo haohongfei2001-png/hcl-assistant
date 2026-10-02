@@ -1,0 +1,105 @@
+# M3-01 Consumer membership lifecycle (source preparation)
+
+The user adopted the complete consumer product on 2026-10-02: ordinary public
+registration and verified email, membership purchase and order/payment
+confirmation, user-initiated renewal and expiry, chat/history, isolation and the
+existing shared budget. The developer is an individual and the primary market is
+domestic. This supersedes earlier documents' billing deferral only for reusable
+engineering. No live price, plan, merchant provider, contract, charge, recurring
+commitment, credential, grant or database permission is adopted by this document.
+
+## Current deliverable and outstanding work
+
+This slice prepares the provider-neutral CNY financial boundary and disposable
+contract/database tests. It is not a functioning checkout. No live adapter is
+registered, no configuration or offer rows are seeded, and no account receives
+membership. The ordinary purchase/order UI and selected merchant integration
+remain M3-01 work; a passing foundation test is not M3-01 completion.
+
+The single canonical queue remains `control/plan.json.product_development`.
+Historical packages/evidence and the L3/private-data/Controller/runtime gates are
+unchanged. Source tests use injected offline payment fixtures and no money/model
+calls. Price values in tests are synthetic examples, not proposed prices.
+
+## Financial contract
+
+- CNY minor units are integers. Offers have immutable versioned terms, finite
+  duration and bounded request/cost subcaps. The current shared-budget policy
+  resets those paid subcaps per Asia/Shanghai calendar month. Each subcap must
+  accommodate the current conservative model reservation (currently CNY12.295272)
+  and may never exceed the all-user CNY500 monthly ceiling.
+- An offer explicitly discloses shared-capacity suspension and cannot promise
+  unlimited use. New order/checkout admission checks model readiness and at least
+  one conservative reservation's remaining shared capacity. This is a point-in-
+  time sales gate, not reserved future compute or a guarantee of availability.
+  An already-issued merchant checkout may settle after capacity changes; genuine
+  payment is still recorded and fulfilled without lifting the model budget.
+- Account sessions and accepted terms bind each immutable order. Same-account
+  idempotency keys return the same order; a changed payload conflicts. The browser
+  cannot set price, currency, provider, product, state or entitlement.
+- Checkout creation is durably claimed once before transport. A lost response
+  becomes uncertain; no blind second creation or automatic payment retry occurs.
+  The chosen adapter must support an authenticated query by the stored internal
+  merchant order ID so an uncertain creation can be reconciled.
+- Redirects, screenshots, callback bodies and claimed payment amounts are never
+  financial authority. Notification data supplies only a bounded reference. The
+  server queries the selected provider and verifies merchant, internal order,
+  external order, product/version, integer amount, currency, immutable quote
+  window and payment ID before a dedicated worker applies the receipt.
+- Renewal is a new user-initiated payment. No automatic debit is implemented or
+  promised. Atomic fulfilment creates a new immutable entitlement period starting
+  after the latest enabled paid period; simultaneous renewals cannot overlap.
+  Replaying a payment never extends duration or creates another entitlement.
+- Full refunds/disputes revoke only the matching order's entitlement. A partial
+  refund suspends that entitlement for review, without choosing proration or
+  initiating a refund payment. Stale captures/refund snapshots never restore it.
+  Other purchased periods retain their original dates; no silent reshuffling of
+  paid terms occurs. A later decision is required for customer-support remediation.
+- TEST_ONLY remains visibly non-paid. A genuine fulfilled purchase disables the
+  account's exceptional testing grant, avoiding ambiguous simultaneous rights.
+
+## Least-privilege boundary
+
+The ordinary `hcla_app` role can read public offer metadata and its own orders,
+and insert only the account/plan/idempotency/accepted-terms fields. It cannot
+write paid membership or payment receipts. The additive migration defines a
+separate dormant `hcla_billing_worker` NOLOGIN role, with read-only order evidence
+and narrow checkout/receipt functions in the unexposed `hcla` schema. The worker
+cannot arbitrarily update tables. These functions are not executable by PUBLIC,
+`anon`, `authenticated` or `hcla_app`.
+
+A future worker is a trusted financial authority because it can submit verified
+provider-query receipts. Its dedicated login/credential and deployment boundary
+must be reviewed and explicitly approved; the ordinary application login must
+not gain that role. Source constructors require explicit dependencies and read
+no credentials/environment or live provider registry. No live role is changed.
+
+## Acceptance M13–M19
+
+| ID | Required proof before closure |
+| --- | --- |
+| M13 | Default closed; no seeded plans, live provider, self-grant or fake payment |
+| M14 | Verified-account orders, immutable offer/amount/currency binding, idempotency and cross-tenant isolation |
+| M15 | Single checkout claim, bounded trusted destinations and lost-response query recovery |
+| M16 | Authenticated server-query proof, replay safety, missing/forged/cross-order evidence refusal |
+| M17 | Concurrent nonoverlapping renewal, expiry, refund/dispute ordering and no automatic debit/refund |
+| M18 | Consumer purchase/order/renewal UI, interrupted flows and truthful exhausted-budget handling |
+| M19 | Selected eligible adapter contract tests, hosted real Postgres/browser evidence, independent review and exact-main verification |
+
+## Minimum future commercial activation bundle
+
+1. Select an eligible provider for the actual AI product and individual domestic
+   developer. Confirm its terms, approved product category, payment-query trust
+   mechanism, CNY/WeChat/Alipay support, refunds, settlement and fees. Research does
+   not itself select or sign up for a provider.
+2. Adopt exact versioned offer/price/duration/subcaps and truthful shared-capacity,
+   renewal, cancellation/refund and support disclosures. No values are chosen here.
+3. Review/apply the additive schema and provision the isolated worker access only
+   with action-time approval. Users enter/submit merchant credentials themselves
+   through a supported secure route. Keep secrets out of repository/browser/logs.
+4. Configure approved merchant, destinations and immutable approval/terms digests,
+   then explicitly enable the selected server adapter and offers after sandbox
+   verification. Activate actual charges only under the adopted purchase terms.
+5. Complete existing ordinary Auth/email and Qwen readiness gates from
+   [member readiness](MEMBER_READINESS_TRANSITION.md). No admin login is needed
+   for ordinary use; normal signup never grants paid/testing rights.

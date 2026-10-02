@@ -202,5 +202,11 @@ class PlanningTests(unittest.TestCase):
                 planning.validate_tree(root)
 
 
+    def test_consumer_commerce_cannot_select_live_provider_or_spending(self):
+        for key in ('provider_selected','pricing_adopted','live_activation_authorized','automatic_debit_authorized'):
+            plan=copy.deepcopy(self.plan)
+            plan['product_development']['consumer_billing'][key]=True
+            with self.subTest(key=key),self.assertRaises(planning.PlanningError):planning.validate_current_queue(plan)
+
 if __name__ == '__main__':
     unittest.main()

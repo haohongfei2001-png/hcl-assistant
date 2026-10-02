@@ -22,7 +22,7 @@ class CurrentQueueTests(unittest.TestCase):
         self.assertEqual(result['next_ready'], json.loads((ROOT/'control/plan.json').read_text())['product_development']['next_ready'])
         self.assertEqual(result['legacy_stage_next_ready'], L3_STOP)
         self.assertEqual(result['package_count'], 11)
-        self.assertEqual(result['current_package_count'], 10)
+        self.assertEqual(result['current_package_count'], 11)
     def test_recovery_code_cannot_authorize_live_mail_or_auth(self):
         for key in ('live_mail_authorized','live_activation_authorized'):
             value=copy.deepcopy(self.plan);value['product_development']['password_recovery'][key]=True
