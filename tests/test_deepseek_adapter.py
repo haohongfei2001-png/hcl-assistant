@@ -106,6 +106,40 @@ class DeepSeekAdapterTests(unittest.TestCase):
         self.assertNotIn(REASONING, rendered)
         self.assertNotIn("reasoning_content", rendered)
 
+    def test_numeric_timing_separates_headers_keepalive_reasoning_and_answer(self):
+        clock = [100.0]
+        class TimedTransport(FakeTransport):
+            def post(self, body, headers):
+                result = super().post(body, headers)
+                clock[0] = 101.0
+                return result
+            def read(self, size):
+                clock[0] += 2.0
+                return super().read(size)
+        fake = TimedTransport([b": heartbeat\n\n", event(chunk(reasoning=REASONING)),
+                               event(chunk("answer")), event(chunk(finish="stop")), DONE])
+        with patch("packages.adapter.deepseek.time.monotonic", side_effect=lambda: clock[0]):
+            result = self.generate(fake, wall_timeout=60)
+        self.assertEqual(result.outcome, "SUCCEEDED")
+        self.assertEqual(result.stream_timing_ms, {
+            "headers_ms": 1000, "first_byte_ms": 3000, "first_event_ms": 5000,
+            "first_reasoning_ms": 5000, "first_answer_ms": 7000,
+            "last_event_ms": 9000, "last_event_age_ms": 4000})
+        self.assert_private(result)
+
+    def test_absent_timing_does_not_masquerade_as_instant_response(self):
+        cancelled = threading.Event(); cancelled.set()
+        fake = FakeTransport()
+        result = self.adapter(fake).generate(MESSAGES, max_tokens=64, cancel_event=cancelled)
+        self.assertEqual(result.stream_timing_ms, {})
+        self.assertEqual(fake.post_calls, 0)
+        result = self.generate(FakeTransport(status=503))
+        self.assertEqual(set(result.stream_timing_ms), {"headers_ms"})
+        result = self.generate(FakeTransport([b": heartbeat\n\n"]))
+        self.assertEqual(result.error_code, "early_eof")
+        self.assertEqual(set(result.stream_timing_ms), {"headers_ms", "first_byte_ms"})
+        self.assert_private(result)
+
     def test_fragmented_utf8_sse_and_final_normal_usage(self):
         wire = (b"\xef\xbb\xbf: heartbeat\r\n\r\ndata:\r\n\r\n" + event(None, "\r\n") +
                 event(chunk(reasoning=REASONING + SECRET), "\r\n") +

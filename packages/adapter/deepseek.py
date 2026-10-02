@@ -51,6 +51,7 @@ class DeepSeekResult:
     http_status: int | None = None
     transport_stopped: bool = False
     stream_counts: dict[str, int] = field(default_factory=dict)
+    stream_timing_ms: dict[str, int] = field(default_factory=dict)
 
 
 class _ProtocolError(Exception):
@@ -255,6 +256,8 @@ class DeepSeekAdapter:
         content: list[str] = []
         actual_model = request_id = finish_reason = None
         counts = {"chunks": 0, "reasoning_chunks": 0, "answer_chunks": 0}
+        timing: dict[str, int] = {}
+        last_event_at = None
         usage: dict[str, int] = {}
         complete_usage = None
         usage_invalid = False
@@ -272,6 +275,9 @@ class DeepSeekAdapter:
             return "sent" if sent is True else "not_sent" if sent is False else "unknown"
 
         def result(outcome, error=None, *, discard=False):
+            observed_timing = dict(timing)
+            if last_event_at is not None:
+                observed_timing["last_event_age_ms"] = max(0, round((time.monotonic() - last_event_at) * 1000))
             # Close before reading send_state: a cancellation/deadline must not
             # report not_sent while a concurrent connect is about to write.
             stop.set()
@@ -297,7 +303,8 @@ class DeepSeekAdapter:
                                   usage=dict(usage), send_state=state,
                                   usage_consistent=complete_usage is not None and not usage_invalid,
                                   error_code=error, http_status=http_status,
-                                  transport_stopped=transport_stopped, stream_counts=dict(counts))
+                                  transport_stopped=transport_stopped, stream_counts=dict(counts),
+                                  stream_timing_ms=observed_timing)
 
         if cancel.is_set():
             return result("CANCELLED", "cancelled")
@@ -328,9 +335,10 @@ class DeepSeekAdapter:
         events: queue.Queue = queue.Queue(maxsize=8)
 
         def put(kind, value):
+            observed_at = time.monotonic()
             while not stop.is_set():
                 try:
-                    events.put((kind, value), timeout=0.02)
+                    events.put((kind, value, observed_at), timeout=0.02)
                     return
                 except queue.Full:
                     continue
@@ -401,14 +409,16 @@ class DeepSeekAdapter:
                 if remaining <= 0:
                     return result("FAILED" if send_state() == "not_sent" else "UNKNOWN", "wall_timeout")
                 try:
-                    kind, value = events.get(timeout=min(0.02, remaining))
+                    kind, value, observed_at = events.get(timeout=min(0.02, remaining))
                 except queue.Empty:
                     continue
                 if cancel.is_set():
                     return result("CANCELLED", "cancelled")
                 if time.monotonic() >= deadline:
                     return result("FAILED" if send_state() == "not_sent" else "UNKNOWN", "wall_timeout")
+                elapsed_ms = max(0, round((observed_at - started) * 1000))
                 if kind == "headers":
+                    timing.setdefault("headers_ms", elapsed_ms)
                     status, headers = value
                     http_status = status if type(status) is int and 100 <= status <= 599 else None
                     if isinstance(headers, Mapping):
@@ -423,6 +433,8 @@ class DeepSeekAdapter:
                     return result("UNKNOWN", "early_eof")
                 if kind != "bytes" or not isinstance(value, bytes):
                     raise _ProtocolError("invalid_stream")
+                if value:
+                    timing.setdefault("first_byte_ms", elapsed_ms)
                 for data in parser.feed(value):
                     if cancel.is_set():
                         return result("CANCELLED", "cancelled")
@@ -441,6 +453,9 @@ class DeepSeekAdapter:
                     if not isinstance(chunk, dict):
                         raise _ProtocolError("invalid_chunk")
                     counts["chunks"] += 1
+                    timing.setdefault("first_event_ms", elapsed_ms)
+                    timing["last_event_ms"] = elapsed_ms
+                    last_event_at = observed_at
                     # Extract only allowlisted public metadata and numeric usage.
                     raw_usage=chunk.pop("usage",None)
                     if raw_usage is not None:
@@ -482,6 +497,7 @@ class DeepSeekAdapter:
                     # Reasoning is discarded before anything can reach a callback.
                     if isinstance(delta.get("reasoning_content"), str) and delta["reasoning_content"]:
                         counts["reasoning_chunks"] += 1
+                        timing.setdefault("first_reasoning_ms", elapsed_ms)
                     delta.pop("reasoning_content", None)
                     text = delta.pop("content", None)
                     tools = bool(delta.pop("tool_calls", None) or delta.pop("function_call", None))
@@ -497,6 +513,7 @@ class DeepSeekAdapter:
                         raise _ProtocolError("invalid_content")
                     if text:
                         counts["answer_chunks"] += 1
+                        timing.setdefault("first_answer_ms", elapsed_ms)
                         if previously_finished:
                             raise _ProtocolError("content_after_finish")
                         if actual_model is None:
