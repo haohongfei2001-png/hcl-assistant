@@ -11,6 +11,8 @@ from packages.controller.live_chat import LiveChat
 
 def application(database, budget_database, runtime=None, env=None, allow_smoke_grant=False):
     env=os.environ if env is None else env
+    if env.get('HCLA_PROVIDER','deepseek')!='deepseek':
+        raise ValueError('Qwen requires the separately approved cloud CNY policy')
     status=configuration_status(env);service=None;auth=None
     if status['configured']:
         config=DevelopmentConfig.from_env(env)

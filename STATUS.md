@@ -81,3 +81,9 @@ Owner explicitly requested ordinary-user registration/login development while th
 ## Navigation and interrupted-chat reliability
 
 Existing search, message-menu and interrupted-send journeys have bounded corrections and deterministic failure-before-fix evidence in [the reliability record](docs/SEARCH_FOCUS_EVIDENCE.md). The reviewed implementation checkpoint passes102 general browser cases and40 cloud journeys, with separate Postgres/Python/JavaScript gates. Adoption is conditional on PR31's exact final-head and merge-commit checks. This is maintenance of the existing consumer flow; the single product queue and all live-service/production gates above remain unchanged.
+
+## Beijing Qwen preparation (2026-10-02)
+
+HCLA-only `qwen3.8-max` provider preparation is in review with separate native-CNY accounting. Default closed; no live Qwen call, key, grant, migration or deployment activation is implied. The old DeepSeek guest trial remains expired. Contract and verification scope: [Qwen provider](docs/QWEN_PROVIDER.md).
+
+The current Qwen activation target is the owner-approved shared CNY 500/month Shanghai calendar budget, including tests. Period-scoped implementation and final review/CI are in progress; no live one-off smoke grant or monthly migration has been installed. See [monthly contract](docs/QWEN_MONTHLY_BUDGET.md).

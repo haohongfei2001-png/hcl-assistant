@@ -50,6 +50,7 @@ class CloudConfig:
     cloud_api_key:str=field(default='',repr=False)
     member_provider:object|None=field(default=None,repr=False)
     member_recovery:bool=False
+    selected_provider:str='deepseek'
     @classmethod
     def from_env(cls,env):
         if not env.get('HCLA_DATABASE_URL') or not env.get('HCLA_PUBLIC_ORIGIN'):raise ValueError('Cloud setup incomplete')
@@ -69,7 +70,17 @@ class CloudConfig:
         if not valid_verifier(verifier):raise ValueError('Owner password verifier required')
         if not isinstance(state_key,str) or not re.fullmatch(r'[0-9a-f]{64}',state_key):raise ValueError('Temporary state signing key required')
         provider=None
-        if 'HCLA_MODEL_GRANT' in env:
+        selected_provider=env.get('HCLA_PROVIDER','deepseek')
+        if selected_provider not in ('deepseek','qwen'):raise ValueError('Explicit supported provider required')
+        if selected_provider=='qwen':
+            if 'HCLA_MODEL_GRANT' in env or env.get('HCLA_CLOUD_PROVIDER_ENABLED')=='true' or 'HCLA_TRIAL_WINDOW' in env:
+                raise ValueError('Qwen cannot reuse legacy USD or trial authorization')
+            if 'HCLA_QWEN_MODEL_GRANT' in env:
+                from packages.cloud.qwen_config import QwenConfig
+                provider=QwenConfig.from_grant(strict_json(env['HCLA_QWEN_MODEL_GRANT']),env.get('HCLA_QWEN_API_KEY',''))
+        elif 'HCLA_QWEN_MODEL_GRANT' in env:
+            raise ValueError('Explicit Qwen provider selection required')
+        elif 'HCLA_MODEL_GRANT' in env:
             try:grant=strict_json(env['HCLA_MODEL_GRANT'])
             except (ValueError,TypeError):raise ValueError('Invalid approved grant') from None
             provider=provider_from_grant(grant,env.get('HCLA_DEEPSEEK_API_KEY',''))
@@ -77,7 +88,7 @@ class CloudConfig:
             # Legacy operator policy, still strictly validated and never a default.
             mapping=dict(env);mapping['HCLA_DEV_ACCESS_TOKEN']='cloud-auth-has-separate-owner-login'
             provider=DevelopmentConfig.from_env(mapping)
-        if provider:
+        if provider and selected_provider=='deepseek':
             if provider.budget_id in CONSUMED:raise ValueError('Consumed grant cannot be renewed')
             if provider.model!='deepseek-v4-pro':raise ValueError('Requested deepseek-v4-pro required')
             from decimal import Decimal
@@ -91,4 +102,4 @@ class CloudConfig:
         member_provider=MemberProviderConfig.from_env(env)
         recovery=env.get('HCLA_MEMBER_RECOVERY','')
         if recovery not in ('','pkce') or (recovery and member_provider is None):raise ValueError('Invalid account recovery configuration')
-        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider,trial,env.get('HCLA_DEEPSEEK_API_KEY',''),member_provider,recovery=='pkce')
+        return cls(env['HCLA_DATABASE_URL'],env['HCLA_PUBLIC_ORIGIN'],login,verifier,state_key,provider,trial,env.get('HCLA_DEEPSEEK_API_KEY','') if selected_provider=='deepseek' else '',member_provider,recovery=='pkce',selected_provider)

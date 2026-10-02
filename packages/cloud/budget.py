@@ -26,6 +26,9 @@ class CloudBudget(DevelopmentBudget):
                 return Reservation(False,Decimal(old['reserved_usd']),old['outcome'])
             rows=self.store.db.execute('SELECT * FROM '+self.attempts).fetchall()
             if any(r['outcome']=='active' for r in rows): raise BudgetError('concurrency_or_unconfirmed_transport')
+            qwen=self.store.db.execute("SELECT to_regclass('hcla.qwen_budget_attempts') AS present").fetchone()['present']
+            if qwen and self.store.db.execute("SELECT 1 FROM qwen_budget_attempts WHERE outcome='active' LIMIT 1").fetchone():
+                raise BudgetError('concurrency_or_unconfirmed_transport')
             if len(rows)>=self.config.max_requests: raise BudgetError('request_budget_exhausted')
             reservation=self._cost(1048576,self.config.max_output_tokens)
             with localcontext() as context:

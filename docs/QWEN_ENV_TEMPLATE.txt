@@ -1,0 +1,7 @@
+# INACTIVE TEMPLATE. Existing HCLA Vercel project only, approved environment only.
+# Owner enters the key directly in secure environment settings, never in this file.
+HCLA_QWEN_API_KEY=
+# Do not select Qwen or install a grant until explicit bounded CNY activation approval.
+# HCLA_PROVIDER=qwen
+# HCLA_QWEN_MODEL_GRANT=<approved non-secret JSON described in QWEN_MONTHLY_BUDGET.md>
+# No public frontend variables, inherited USD grant, trial renewal or automatic calls.

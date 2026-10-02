@@ -11,11 +11,12 @@ from packages.store.ledger import Fault
 
 
 class Entitlements:
+    table = 'member_entitlements'
     def __init__(self, store): self.store=store
 
     def current(self):
         with self.store.transaction():
-            rows=self.store.db.execute('SELECT * FROM member_entitlements WHERE tenant=? AND enabled=true AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp()',(self.store.tenant,)).fetchall()
+            rows=self.store.db.execute('SELECT * FROM '+self.table+' WHERE tenant=? AND enabled=true AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp()',(self.store.tenant,)).fetchall()
         # Ambiguous overlapping grants fail closed instead of summing capacity.
         return rows[0] if len(rows)==1 else None
 
