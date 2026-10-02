@@ -23,6 +23,10 @@ from scripts.check_planning import product_files
 LOCK = 'contracts/runtime-bridge.lock.json'
 CHECKS = ('manifest', 'acquisition', 'handshake', 'smoke', 'planning', 'repository',
           'python', 'npm_install', 'build', 'browser_install', 'browser')
+# Full canonical browser acceptance now takes about 336s (115 passed/45 skipped).
+# Keep every assertion and the 15-minute job ceiling; isolate measured headroom
+# to this stage rather than widening the default for all subprocesses.
+COMMAND_TIMEOUTS = {stage: 420 if stage == 'browser' else 300 for stage in CHECKS}
 
 
 def exact_sha(value):
@@ -172,6 +176,7 @@ def sync(root, output, get=public_get, runner=command_runner):
     stable = json.loads(stable_bytes)
     report = {'schema_version': '1.0', 'status': 'FAILED', 'stable_verified_sha': stable['source_commit_sha'],
               'upstream_main_sha': None, 'candidate_sha': None, 'checks': {},
+              'command_timeout_seconds': dict(COMMAND_TIMEOUTS),
               'product_sha': product_identity(root), 'product_source_digest': snapshot(root),
               'provider_calls': 0, 'provider_spend': 0, 'production_enabled': False, 'efficacy': 'NOT_TESTED'}
     stage = 'upstream_identity'
@@ -211,7 +216,7 @@ def sync(root, output, get=public_get, runner=command_runner):
             }
             for stage in CHECKS:
                 log = output / (stage + '.log')
-                runner(commands[stage], work, env, log)
+                runner(commands[stage], work, env, log, timeout=COMMAND_TIMEOUTS[stage])
                 if stage == 'manifest':
                     discovery = json.loads(log.read_text())
                     candidate['capability_manifest_digest'] = fingerprint(discovery)

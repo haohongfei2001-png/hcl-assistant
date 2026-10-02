@@ -11,7 +11,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from packages.runtime_bridge import contract
-from scripts.upstream_runtime_sync import CHECKS, LOCK, build_candidate, command_runner, snapshot, sync, validate_handshake
+from scripts.upstream_runtime_sync import CHECKS, COMMAND_TIMEOUTS, LOCK, build_candidate, command_runner, snapshot, sync, validate_handshake
 from scripts.publish_runtime_sync import MARKER, publish, validate_evidence
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +28,7 @@ class SyncTests(unittest.TestCase):
         self.output = Path(self.temp.name) / 'receipts'
         self.stable = json.loads((self.root / LOCK).read_text())
         self.original = (self.root / LOCK).read_bytes()
-        self.calls = []; self.stages = []; self.fail_stage = None; self.drift = None
+        self.calls = []; self.stages = []; self.fail_stage = None; self.drift = None; self.timeouts = {}; self.timeout_stage = None
         self.identity = patch('scripts.upstream_runtime_sync.product_identity', return_value=BASE); self.identity.start(); self.addCleanup(self.identity.stop)
         self.publisher_identity = patch('scripts.publish_runtime_sync.product_identity', return_value=BASE); self.publisher_identity.start(); self.addCleanup(self.publisher_identity.stop)
         self.patch_env = patch.dict(os.environ, {'PRODUCT_SHA': BASE}); self.patch_env.start(); self.addCleanup(self.patch_env.stop)
@@ -55,8 +55,9 @@ class SyncTests(unittest.TestCase):
         return {'type': 'file', 'path': name, 'encoding': 'base64', 'sha': blob,
                 'content': base64.b64encode(data).decode()}
 
-    def runner(self, command, work, env, log):
-        stage = log.stem; self.stages.append(stage)
+    def runner(self, command, work, env, log, timeout=300):
+        stage = log.stem; self.stages.append(stage); self.timeouts[stage] = timeout
+        if stage == self.timeout_stage: raise subprocess.TimeoutExpired(command, timeout)
         self.assertNotEqual(work, self.root)
         if stage == self.fail_stage: raise subprocess.CalledProcessError(1, command)
         config = json.loads((work / LOCK).read_text())
@@ -96,6 +97,24 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(candidate['interface'], self.stable['interface'])
         self.assertEqual(candidate['execution_policy'], self.stable['execution_policy'])
         validate_evidence(self.root, self.output)
+
+    def test_only_full_browser_stage_gets_measured_seven_minute_budget(self):
+        report=self.run_sync()
+        expected={stage:420 if stage=='browser' else 300 for stage in CHECKS}
+        self.assertEqual(COMMAND_TIMEOUTS,expected)
+        self.assertEqual(self.timeouts,expected)
+        self.assertEqual(report['command_timeout_seconds'],expected)
+        self.assertEqual(report['checks'],{stage:'PASS' for stage in CHECKS})
+        self.assertIn('timeout-minutes: 15',(ROOT/'.github/workflows/upstream-runtime-sync.yml').read_text())
+
+    def test_browser_timeout_still_refuses_candidate_and_removes_stale_success(self):
+        self.run_sync();self.assertTrue((self.output/'candidate.lock.json').exists())
+        self.timeout_stage='browser';report=self.run_sync()
+        self.assertEqual(report['status'],'FAILED');self.assertEqual(report['failed_stage'],'browser')
+        self.assertEqual(report['checks']['browser'],'FAIL')
+        self.assertIn('420 seconds',report['error'])
+        self.assertFalse((self.output/'candidate.lock.json').exists())
+        self.assertEqual((self.root/LOCK).read_bytes(),self.original)
 
     def test_interface_manifest_and_activation_drift_refuse_candidate(self):
         for drift in ('interface', 'manifest', 'production'):
