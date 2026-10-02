@@ -4,8 +4,8 @@ import {clearTemporary} from './cloud-temporary';
 import './account-entry.css';
 import {RecoveryEntry} from './RecoveryEntry';
 
-type Status={recovery_available?:boolean;available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{enabled:boolean;temporary?:boolean;persistent?:boolean;reason?:string|null}};
-export function MemberEntry({children,onOwner,extra,provider}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean,logoutPending:boolean,generation:{model:boolean;temporary:boolean;persistent:boolean})=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode;provider?:'deepseek'|'qwen'}){
+type Status={recovery_available?:boolean;available:boolean;authenticated:boolean;renewable?:boolean;expires_at?:number;account_scope?:string;model_enabled?:boolean;entitlements?:{membership_required?:boolean;enabled:boolean;temporary?:boolean;persistent?:boolean;reason?:string|null}};
+export function MemberEntry({children,onOwner,extra,provider}:{children:(logout:()=>void,scope:string,notice:string,renewing:boolean,logoutPending:boolean,generation:{model:boolean;temporary:boolean;persistent:boolean;reason?:string})=>React.ReactNode;onOwner:()=>void;extra?:React.ReactNode;provider?:'deepseek'|'qwen'}){
  const [status,setStatus]=useState<Status|null>(null),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[register,setRegister]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  const scope=useRef(''),channel=useRef<BroadcastChannel|null>(null),live=useRef(true),revision=useRef(0);
  const [recover,setRecover]=useState(false);
@@ -48,7 +48,7 @@ export function MemberEntry({children,onOwner,extra,provider}:{children:(logout:
   finally{clearTimeout(timeout);if(live.current&&epoch===revision.current)setBusy(false)}
  }
  if(recover)return <RecoveryEntry initialEmail={email} onBack={()=>setRecover(false)}/>;
- if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||logoutError||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,{model:Boolean(status.model_enabled),temporary:Boolean(status.entitlements?.enabled&&status.entitlements.temporary),persistent:Boolean(status.entitlements?.enabled&&status.entitlements.persistent)});
+ if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||logoutError||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,{model:Boolean(status.model_enabled),temporary:Boolean(status.entitlements?.enabled&&status.entitlements.temporary),persistent:Boolean(status.entitlements?.enabled&&status.entitlements.persistent),...(status.entitlements?.membership_required&&!status.entitlements.enabled?{reason:status.entitlements.reason||'会员未开通，注册账号不包含模型使用权限'}:{})});
  async function submit(event:React.FormEvent){
   event.preventDefault();if(busy||!status?.available)return;setBusy(true);setError('');setMessage('');
   const epoch=++revision.current;flight.current?.controller.abort();authFlight.current?.abort();

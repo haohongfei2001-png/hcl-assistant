@@ -5,7 +5,7 @@ import {MemberEntry} from './MemberEntry';
 import {RecoveryEntry} from './RecoveryEntry';
 export type DevelopmentStatus={enabled:boolean;authenticated:boolean;cloud?:boolean;request_bound?:boolean;configuration:{configured?:boolean;provider_enabled?:boolean;provider?:'deepseek'|'qwen';owner_smoke_only?:boolean;temporary_trial?:boolean;member_accounts?:boolean;missing?:string[];invalid?:string[]}};
 type TrialStatus={available:boolean;authenticated:boolean;expires_at?:number};
-export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolean,onLogout?:()=>void,trial?:boolean,account?:{scope:string;notice:string;renewing:boolean;logoutPending:boolean;generation?:{model:boolean;temporary:boolean;persistent:boolean}},provider?:'deepseek'|'qwen')=>React.ReactNode}){
+export function DevelopmentEntry({children}:{children:(live:boolean,cloud:boolean,onLogout?:()=>void,trial?:boolean,account?:{scope:string;notice:string;renewing:boolean;logoutPending:boolean;generation?:{model:boolean;temporary:boolean;persistent:boolean;reason?:string}},provider?:'deepseek'|'qwen')=>React.ReactNode}){
  const [status,setStatus]=useState<DevelopmentStatus|null>(null),[secret,setSecret]=useState(''),[login,setLogin]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [trial,setTrial]=useState<TrialStatus|null>(null),[guest,setGuest]=useState(false);
  const [ownerMode,setOwnerMode]=useState(false);
