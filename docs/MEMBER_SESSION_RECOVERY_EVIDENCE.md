@@ -1,0 +1,21 @@
+# Member logout lifecycle recovery
+
+Bounded follow-up to the adopted ordinary account journey, based on main `52e85ed4ad15c196650ff62627d2e79c825c2926`. No server credential, cookie policy, Auth setting, permission, provider, trial window or database schema is changed.
+
+## Reproduced before the correction
+
+The exact prior MemberEntry source blob `04711b24a8a6326025924c685d231ee71357bd9c` failed three controlled component tests while the existing24 JavaScript cases passed:
+
+- A status read begun during a held logout was neither cancelled nor fenced when logout succeeded. A separate controlled probe resolved that old authenticated snapshot afterward and observed the signed-in UI return, even though the server session had been revoked
+- A healthy status poll silently erased the visible failure of an unsuccessful logout, even though no new logout had been submitted
+- A superseded logout completion cleared the busy state of a newer sign-in submission after a cross-tab session notice
+
+The initial test harness attempted to mock BroadcastChannel as an ordinary method and hit Node EventTarget initialization errors. The harness now replaces and restores the whole constructor, matching the existing controlled-hook test approach. These harness errors were not classified as product failures.
+
+## Correction and scope
+
+Successful logout now advances the UI revision and cancels a status read that began during logout before clearing the account view. A separate logout-error state survives healthy background polls until explicit retry or account identity clearance; a current connection/authorization error still takes precedence. Logout finalization updates busy state only while it owns the current revision, so a newer account submission remains locked against duplicate clicks. No auth mutation is automatically retried.
+
+The four controlled component regressions cover the three failures plus connection-error priority without losing the unresolved logout notice. All28 JavaScript checks, TypeScript and local builds pass;379 Python cases pass with59 database cases deferred to the separate real Postgres gate. Two injected-auth browser cases hold the real status transport across confirmed logout and verify failed-logout feedback after a healthy poll, with exact mutation counts and actual captures. Hosted browser, independent source review and exact-head/main checks remain required.
+
+Controlled hooks establish UI orchestration only. They do not substitute for real database/session-revocation tests, certify every cookie ordering race, or prove live account readiness.
