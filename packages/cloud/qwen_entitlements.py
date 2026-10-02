@@ -8,17 +8,47 @@ from packages.store.ledger import Fault
 class QwenEntitlements(Entitlements):
     table = 'qwen_member_entitlements'
 
+    def __init__(self,store,*,readiness=False,readiness_authorization=None):
+        super().__init__(store);self.readiness=readiness;self.readiness_authorization=readiness_authorization;self._test_schema=None
+
+    def test_schema(self):
+        if self._test_schema is None:
+            self._test_schema=bool(self.store.db.execute("SELECT to_regclass('hcla.qwen_member_test_entitlements') IS NOT NULL AS present").fetchone()['present'])
+        return self._test_schema
+
     def current(self):
         with self.store.transaction():
-            row=super().current()
-            if not (row and row['paid_membership'] and row['payment_verification'] in {'ADMIN_VERIFIED','TRUSTED_PAYMENT_EVENT'} and row['paid_evidence_digest'] and row['paid_verified_at']):return None
+            paid=self.store.db.execute('SELECT * FROM qwen_member_entitlements WHERE tenant=? AND enabled AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp()',(self.store.tenant,)).fetchall()
+            tests=self.store.db.execute('SELECT * FROM qwen_member_test_entitlements WHERE tenant=? AND enabled AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp()',(self.store.tenant,)).fetchall() if self.test_schema() else []
+            # No preference or summing across overlapping paid/testing grants.
+            if len(paid)+len(tests)!=1:return None
+            if tests:
+                row=tests[0]
+                verified=self.store.db.execute("SELECT parent_policy_sha256=encode(sha256(convert_to(policy,'UTF8')),'hex') AS verified FROM qwen_member_test_entitlements CROSS JOIN qwen_monthly_authorization WHERE tenant=? AND grant_id=? AND singleton=1",(self.store.tenant,row['grant_id'])).fetchone()
+                return dict(row,access_kind='TEST_ONLY') if verified and verified['verified'] else None
+            row=paid[0]
+            if not (row['paid_membership'] and row['payment_verification'] in {'ADMIN_VERIFIED','TRUSTED_PAYMENT_EVENT'} and row['paid_evidence_digest'] and row['paid_verified_at']):return None
             verified=self.store.db.execute('SELECT paid_verified_at<=clock_timestamp() AS verified FROM qwen_member_entitlements WHERE tenant=? AND grant_id=?',(self.store.tenant,row['grant_id'])).fetchone()
-            return row if verified and verified['verified'] else None
+            return dict(row,access_kind='PAID_MEMBERSHIP') if verified and verified['verified'] else None
+
+    def require(self,memory):
+        row=super().require(memory)
+        if self.readiness:
+            if memory!='TEMPORARY' or not self.readiness_authorization:raise Fault(403,'模型连接验证尚未获准')
+            authorization=self.store.db.execute("SELECT 1 FROM qwen_member_readiness_authorizations r JOIN qwen_monthly_authorization a ON a.singleton=1 WHERE r.authorization_id=? AND r.enabled AND r.starts_at<=clock_timestamp() AND r.expires_at>clock_timestamp() AND r.parent_policy_sha256=encode(sha256(convert_to(a.policy,'UTF8')),'hex')",(self.readiness_authorization,)).fetchone()
+            if not authorization:raise Fault(403,'模型连接验证授权已失效')
+        if row['access_kind']=='TEST_ONLY' and ((self.readiness and (memory!='TEMPORARY' or not row['readiness_enabled'])) or (not self.readiness and not row['chat_enabled'])):
+            raise Fault(403,'当前测试资格不包含这项使用权限')
+        return row
 
     def status(self):
-        result=super().status()
-        result['membership_required']=True
-        if not result['enabled']:result['reason']='会员未开通、已到期或已停用；注册账号不包含模型使用权限'
+        row=self.current()
+        result={'enabled':False,'temporary':False,'persistent':False,'membership_required':True,'reason':'会员或测试资格未开通、已到期或已停用；注册账号不包含模型使用权限'}
+        if row is None:return result
+        enabled=row['access_kind']=='PAID_MEMBERSHIP' or bool(row['readiness_enabled' if self.readiness else 'chat_enabled'])
+        result.update(enabled=enabled,temporary=bool(enabled and row['temporary_enabled']),persistent=bool(enabled and row['persistent_enabled'] and not self.readiness),expires_at=int(row['expires_at'].timestamp()),access_kind=row['access_kind'],reason=None if enabled else '测试资格有效，但未获准日常聊天；已有记录仍可查看')
+        if row['access_kind']=='TEST_ONLY':
+            result.update(test_max_requests=row['max_requests'],test_max_cost_cny=str(row['max_cost_cny']),test_chat_enabled=row['chat_enabled'],test_readiness_enabled=row['readiness_enabled'])
         return result
 
 
@@ -124,11 +154,13 @@ class QwenMonthlyMemberBudget:
             self.operator.authorize_request(request,conversation)
     def dispatch_output_tokens(self):return self.operator.dispatch_output_tokens()
     def smoke_ready(self):return self.operator.smoke_ready()
+    def member_readiness(self):return self.operator.member_readiness()
     def reserve(self,run_id,attempt_id,input_bytes):
         with self.store.transaction():
             grant=self._require();self._grant_id=grant['grant_id']
-            if not self.operator.smoke_ready():raise BudgetError('owner_smoke_required')
+            if not self.operator.smoke_ready() and not self.operator.member_readiness():raise BudgetError('owner_smoke_required')
             self.operator.member_grant_id=self._grant_id;self.operator.memory_scope=self.memory
+            self.operator.member_entitlement_kind=grant['access_kind']
             return self.operator.reserve(run_id,attempt_id,input_bytes)
     def finish(self,*args,**kwargs):
         # Terminal accounting must be recorded even if access was revoked while

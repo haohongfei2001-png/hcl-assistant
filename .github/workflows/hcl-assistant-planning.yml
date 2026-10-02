@@ -304,7 +304,7 @@ jobs:
           HCLA_TEST_OWNER_SCHEMA_ONLY: '1'
         run: python3 -m unittest tests.test_qwen_owner_schema -v
       - name: Real Postgres independent-instance and temporary-state regressions
-        run: python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres tests.test_cloud_trial tests.test_cloud_members tests.test_cloud_recovery tests.test_qwen_provider tests.test_qwen_postgres tests.test_qwen_monthly tests.test_qwen_shared -v
+        run: python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres tests.test_cloud_trial tests.test_cloud_members tests.test_cloud_recovery tests.test_qwen_provider tests.test_qwen_postgres tests.test_qwen_monthly tests.test_qwen_shared tests.test_qwen_member_readiness -v
       - name: Shared cloud UI with local injected provider fixture
         run: |
           npm ci --ignore-scripts

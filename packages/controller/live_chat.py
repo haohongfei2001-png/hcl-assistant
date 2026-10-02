@@ -167,7 +167,11 @@ class LiveChat:
                     receipt['provider'].update(provider='qwen',region=self.config.region,currency=self.config.currency,max_completion_tokens=self.config.max_output_tokens,reserved_output_tokens=self.config.reserved_output_tokens,serialized_messages_bytes=message_bytes,admission_input_bytes=message_bytes+512,input_token_reservation=self.config.input_token_reservation,input_token_basis='DOCUMENTED_MAX_CONTEXT_NOT_TOKENIZER_ESTIMATE')
                 receipt['usage'].update(provider_calls=1 if result.send_state=='sent' else 0 if result.send_state=='not_sent' else None,input_tokens=result.usage.get('prompt_tokens'),output_tokens=result.usage.get('completion_tokens'),reasoning_tokens=result.usage.get('reasoning_tokens'),provider_usage=result.usage,latency_ms=round((time.monotonic()-started)*1000))
                 # Do not claim a charge is zero or known merely from a configured upper bound.
-                allowed=current['pending'] and not cancel.is_set() and result.transport_stopped and valid(controller,tenant,run)
+                # Monthly grants can expire/revoke while transport returns.
+                # Recheck uncached authorization before publishing, as well as
+                # before releasing its conservative reservation below.
+                publication_cancelled=cancel.is_set_for_settlement() if getattr(self.config,'monthly',None) and hasattr(cancel,'is_set_for_settlement') else cancel.is_set()
+                allowed=current['pending'] and not publication_cancelled and result.transport_stopped and valid(controller,tenant,run)
                 if not allowed or result.outcome!='SUCCEEDED':
                     current['answer']=None;current['stream']=[e for e in current['stream'] if not e['type'].startswith('answer.')]
                     current['errors']=[('TRANSPORT_TERMINATION_UNCONFIRMED' if not result.transport_stopped else result.error_code) or ('STALE_OR_CANCELLED_OUTPUT_WITHHELD' if not allowed else result.outcome)]

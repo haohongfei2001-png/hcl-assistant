@@ -100,3 +100,16 @@ coverage without creating a price, checkout, entitlement, credential or live Aut
 configuration. Server admission/expiry/revocation and the shared atomic CNY500
 budget remain authoritative. See docs/MEMBER_ENTRY_SEPARATION.md. Exact-head
 review/Postgres/browser checks and exact-main adoption are still required.
+
+## Ordinary-account and full consumer continuation (2026-10-02)
+
+The user wants the complete consumer product, with individual-developer and
+primarily domestic/CNY payment eligibility to be established separately. Continue
+ordinary verified accounts, membership/order/payment adapter and renewal/expiry
+engineering with disabled live commerce until provider/pricing are approved.
+A default-closed, explicitly authorized TEST_ONLY account path may validate the
+same exact synthetic readiness then separately approved everyday testing; it is
+never a paid membership or product completion. Preserve immutable V3 funding,
+all-user shared500, tenant isolation, no self-grant and no automatic paid call.
+Live schema/security/config, test rights and commercial activation remain separate.
+See docs/MEMBER_READINESS_TRANSITION.md.

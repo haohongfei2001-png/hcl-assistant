@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "product/member-entry-separation",
-    "scope": "ORDINARY_MEMBER_ENTRY_AND_EXPIRY_FEEDBACK_NO_LIVE_ACTIVATION",
+    "branch": "product/member-readiness-transition",
+    "scope": "ORDINARY_READINESS_AND_TEST_ONLY_SOURCE_NO_LIVE_ACTIVATION",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

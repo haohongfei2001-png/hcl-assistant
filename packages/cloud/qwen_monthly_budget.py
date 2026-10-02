@@ -17,6 +17,7 @@ class QwenMonthlyBudget:
             raise BudgetError('monthly_qwen_configuration_required')
         self.store=store;self.config=QwenConfig.from_grant(config.as_grant(),config.api_key)
         self._held=None;self._dispatch_cap=config.max_output_tokens;self.member_grant_id=None;self.memory_scope='CONVERSATION'
+        self.member_entitlement_kind=None;self._member_smoke=None
         with store.transaction():
             row=store.db.execute('SELECT policy FROM qwen_monthly_authorization WHERE singleton=1').fetchone()
             if row is None:raise BudgetError('monthly_qwen_not_authorized')
@@ -42,11 +43,22 @@ class QwenMonthlyBudget:
     def smoke_ready(self):
         with self.store.transaction():return self._shared_state()['smoke_ready']
 
+    def member_readiness(self):
+        if self.config.monthly['scope']!='AUTHENTICATED_SHARED':return None
+        with self.store.transaction():return self._shared_state().get('member_readiness_authorization')
+
     def authorize_request(self,request,conversation):
-        self._owner();self.memory_scope=conversation.get('memory','CONVERSATION')
-        if not self.smoke_ready():
-            if self.store.tenant!='hcla-owner':raise BudgetError('owner_smoke_required')
+        self._owner();self.memory_scope=conversation.get('memory','CONVERSATION');self._member_smoke=None
+        ready=self.smoke_ready()
+        if self.store.tenant!='hcla-owner' and request.get('member_readiness_check') is True and ready:raise BudgetError('readiness_already_completed')
+        if not ready:
+            authorization=self.member_readiness() if self.store.tenant!='hcla-owner' else None
+            if self.store.tenant!='hcla-owner' and not authorization:raise BudgetError('owner_smoke_required')
+            if self.store.tenant!='hcla-owner' and request.get('member_readiness_check') is not True:raise BudgetError('explicit_member_readiness_required')
             self.config.authorize_request(request,conversation)
+            if authorization:
+                import hashlib
+                self._member_smoke=(authorization,hashlib.sha256(request['event']['text'].encode()).hexdigest(),hashlib.sha256(request['development_execution']['query'].encode()).hexdigest())
 
     def dispatch_output_tokens(self):
         return self._dispatch_cap
@@ -62,6 +74,7 @@ class QwenMonthlyBudget:
                 if old['input_bytes']!=input_bytes or old['actor_tenant']!=self.store.tenant:raise BudgetError('attempt_payload_mismatch')
                 return CnyReservation(False,Decimal(old['reserved_cny']),old['outcome'],old['period_key'])
             ready=self.smoke_ready();self._dispatch_cap=self.config.max_output_tokens
+            if ready and self._member_smoke:raise BudgetError('readiness_already_completed')
             period=self._period()
             self.store.db.execute('INSERT INTO qwen_monthly_periods(period_key) VALUES(?) ON CONFLICT(period_key) DO NOTHING',(period,))
             reservation=self._cost(self.config.input_token_reservation,self._dispatch_cap+10)
@@ -73,8 +86,16 @@ class QwenMonthlyBudget:
             # Database trigger derives policy/period, enforces the aggregate cap,
             # owner scope, calendar cutoff, immutable row and cross-provider slot.
             try:
-                self.store.db.execute("INSERT INTO qwen_monthly_attempts(run_key,attempt_key,period_key,input_bytes,output_cap,kind,actor_tenant,entitlement_grant_id,memory_scope,execution_run_id,execution_owner,reserved_cny,charged_cny,outcome) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'active')",
-                    (*keys,period,input_bytes,self._dispatch_cap,('OWNER' if self.store.tenant=='hcla-owner' else 'MEMBER') if ready else 'SMOKE',self.store.tenant,self.member_grant_id,self.memory_scope,execution,owner,_money(reservation),_money(reservation)))
+                fields='run_key,attempt_key,period_key,input_bytes,output_cap,kind,actor_tenant,entitlement_grant_id,memory_scope,execution_run_id,execution_owner,reserved_cny,charged_cny'
+                values=(*keys,period,input_bytes,self._dispatch_cap,('OWNER' if self.store.tenant=='hcla-owner' else 'MEMBER') if ready else 'SMOKE',self.store.tenant,self.member_grant_id,self.memory_scope,execution,owner,_money(reservation),_money(reservation))
+                if self.store.tenant!='hcla-owner' and state.get('member_access_schema')==1:
+                    proof=(None,None,None)
+                    if not ready:
+                        if not self._member_smoke or self._member_smoke[0]!=state.get('member_readiness_authorization'):raise BudgetError('exact_member_readiness_required')
+                        proof=self._member_smoke
+                    fields+=',entitlement_kind,readiness_authorization_id,readiness_input_digest,readiness_query_digest'
+                    values+= (self.member_entitlement_kind,*proof)
+                self.store.db.execute('INSERT INTO qwen_monthly_attempts('+fields+",outcome) VALUES("+','.join('?' for _ in values)+",'active')",values)
             except Exception:
                 # Never expose provider/database exception text. The transaction
                 # rolls back completely; no transport has been constructed here.
