@@ -42,7 +42,7 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
  async function logout(){
   if(busy)return;setBusy(true);setLogoutError('');const epoch=++revision.current;flight.current?.controller.abort();
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
-  const complete=()=>{if(!live.current||epoch!==revision.current)return;revision.current++;flight.current?.controller.abort();clear();setBusy(false);channel.current?.postMessage({type:'signed-out'});setMessage('已退出账号')};
+  const complete=()=>{if(!live.current||epoch!==revision.current)return;revision.current++;flight.current?.controller.abort();clear();setError('');setBusy(false);channel.current?.postMessage({type:'signed-out'});setMessage('已退出账号')};
   try{await api('/v1/account/logout',{},controller.signal);complete()}
   catch(error){if(!live.current||epoch!==revision.current)return;if(/^Error: 401:/.test(String(error)))complete();else setLogoutError('退出未完成，请重试')}
   finally{clearTimeout(timeout);if(live.current&&epoch===revision.current)setBusy(false)}

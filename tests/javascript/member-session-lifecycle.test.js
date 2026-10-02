@@ -19,7 +19,7 @@ function harness(t){
  function render(){index=0;tree=module.exports.MemberEntry({onOwner(){},children:(logout,scope,notice,renewing,logoutPending)=>({type:'signed-in',props:{logout,scope,notice,renewing,logoutPending}})});while(scheduled.length)scheduled.shift()();return tree}
  function nodes(node){if(!node||typeof node!=='object')return [];return [node,...[node.props?.children].flat(Infinity).flatMap(nodes)]}
  t.after(()=>{for(const effect of effects)effect?.cleanup?.()});
- return {requests,render,poll(){for(const fn of [...intervals.values()])fn()},broadcast(){channels[0].onmessage({data:{type:'signed-in'}})},get signedIn(){return tree.type==='signed-in'},get notice(){return tree.props.notice},logout(){tree.props.logout()},form(){return nodes(tree).find(n=>n.type==='form')},inputs(){return nodes(tree).filter(n=>n.type==='input')},buttons(){return nodes(tree).filter(n=>n.type==='button')}};
+ return {requests,render,poll(){for(const fn of [...intervals.values()])fn()},broadcast(){channels[0].onmessage({data:{type:'signed-in'}})},get signedIn(){return tree.type==='signed-in'},get notice(){return tree.props.notice},get alerts(){return nodes(tree).filter(n=>n.props?.role==='alert').map(n=>n.props.children)},logout(){tree.props.logout()},form(){return nodes(tree).find(n=>n.type==='form')},inputs(){return nodes(tree).filter(n=>n.type==='input')},buttons(){return nodes(tree).filter(n=>n.type==='button')}};
 }
 async function enter(h){h.render();h.requests[0].resolve(authenticated);await tick();h.render();assert.equal(h.signedIn,true)}
 test('successful logout aborts and fences a status read begun while logout was pending',async t=>{
@@ -44,4 +44,9 @@ test('connection uncertainty takes priority without erasing an unresolved logout
  const h=harness(t);await enter(h);h.logout();h.requests[1].reject(new Error('503: synthetic logout failure'));await tick();h.render();
  h.poll();h.requests[2].reject(new Error('503: synthetic connection outage'));await tick();h.render();assert.match(h.notice,/只读/);
  h.poll();h.requests[3].resolve(authenticated);await tick();h.render();assert.match(h.notice,/退出未完成/);
+});
+
+test('confirmed logout clears a prior connection warning from the signed-out entry',async t=>{
+ const h=harness(t);await enter(h);h.poll();h.requests[1].reject(new Error('503: synthetic connection outage'));await tick();h.render();assert.match(h.notice,/只读/);
+ h.logout();h.requests[2].resolve({});await tick();h.render();assert.equal(h.signedIn,false);assert.deepEqual(h.alerts,[]);
 });
