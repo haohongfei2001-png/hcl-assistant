@@ -10,10 +10,11 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
  const scope=useRef(''),channel=useRef<BroadcastChannel|null>(null),live=useRef(true),revision=useRef(0);
  const [recover,setRecover]=useState(false);
  const [renewing,setRenewing]=useState(false),[serviceError,setServiceError]=useState(false),[showPassword,setShowPassword]=useState(false);
+ const [logoutError,setLogoutError]=useState('');
  const authFlight=useRef<AbortController|null>(null);
  const flight=useRef<{epoch:number;promise:Promise<void>;controller:AbortController}|null>(null);
  function suspend(){setMemberReady(false);setRenewing(true)}
- function clear(){clearTemporary();configureCloud(true);scope.current='';setRenewing(false);setStatus(value=>value?{...value,authenticated:false}:value)}
+ function clear(){clearTemporary();configureCloud(true);scope.current='';setRenewing(false);setLogoutError('');setStatus(value=>value?{...value,authenticated:false}:value)}
  async function refresh():Promise<void>{const epoch=revision.current;
   if(flight.current){if(flight.current.epoch===epoch)return flight.current.promise;await flight.current.promise;if(live.current&&epoch===revision.current)return refresh();return}
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
@@ -39,15 +40,15 @@ export function MemberEntry({children,onOwner,extra}:{children:(logout:()=>void,
  },[]);
  useEffect(()=>{if(!status?.authenticated||!status.expires_at)return;const timer=setTimeout(()=>{suspend();void refresh()},Math.max(0,status.expires_at*1000-Date.now()));return()=>clearTimeout(timer)},[status?.authenticated,status?.expires_at]);
  async function logout(){
-  if(busy)return;setBusy(true);const epoch=++revision.current;flight.current?.controller.abort();
+  if(busy)return;setBusy(true);setLogoutError('');const epoch=++revision.current;flight.current?.controller.abort();
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
-  const complete=()=>{if(!live.current||epoch!==revision.current)return;clear();channel.current?.postMessage({type:'signed-out'});setMessage('已退出账号')};
+  const complete=()=>{if(!live.current||epoch!==revision.current)return;revision.current++;flight.current?.controller.abort();clear();setError('');setBusy(false);channel.current?.postMessage({type:'signed-out'});setMessage('已退出账号')};
   try{await api('/v1/account/logout',{},controller.signal);complete()}
-  catch(error){if(!live.current||epoch!==revision.current)return;if(/^Error: 401:/.test(String(error)))complete();else setError('退出未完成，请重试')}
-  finally{clearTimeout(timeout);if(live.current)setBusy(false)}
+  catch(error){if(!live.current||epoch!==revision.current)return;if(/^Error: 401:/.test(String(error)))complete();else setLogoutError('退出未完成，请重试')}
+  finally{clearTimeout(timeout);if(live.current&&epoch===revision.current)setBusy(false)}
  }
  if(recover)return <RecoveryEntry initialEmail={email} onBack={()=>setRecover(false)}/>;
- if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,{model:Boolean(status.model_enabled),temporary:Boolean(status.entitlements?.enabled&&status.entitlements.temporary),persistent:Boolean(status.entitlements?.enabled&&status.entitlements.persistent)});
+ if(status?.authenticated&&status.account_scope)return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||logoutError||(renewing?'正在恢复账号登录，当前内容暂时只读':!status.entitlements?.enabled?(status.entitlements?.reason||'账号使用权限尚未开通'):!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,{model:Boolean(status.model_enabled),temporary:Boolean(status.entitlements?.enabled&&status.entitlements.temporary),persistent:Boolean(status.entitlements?.enabled&&status.entitlements.persistent)});
  async function submit(event:React.FormEvent){
   event.preventDefault();if(busy||!status?.available)return;setBusy(true);setError('');setMessage('');
   const epoch=++revision.current;flight.current?.controller.abort();authFlight.current?.abort();

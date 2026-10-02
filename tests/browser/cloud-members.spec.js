@@ -128,6 +128,35 @@ test('absolute expiry clears temporary content and failed logout is visible',asy
  await page.request.post('/v1/fixture/member-expire');await expect(page.getByLabel('用户邮箱')).toBeVisible({timeout:15000});await expect(page.locator('body')).not.toContainText('EXPIRY_MEMBER_CANARY');
 });
 
+test('accepted logout cancels an older status snapshot and never restores the previous account UI',async({page},info)=>{
+ await page.addInitScript(()=>{window.__logoutStatusAborts=0;window.__logoutStatusSettled=0;window.__trackLogoutStatus=false;const original=window.fetch.bind(window);window.fetch=(input,options)=>{const track=window.__trackLogoutStatus&&String(input).endsWith('/v1/account/status');if(track)options?.signal?.addEventListener('abort',()=>window.__logoutStatusAborts++,{once:true});const result=original(input,options);if(track)result.then(()=>window.__logoutStatusSettled++,()=>window.__logoutStatusSettled++);return result}});
+ await enter(page);await send(page,'原创合成：LOGOUT_OLD_ACCOUNT_CANARY');
+ let releaseLogout,releaseStatus,captured,released;const logoutHold=new Promise(resolve=>releaseLogout=resolve),statusHold=new Promise(resolve=>releaseStatus=resolve),statusCaptured=new Promise(resolve=>captured=resolve),statusReleased=new Promise(resolve=>released=resolve);let writes=0;
+ await page.route('**/v1/account/logout',async route=>{writes++;await logoutHold;await route.continue()});
+ await page.route('**/v1/account/status',async route=>{const response=await route.fetch();captured();await statusHold;await route.fulfill({response}).catch(()=>{});released()});
+ try{
+  await page.evaluate(()=>window.__trackLogoutStatus=true);await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByRole('button',{name:'退出登录',exact:true}).click();
+  await statusCaptured;releaseLogout();await expect(page.getByLabel('用户邮箱')).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>window.__logoutStatusAborts)).toBe(1);await expect.poll(()=>page.evaluate(()=>window.__logoutStatusSettled)).toBe(1);
+  releaseStatus();await statusReleased;await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await expect(page.getByLabel('用户邮箱')).toBeVisible();await expect(page.locator('body')).not.toContainText('LOGOUT_OLD_ACCOUNT_CANARY');expect(writes).toBe(1);
+  await page.screenshot({path:info.outputPath('member-confirmed-logout.png'),fullPage:true,animations:'disabled'});
+ }finally{releaseLogout();releaseStatus();await page.unroute('**/v1/account/logout');await page.unroute('**/v1/account/status')}
+});
+
+test('failed logout remains visible after a healthy poll and only an explicit retry submits again',async({page},info)=>{
+ await enter(page);let writes=0;
+ await page.route('**/v1/account/logout',route=>{writes++;return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Injected logout outage'})})});
+ await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByRole('button',{name:'退出登录',exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'设置'})).toContainText('退出未完成');
+ await page.waitForResponse(response=>response.url().endsWith('/v1/account/status')&&response.status()===200,{timeout:15000});
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await expect(page.getByRole('dialog',{name:'设置'})).toContainText('退出未完成');expect(writes).toBe(1);
+ await page.screenshot({path:info.outputPath('member-logout-retry-after-poll.png'),fullPage:true,animations:'disabled'});
+ await page.unroute('**/v1/account/logout');await page.route('**/v1/account/logout',route=>{writes++;return route.continue()});
+ await page.getByRole('button',{name:'退出登录',exact:true}).click();await expect(page.getByLabel('用户邮箱')).toBeVisible();expect(writes).toBe(2);
+});
+
 test('a stalled member logout times out, keeps the draft and permits retry',async({page})=>{
  await enter(page);await page.getByLabel('消息',{exact:true}).fill('LOGOUT_RETRY_DRAFT');await page.getByRole('button',{name:'设置',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'设置'});let release;const held=new Promise(resolve=>release=resolve);

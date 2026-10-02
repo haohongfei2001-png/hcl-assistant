@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "fix/startup-connection",
-    "scope": "U2-01_INITIAL_CONNECTION_RELIABILITY",
+    "branch": "fix/member-session-feedback",
+    "scope": "U2-01_LOGOUT_LIFECYCLE_RECOVERY",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
