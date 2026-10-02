@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "product/m2-01-password-recovery",
-    "scope": "M2-01_BOUNDED_PASSWORD_RECOVERY",
+    "branch": "fix/startup-connection",
+    "scope": "U2-01_INITIAL_CONNECTION_RELIABILITY",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

@@ -10,10 +10,17 @@ for(const surface of ['local','pages']){
   await page.getByRole('button',{name:'移除待提交附件'}).click();await expect(page.locator('.staged-attachment')).toHaveCount(0);await expect(page.locator('article')).toHaveCount(0);
   await page.getByLabel('上传文本文件').setInputFiles({name:'accepted-original.txt',mimeType:'text/plain',buffer:Buffer.from('ACCEPTED_ORIGINAL_ONLY')});await page.getByRole('button',{name:'提交附件',exact:true}).click();await expect(page.locator('article')).toHaveCount(1);await expect(page.locator('.staged-attachment')).toHaveCount(0);await expect(composer).toHaveValue('INDEPENDENT_ATTACHMENT_DRAFT');
  });
- test(`${surface} context panel restores semantic trigger and permits deliberate reading`,async({page})=>{
+ test(`${surface} context panel restores semantic trigger and permits deliberate reading`,async({page},info)=>{
   await page.setViewportSize({width:1448,height:1086});await page.goto(surface==='local'?'/':pages);
   for(let i=0;i<4;i++){await page.getByLabel('消息',{exact:true}).fill((surface==='local'?'报告[岚]：':'记录：')+`原创合成记录${i}。`+'这是一条用于校验阅读位置的原创合成说明，不能解释成真实人物经历。'.repeat(12));await page.getByRole('button',{name:'发送',exact:true}).click();await expect(page.locator('article')).toHaveCount(i+1)}
-  const trigger=page.locator('article').nth(1).getByRole('button',{name:'查看依据',exact:true});await trigger.scrollIntoViewIfNeeded();await trigger.focus();const offset=()=>trigger.evaluate(el=>el.getBoundingClientRect().top-document.querySelector('.messages').getBoundingClientRect().top);const before=await offset();await trigger.click();
+  // An accepted article can precede the final streaming/watch update. Measure
+  // the settled reading position, then prove it still matches actual activation.
+  await expect(page.getByRole('button',{name:'停止',exact:true})).toHaveCount(0);
+  const trigger=page.locator('article').nth(1).getByRole('button',{name:'查看依据',exact:true});await trigger.scrollIntoViewIfNeeded();await trigger.focus();const offset=()=>trigger.evaluate(el=>el.getBoundingClientRect().top-document.querySelector('.messages').getBoundingClientRect().top);
+  await trigger.evaluate(el=>{delete window.__contextActivation;el.addEventListener('pointerdown',()=>{const root=document.querySelector('.messages');window.__contextActivation={offset:el.getBoundingClientRect().top-root.getBoundingClientRect().top,scrollTop:root.scrollTop}},{once:true})});
+  const before=await offset();await trigger.click();const activation=await page.evaluate(()=>window.__contextActivation);
+  await info.attach('context-activation-position',{body:JSON.stringify({surface,before,activation}),contentType:'application/json'});
+  expect(activation).toBeTruthy();expect(Math.abs(activation.offset-before)).toBeLessThanOrEqual(2);
   const panel=page.getByRole('dialog',{name:'查看依据',exact:true});await expect(panel).toHaveAttribute('aria-modal','false');await expect(page.locator('article').nth(1)).toHaveClass(/is-context-target/);
   await panel.getByRole('button',{name:'返回回答位置',exact:true}).click();await expect(panel).toHaveCount(0);await expect(trigger).toBeFocused();await expect.poll(async()=>Math.abs(await offset()-before)).toBeLessThanOrEqual(2);
   await trigger.click();await page.setViewportSize({width:1024,height:768});await page.getByRole('button',{name:'返回回答位置',exact:true}).click();await expect(trigger).toBeInViewport();

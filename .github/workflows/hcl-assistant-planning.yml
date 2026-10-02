@@ -170,6 +170,15 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Retain focused initial connection captures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: startup-connection-captures
+          path: product-export/test-results/startup-connection*/**/*.png
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Retain lightweight Continuum reference and app captures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
