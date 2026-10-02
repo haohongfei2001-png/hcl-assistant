@@ -58,7 +58,7 @@ test('optional trial status shares the connection deadline without partially ope
 test('inactive owner entry shares the account surface on a narrow phone without enabling member or trial actions',async({page},info)=>{
  await page.setViewportSize({width:390,height:844});
  await page.route('**/v1/development/status',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({...memberEntry,configuration:{configured:true,provider_enabled:false}})}));
- await page.goto('/');await expect(page.getByRole('heading',{name:'管理员登录',exact:true})).toBeVisible();
+ await page.goto('/admin');await expect(page.getByRole('heading',{name:'管理员登录',exact:true})).toBeVisible();
  await expect(page.getByLabel('账号',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeDisabled();
  await expect(page.getByRole('button',{name:'没有账号，注册'})).toHaveCount(0);await expect(page.getByRole('button',{name:'开始临时试用（仅合成内容）'})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

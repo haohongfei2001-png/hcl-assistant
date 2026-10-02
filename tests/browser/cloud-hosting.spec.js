@@ -5,7 +5,7 @@ async function receiptEvidence(info,name,value){mkdirSync(info.outputDir,{recurs
 test.skip(!process.env.HCLA_TEST_POSTGRES_DSN,'Cloud browser fixture requires isolated Postgres');
 async function enter(page){
  await page.request.post('/v1/fixture/reset-throttle');
- await page.goto('/');await page.getByLabel('账号',{exact:true}).fill('owner');await page.getByLabel('密码',{exact:true}).fill('offline password fixture');const signedIn=page.waitForResponse(r=>r.url().endsWith('/v1/development/login'));await page.getByRole('button',{name:'登录',exact:true}).click();expect((await signedIn).status()).toBe(200);
+ await page.goto('/admin');await page.getByLabel('账号',{exact:true}).fill('owner');await page.getByLabel('密码',{exact:true}).fill('offline password fixture');const signedIn=page.waitForResponse(r=>r.url().endsWith('/v1/development/login'));await page.getByRole('button',{name:'登录',exact:true}).click();expect((await signedIn).status()).toBe(200);
  await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('本次仅使用原创合成输入，并使用服务器已批准额度').check();
 }

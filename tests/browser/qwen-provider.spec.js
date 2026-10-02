@@ -15,7 +15,7 @@ async function mockedQwen(page,enabled=true){
   }
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)});
  });
- await page.goto('/');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
+ await page.goto('/admin');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  return seen;
 }
 

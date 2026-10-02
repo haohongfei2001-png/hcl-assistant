@@ -243,3 +243,28 @@ class SharedMonthlyPostgresTests(unittest.TestCase):
         with self.assertRaises(Exception):self.admin.execute('UPDATE hcla.qwen_member_entitlements SET paid_membership=true WHERE tenant=%s',(tenant,))
         with app.stores.persistent.transaction():
             with self.assertRaises(Exception):app.stores.persistent.db.execute("UPDATE qwen_member_entitlements SET paid_membership=true,payment_verification='ADMIN_VERIFIED',paid_evidence_digest=repeat('a',64),paid_verified_at=clock_timestamp()")
+
+    def test_registration_and_status_never_install_paid_rights_or_spend(self):
+        self.ready();app,cookie,tenant,fake=self.member('a',grant=False)
+        response=app.member_auth.register({'email':'a@example.test','password':'offline member password'})
+        self.assertTrue(response['confirmation_required'])
+        before=self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_monthly_attempts').fetchone()['n']
+        status=app.member_status(cookie)
+        self.assertFalse(status['model_enabled']);self.assertFalse(status['entitlements']['enabled'])
+        self.assertTrue(status['entitlements']['membership_required'])
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_member_entitlements').fetchone()['n'],0)
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_monthly_attempts').fetchone()['n'],before)
+        self.assertEqual(fake.post_calls,0)
+
+    def test_membership_expiry_keeps_identity_but_revokes_status_and_admission(self):
+        self.ready();app,cookie,tenant,fake=self.member('a')
+        status=app.member_status(cookie)
+        self.assertTrue(status['model_enabled'])
+        self.assertGreater(status['entitlements']['expires_at'],time.time())
+        self.admin.execute("UPDATE hcla.qwen_member_entitlements SET expires_at=clock_timestamp()-interval '1 second' WHERE tenant=%s",(tenant,))
+        expired=app.member_status(cookie)
+        self.assertTrue(expired['authenticated']);self.assertEqual(expired['account_scope'],tenant)
+        self.assertFalse(expired['model_enabled']);self.assertFalse(expired['entitlements']['enabled'])
+        self.assertIn('已到期',expired['entitlements']['reason'])
+        with self.assertRaises(BudgetError):self.claim(app,'expired-membership').reserve('expired-membership','attempt',100)
+        self.assertEqual(fake.post_calls,0)

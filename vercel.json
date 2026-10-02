@@ -16,6 +16,10 @@
       "destination": "/api/index"
     },
     {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
       "source": "/account/recovery",
       "destination": "/index.html"
     }
