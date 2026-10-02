@@ -21,3 +21,11 @@ The five controlled component regressions cover the three failures, connection-e
 Controlled hooks establish UI orchestration only. They do not substitute for real database/session-revocation tests, certify every cookie ordering race, or prove live account readiness.
 
 Independent source review found one additional feedback edge: confirmed logout after a connection outage retained the old read-only/renewal warning on the signed-out form. A focused controlled case failed on the reviewed draft and passed after confirmed completion also clears that stale connection error. Failed logout does not clear current connection uncertainty. The server cookie ordering contract is unchanged and is not certified by these UI-only tests.
+
+## Reviewed implementation checkpoint
+
+Exact source `9dac917418677c267258209cea788f962743f00d` passed both jobs in [run36953218454](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36953218454): all80 general browser journeys, all40 cloud browser journeys, 105 disposable PostgreSQL cases without skips, 379 Python cases with59 database deferrals in the broad job, TypeScript/both bundles and29 JavaScript checks.
+
+The held-status browser test verified that the actual fetch aborts and settles before its old response is released, then remains signed out with the previous account body absent and exactly one logout write. The failed-logout test verified the error after a healthy poll, then exactly one explicit second write. Confirmed-signout and retained-error captures from [artifact11204788436](https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/36953218454/artifacts/11204788436) were visually inspected; signed-out entry and retry feedback remain clear. Independent source review has no remaining blocker in this bounded delta.
+
+Implementation and review are complete; this documentation/claim closure commit and eventual merged main still require their exact-SHA checks. All live activation gates remain separate and unchanged.
