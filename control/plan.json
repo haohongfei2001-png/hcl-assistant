@@ -532,8 +532,8 @@
     }
   },
   "writer": {
-    "branch": "fix/history-read-recovery",
-    "scope": "P1-02_SELECTED_HISTORY_READ_RECOVERY",
+    "branch": "fix/guest-run-diagnostics",
+    "scope": "C1-01_GUEST_RUN_DIAGNOSTICS",
     "status": "COMPLETE"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
