@@ -97,9 +97,10 @@ class QwenConfig:
         smoke=grant.get('smoke')
         monthly=grant.get('monthly')
         if 'monthly' in grant:
-            if (monthly!={'timezone':'Asia/Shanghai','scope':'OWNER_ONLY','limit_cny':'500'}
+            if (monthly not in ({'timezone':'Asia/Shanghai','scope':'OWNER_ONLY','limit_cny':'500'},
+                                {'timezone':'Asia/Shanghai','scope':'AUTHENTICATED_SHARED','limit_cny':'500'})
                     or values['max_cost_cny']!=500 or grant['max_requests']>1000000 or 'smoke' not in grant):
-                raise ValueError('Approved owner-only Shanghai monthly CNY500 contract required')
+                raise ValueError('Approved Shanghai monthly CNY500 contract required')
             monthly=dict(monthly)
         if 'smoke' in grant:
             import re
@@ -131,6 +132,9 @@ class QwenConfig:
         }
         if self.smoke is not None:policy['smoke']=dict(self.smoke)
         if self.monthly is not None:
-            policy.update(version=2,monthly=dict(self.monthly),refund_policy='CONTROLLER_PUBLISHED_VERIFIED_USAGE_ONLY',
+            policy.update(version=3 if self.monthly['scope']=='AUTHENTICATED_SHARED' else 2,monthly=dict(self.monthly),refund_policy='CONTROLLER_PUBLISHED_VERIFIED_USAGE_ONLY',
                           month_end_admission_margin_seconds=300,initial_smoke_max_completion_tokens=self.max_output_tokens)
+            if self.monthly['scope']=='AUTHENTICATED_SHARED':
+                policy['member_subcaps']='CALENDAR_MONTH_WITHIN_SHARED_CEILING'
+                policy['membership_requirement']='SERVER_VERIFIED_PAID_MEMBERSHIP'
         return json.dumps(policy, sort_keys=True, separators=(',', ':'))

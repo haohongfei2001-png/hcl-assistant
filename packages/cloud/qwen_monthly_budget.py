@@ -1,4 +1,4 @@
-"""One global CNY500 owner budget per database-derived Shanghai calendar month.
+"""One global CNY500 authorized-actor budget per database-derived Shanghai calendar month.
 
 Immutable template/period/attempt guards are also enforced by the additive SQL
 migration. Old grants and attempts are never reinterpreted or reset.
@@ -16,14 +16,16 @@ class QwenMonthlyBudget:
         if not isinstance(config,QwenConfig) or config.monthly is None:
             raise BudgetError('monthly_qwen_configuration_required')
         self.store=store;self.config=QwenConfig.from_grant(config.as_grant(),config.api_key)
-        self._held=None;self._dispatch_cap=config.max_output_tokens
+        self._held=None;self._dispatch_cap=config.max_output_tokens;self.member_grant_id=None;self.memory_scope='CONVERSATION'
         with store.transaction():
             row=store.db.execute('SELECT policy FROM qwen_monthly_authorization WHERE singleton=1').fetchone()
             if row is None:raise BudgetError('monthly_qwen_not_authorized')
             if row['policy']!=self.config.policy():raise BudgetError('budget_policy_mismatch')
 
     def _owner(self):
-        if self.store.tenant!='hcla-owner':raise BudgetError('monthly_owner_scope_required')
+        import re
+        if self.store.tenant!='hcla-owner' and (self.config.monthly['scope']!='AUTHENTICATED_SHARED' or not re.fullmatch('member-[0-9a-f]{64}',self.store.tenant)):
+            raise BudgetError('monthly_owner_scope_required')
 
     def _cost(self,input_tokens,output_tokens):
         with localcontext() as context:
@@ -34,13 +36,17 @@ class QwenMonthlyBudget:
     def _period(self):
         return self.store.db.execute("SELECT to_char(hcla.qwen_monthly_clock() AT TIME ZONE 'Asia/Shanghai','YYYY-MM') AS period_key").fetchone()['period_key']
 
+    def _shared_state(self):
+        return self.store.db.execute('SELECT qwen_monthly_shared_state() AS state').fetchone()['state']
+
     def smoke_ready(self):
-        with self.store.transaction():
-            return self.store.db.execute("SELECT 1 FROM qwen_monthly_attempts WHERE kind='SMOKE' AND outcome='completed' AND settled=true LIMIT 1").fetchone() is not None
+        with self.store.transaction():return self._shared_state()['smoke_ready']
 
     def authorize_request(self,request,conversation):
-        self._owner()
-        if not self.smoke_ready():self.config.authorize_request(request,conversation)
+        self._owner();self.memory_scope=conversation.get('memory','CONVERSATION')
+        if not self.smoke_ready():
+            if self.store.tenant!='hcla-owner':raise BudgetError('owner_smoke_required')
+            self.config.authorize_request(request,conversation)
 
     def dispatch_output_tokens(self):
         return self._dispatch_cap
@@ -53,7 +59,7 @@ class QwenMonthlyBudget:
         with self.store.transaction():
             old=self.store.db.execute('SELECT * FROM qwen_monthly_attempts WHERE run_key=? AND attempt_key=?',keys).fetchone()
             if old:
-                if old['input_bytes']!=input_bytes:raise BudgetError('attempt_payload_mismatch')
+                if old['input_bytes']!=input_bytes or old['actor_tenant']!=self.store.tenant:raise BudgetError('attempt_payload_mismatch')
                 return CnyReservation(False,Decimal(old['reserved_cny']),old['outcome'],old['period_key'])
             ready=self.smoke_ready();self._dispatch_cap=self.config.max_output_tokens
             period=self._period()
@@ -61,17 +67,14 @@ class QwenMonthlyBudget:
             reservation=self._cost(self.config.input_token_reservation,self._dispatch_cap+10)
             window=self.store.db.execute("SELECT ends_at>hcla.qwen_monthly_clock()+interval '300 seconds' AS open FROM qwen_monthly_periods WHERE period_key=?",(period,)).fetchone()
             if not window or not window['open']:raise BudgetError('monthly_boundary_pause')
-            rows=self.store.db.execute('SELECT charged_cny,outcome FROM qwen_monthly_attempts WHERE period_key=?',(period,)).fetchall()
-            with localcontext() as context:
-                context.prec=64
-                if sum((Decimal(r['charged_cny']) for r in rows),Decimal(0))+reservation>500:
-                    raise BudgetError('cost_budget_exhausted')
-            if len(rows)>=self.config.max_requests:raise BudgetError('request_budget_exhausted')
+            state=self._shared_state()
+            if Decimal(state['charged_cny'])+reservation>500:raise BudgetError('cost_budget_exhausted')
+            if state['request_count']>=self.config.max_requests:raise BudgetError('request_budget_exhausted')
             # Database trigger derives policy/period, enforces the aggregate cap,
             # owner scope, calendar cutoff, immutable row and cross-provider slot.
             try:
-                self.store.db.execute("INSERT INTO qwen_monthly_attempts(run_key,attempt_key,period_key,input_bytes,output_cap,kind,execution_run_id,execution_owner,reserved_cny,charged_cny,outcome) VALUES(?,?,?,?,?,?,?,?,?,?,'active')",
-                    (*keys,period,input_bytes,self._dispatch_cap,'OWNER' if ready else 'SMOKE',execution,owner,_money(reservation),_money(reservation)))
+                self.store.db.execute("INSERT INTO qwen_monthly_attempts(run_key,attempt_key,period_key,input_bytes,output_cap,kind,actor_tenant,entitlement_grant_id,memory_scope,execution_run_id,execution_owner,reserved_cny,charged_cny,outcome) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'active')",
+                    (*keys,period,input_bytes,self._dispatch_cap,('OWNER' if self.store.tenant=='hcla-owner' else 'MEMBER') if ready else 'SMOKE',self.store.tenant,self.member_grant_id,self.memory_scope,execution,owner,_money(reservation),_money(reservation)))
             except Exception:
                 # Never expose provider/database exception text. The transaction
                 # rolls back completely; no transport has been constructed here.
@@ -107,20 +110,15 @@ class QwenMonthlyBudget:
             self.store.db.execute('UPDATE qwen_monthly_attempts SET charged_cny=actual_cny,settled=true WHERE run_key=? AND attempt_key=?',keys)
 
     def snapshot(self):
-        with self.store.transaction():
-            period=self._period()
-            rows=self.store.db.execute('SELECT * FROM qwen_monthly_attempts WHERE period_key=?',(period,)).fetchall()
-        with localcontext() as context:
-            context.prec=64
-            charged=sum((Decimal(r['charged_cny']) for r in rows),Decimal(0))
-            known=[Decimal(r['actual_cny']) for r in rows if r['actual_cny'] is not None]
-            return {'currency':'CNY','period':period,'timezone':'Asia/Shanghai','scope':'OWNER_ONLY',
-                    'request_count':len(rows),'max_requests':self.config.max_requests,
-                    'active_requests':sum(r['outcome']=='active' for r in rows),
-                    'charged_cost_cny':_money(charged),'max_cost_cny':'500',
-                    'remaining_cny':_money(max(Decimal(0),Decimal(500)-charged)),
-                    'actual_provider_cost_cny':None,'cost_basis':'CONFIGURED_UNCACHED_CNY_RATES_NOT_PROVIDER_INVOICE',
-                    'known_usage_priced_upper_bound_cny':_money(sum(known,Decimal(0))) if known else None,
-                    'unknown_usage_requests':len(rows)-len(known),'over_budget':charged>500}
+        with self.store.transaction():state=self._shared_state()
+        charged=Decimal(state['charged_cny'])
+        return {'currency':'CNY','period':state['period'],'timezone':'Asia/Shanghai','scope':self.config.monthly['scope'],
+                'request_count':state['request_count'],'max_requests':self.config.max_requests,
+                'active_requests':state['active_requests'],'charged_cost_cny':_money(charged),'max_cost_cny':'500',
+                'remaining_cny':_money(max(Decimal(0),Decimal(500)-charged)),
+                'actor_charged_cost_cny':state['actor_charged_cny'],'actor_request_count':state['actor_request_count'],
+                'actual_provider_cost_cny':None,'cost_basis':'CONFIGURED_UNCACHED_CNY_RATES_NOT_PROVIDER_INVOICE',
+                'known_usage_priced_upper_bound_cny':state['known_cny'],
+                'unknown_usage_requests':state['unknown_usage_requests'],'over_budget':charged>500}
 
     def close(self):pass

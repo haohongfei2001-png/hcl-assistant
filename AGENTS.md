@@ -84,3 +84,9 @@ Owner requested HCLA-only Model Studio Beijing pay-as-you-go `qwen3.8-max` integ
 ## Shanghai monthly owner budget amendment (2026-10-02)
 
 Owner approved HCLA testing and owner use within a shared CNY 500 per Asia/Shanghai calendar month. Implement the immutable monthly authorization, guarded period accounting, safe verified settlement and owner-only staged activation in [monthly budget](docs/QWEN_MONTHLY_BUDGET.md). First smoke and ordinary owner use share this cap; no separate renewed smoke grant, public member/guest opening, HCL core change or automatic recharge. Actual migration/security actions still require the appropriate action-time approval, and final exact-tree review/Postgres/browser CI precedes activation.
+
+## Shared Qwen monthly amendment (2026-10-02 19:00 UTC)
+
+Owner clarified this is a reusable multiuser product and explicitly chose one shared CNY500 per Asia/Shanghai month across all eligible authenticated users and integration tests, never500 per user. The first exact owner synthetic smoke remains a capability validation gate, then existing verified member sessions and server-owned CNY permissions share the same atomic global ceiling. Preserve actor privacy, immutable accounting, no anonymous spending, no automatic provider retries/fallback and HCL core isolation. The earlier uninstalled owner-only policy is obsolete. Code/tests/review are authorized; live schema/permission/config steps remain subject to their exact activation approval. See docs/QWEN_SHARED_MONTHLY_BUDGET.md.
+
+Owner further chose open registration with active verified paid membership required for model access. No automatic free entitlement/trial, client self-grant, payment provider or pricing is authorized. Registration and payment are distinct; shared CNY500 remains the all-user ceiling.

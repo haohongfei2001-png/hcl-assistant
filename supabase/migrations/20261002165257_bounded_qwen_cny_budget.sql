@@ -13,6 +13,11 @@ CREATE TABLE qwen_budget_attempts(
 );
 CREATE TABLE qwen_member_entitlements(
  tenant text NOT NULL,grant_id text NOT NULL,enabled boolean NOT NULL DEFAULT false,
+ paid_membership boolean NOT NULL DEFAULT false,
+ payment_verification text NOT NULL DEFAULT 'NONE' CHECK(payment_verification IN('NONE','ADMIN_VERIFIED','TRUSTED_PAYMENT_EVENT')),
+ paid_evidence_digest text CHECK(paid_evidence_digest IS NULL OR paid_evidence_digest ~ '^[0-9a-f]{64}$'),
+ paid_verified_at timestamptz,
+ CHECK(NOT paid_membership OR (payment_verification<>'NONE' AND paid_evidence_digest IS NOT NULL AND paid_verified_at IS NOT NULL)),
  starts_at timestamptz NOT NULL,expires_at timestamptz NOT NULL,
  temporary_enabled boolean NOT NULL DEFAULT false,persistent_enabled boolean NOT NULL DEFAULT false,
  max_requests integer NOT NULL CHECK(max_requests>0),max_cost_cny numeric NOT NULL CHECK(max_cost_cny>0),

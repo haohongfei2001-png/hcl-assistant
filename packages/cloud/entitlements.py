@@ -89,6 +89,16 @@ class MemberCancellation:
         self.cancellation=cancellation;self.auth=auth;self.session_key=session_key
         self.entitlements=entitlements;self.memory=memory;self.next_check=0;self.lock=threading.RLock()
     def set(self):self.cancellation.set()
+    def is_set_for_settlement(self):
+        # Revalidate authentication and entitlement without mistaking our own
+        # completed publication for cancellation. No periodic-cache shortcut.
+        with self.auth.store.lock,self.lock:
+            try:
+                if not self.auth.active(self.session_key):self.set()
+                self.entitlements.require(self.memory)
+            except Exception:self.set()
+            probe=getattr(self.cancellation,'is_set_for_settlement',self.cancellation.is_set)
+            return probe()
     def is_set(self):
         # Store lock precedes event lock, matching Controller callbacks.
         with self.auth.store.lock,self.lock:
