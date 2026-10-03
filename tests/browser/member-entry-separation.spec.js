@@ -10,8 +10,9 @@ async function fixture(page,{owner=false,available=false,member=false,rights,mod
   if(path==='/v1/development/status')body={...development,authenticated:state.owner};
   else if(path==='/v1/account/status'){
    if(state.holdStatus)await state.holdStatus;
-   body={available:state.available,authenticated:state.member,account_scope:state.member?'member-route-synthetic':undefined,expires_at:Math.floor(Date.now()/1000)+3600,model_enabled:state.model,entitlements:state.rights};
-  }else if(path==='/v1/account/register')body={confirmation_required:true,message:'请检查邮箱完成确认后登录'};
+   body={available:state.available,recovery_available:state.available,authenticated:state.member,account_scope:state.member?'member-route-synthetic':undefined,expires_at:Math.floor(Date.now()/1000)+3600,model_enabled:state.model,entitlements:state.rights};
+  }else if(path==='/v1/account/recovery/status')body={available:state.available,ready:false};
+  else if(path==='/v1/account/register')body={confirmation_required:true,message:'请检查邮箱完成确认后登录'};
   else if(path==='/v1/account/login'){state.member=true;body={};}
   else if(path==='/v1/member/budget')body={currency:'CNY',period:'2026-10',timezone:'Asia/Shanghai',scope:'AUTHENTICATED_SHARED',charged_cost_cny:'0',actor_charged_cost_cny:'0',max_cost_cny:'500',remaining_cny:'500'};
   else if(path==='/v1/member/billing/catalog')body={available:false,plans:[],reason:'会员购买尚未开放；注册不会自动开通会员'};
@@ -48,6 +49,25 @@ test('an existing owner cookie never selects owner chat on the ordinary route',a
  await page.goto('/admin');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  await page.reload();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  await page.goto('/');await expect(page.getByRole('heading',{name:'继续你的对话'})).toBeVisible();
+});
+
+test('ordinary signup and recovery disclose restricted test email before any submission',async({page},info)=>{
+ await page.setViewportSize({width:390,height:844});const state=await fixture(page,{available:true});
+ const disclosure='当前使用测试邮件服务，仅项目团队邮箱能收到注册和找回密码邮件。公开注册邮件服务尚未开放。';
+ await page.goto('/');await expect(page.getByText(disclosure,{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'没有账号，注册',exact:true}).click();
+ await expect(page.getByText(disclosure,{exact:true})).toBeVisible();
+ await expect(page.locator('body')).toContainText('注册不会自动开通会员');
+ await expect(page.getByLabel('消息',{exact:true})).toHaveCount(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:info.outputPath('restricted-email-registration-phone.png'),fullPage:true,animations:'disabled'});
+ await page.getByRole('button',{name:'已有账号，返回登录',exact:true}).click();
+ await page.getByRole('button',{name:'忘记密码',exact:true}).click();
+ await expect(page.getByText(disclosure,{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'发送恢复链接',exact:true})).toBeDisabled();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:info.outputPath('restricted-email-recovery-phone.png'),fullPage:true,animations:'disabled'});
+ expect(state.posts).toEqual([]);
 });
 
 test('registration confirms email but never signs in, starts a trial or grants paid access',async({page},info)=>{
