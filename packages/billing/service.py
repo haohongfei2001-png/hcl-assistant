@@ -20,7 +20,7 @@ class BillingService:
     def catalog(self,actor):
         if not self.available:return {'available':False,'plans':[],'reason':'会员购买尚未开放；注册不会自动开通会员'}
         offers=self.repository.catalog(actor)
-        return {'available':True,'plans':offers,'renewal_mode':'USER_INITIATED_FIXED_DURATION','capacity_notice':'模型额度为平台共享每月500元，到限暂停；不承诺无限使用','recurring_charge':False}
+        return {'available':bool(offers),'plans':offers,'reason':None if offers else '当前没有可购买套餐，或共享模型额度暂不可用','renewal_mode':'USER_INITIATED_FIXED_DURATION','capacity_notice':'模型额度为平台共享每月500元，到限暂停；不承诺无限使用','recurring_charge':False}
 
     def create_order(self,actor,plan_id,version,idempotency_key,terms_digest):
         self._enabled();identifier(plan_id);identifier(idempotency_key)
@@ -59,15 +59,20 @@ class BillingService:
 
     def _reconcile(self,order):
         if order.get('state')=='PENDING':raise BillingError('checkout_not_created')
+        owner=self.repository.claim_verification(order['order_id'])
+        if owner is None:return {'order_id':order['order_id'],'verification_deferred':True}
         try:
-            # Query stored internal merchant order ID even if a create response
-            # was lost. The proof may bind the missing external reference once.
-            # Never create a second remote order or query a callback URL.
-            result=self.provider.query_order(order)
-            if not isinstance(result,VerifiedPayment):raise BillingError('authoritative_order_query_required')
-            result.validate(order)
-        except Exception:
-            self.repository.verification_unconfirmed(order['order_id'])
-            raise BillingError('payment_not_verified_no_membership_change') from None
-        # This operation revalidates all immutable bindings under its DB lock.
-        return self.repository.apply_verified(result)
+            try:
+                # Query stored internal merchant order ID even when creation's
+                # response was lost. No callback-supplied URL/amount is trusted.
+                # A selected adapter must enforce a <=10s wall deadline, less
+                # than the 30s query lease; no live adapter is registered here.
+                result=self.provider.query_order(order)
+                if not isinstance(result,VerifiedPayment):raise BillingError('authoritative_order_query_required')
+                result.validate(order)
+            except Exception:
+                self.repository.verification_unconfirmed(order['order_id'])
+                raise BillingError('payment_not_verified_no_membership_change') from None
+            return self.repository.apply_verified(result)
+        finally:
+            self.repository.finish_verification(order['order_id'],owner)

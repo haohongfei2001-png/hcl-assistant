@@ -37,8 +37,9 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
   flight.current={epoch,promise:task,controller};try{await task}finally{if(flight.current?.promise===task)flight.current=null}
  }
  useEffect(()=>{live.current=true;void refresh();const poll=setInterval(()=>void refresh(),10000);
+  const refreshMembership=()=>void refresh();window.addEventListener('hcla-member-status-refresh',refreshMembership);
   if(typeof BroadcastChannel!=='undefined'){channel.current=new BroadcastChannel('hcla-member-session');channel.current.onmessage=()=>{revision.current++;flight.current?.controller.abort();authFlight.current?.abort();setBusy(false);clear();void refresh()}}
-  return()=>{live.current=false;revision.current++;flight.current?.controller.abort();authFlight.current?.abort();clearInterval(poll);channel.current?.close();clearTemporary()};
+  return()=>{live.current=false;revision.current++;flight.current?.controller.abort();authFlight.current?.abort();clearInterval(poll);window.removeEventListener('hcla-member-status-refresh',refreshMembership);channel.current?.close();clearTemporary()};
  },[]);
  useEffect(()=>{if(!status?.authenticated||!status.expires_at)return;const timer=setTimeout(()=>{suspend();void refresh()},Math.max(0,status.expires_at*1000-Date.now()));return()=>clearTimeout(timer)},[status?.authenticated,status?.expires_at]);
  const entitlementDeadline=status?.entitlements?.expires_at;
@@ -82,7 +83,7 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
   }catch{if(live.current&&epoch===revision.current)setError(controller.signal.aborted?'连接等待过久，请重新检查连接后再试；不会自动重复提交':register?'暂时无法创建账号，请检查输入或稍后重试':'登录未完成，请确认邮箱已验证、账号密码正确，或稍后重试')}
   finally{clearTimeout(timeout);if(authFlight.current===controller){authFlight.current=null;if(live.current){setPassword('');setShowPassword(false);setBusy(false)}}}
  }
- return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="account-heading"><div className="account-brand">HCL <span>Assistant</span></div>{extra}
+ return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="account-heading"><div className="account-brand">HCL <span>Assistant</span></div>
   <h1 id="account-heading">{register?'创建你的账号':'继续你的对话'}</h1><p className="account-intro">登录后，在你的设备上继续自己的对话。当前仅开放合成内容体验，请勿输入真实私密资料。</p>
   <p className="account-hint account-membership">注册并验证邮箱后仍需开通有效会员，才能使用模型。在线购买会员暂未开放。{provider==='qwen'?'所有会员与测试共用平台每月500元总额度。':''}</p>
   {notice&&<p className="account-feedback" role="alert">{notice}</p>}
@@ -95,6 +96,7 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
   </form>}
   {status?.available&&<button className="account-switch" type="button" disabled={busy} onClick={()=>{setRegister(!register);setPassword('');setShowPassword(false);setError('');setMessage('')}}>{register?'已有账号，返回登录':'没有账号，注册'}</button>}
   {status?.recovery_available&&!register&&<button className="account-switch" disabled={busy} onClick={()=>{setPassword('');setRecover(true)}}>忘记密码</button>}
+  {extra}
   <details className="account-admin"><summary>管理员入口</summary><button disabled={busy} onClick={()=>{clear();onOwner()}}>打开管理员登录</button></details>
  </section></main>
 }

@@ -17,6 +17,6 @@ export function MemberMembership({value}:{value:Membership}){
  return <section aria-label="会员状态"><h3>会员状态</h3>
   <p>{value.enabled?'会员有效':'会员未开通、已到期或已停用'}</p>
   {expires&&<p>有效期至 <time dateTime={expires.toISOString()}>{expires.toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})}</time>（北京时间）</p>}
-  <p>注册账号不包含模型使用权限。在线购买会员暂未开放。</p>
+  <p>注册账号不包含模型使用权限。购买、续费与退款状态以服务器核验为准。</p>
  </section>;
 }

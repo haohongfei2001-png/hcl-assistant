@@ -28,7 +28,8 @@ class BillingWorker:
 
     def call(self, function, values):
         counts = {'billing_claim_checkout':3, 'billing_complete_checkout':3,
-                  'billing_mark_unknown':2, 'billing_apply_verified':2}
+                  'billing_mark_unknown':2, 'billing_apply_verified':2,
+                  'billing_claim_query':2, 'billing_finish_query':2}
         if function not in counts or len(values) != counts[function]:
             raise BillingError('unknown_billing_operation')
         with self.connection.transaction():
@@ -56,8 +57,8 @@ class BillingRepository:
     @staticmethod
     def _order(row):
         result = dict(row)
-        for key in ('created_at', 'expires_at'):
-            if hasattr(result[key], 'timestamp'):
+        for key in ('created_at', 'expires_at','access_starts_at','access_expires_at'):
+            if hasattr(result.get(key), 'timestamp'):
                 result[key] = int(result[key].timestamp())
         return result
 
@@ -89,7 +90,7 @@ class BillingRepository:
     def order(self, actor, order_id):
         with self.store.transaction():
             self._member(actor)
-            row = self.store.db.execute('SELECT * FROM billing_orders WHERE order_id=? AND tenant=?', (order_id,actor.tenant)).fetchone()
+            row = self.store.db.execute('SELECT o.*,e.starts_at AS access_starts_at,e.expires_at AS access_expires_at,e.enabled AS access_enabled FROM billing_orders o LEFT JOIN qwen_member_entitlements e ON e.tenant=o.tenant AND e.grant_id=o.grant_id WHERE o.order_id=? AND o.tenant=?', (order_id,actor.tenant)).fetchone()
             if not row:
                 raise BillingError('order_not_found')
             return self._order(row)
@@ -97,7 +98,7 @@ class BillingRepository:
     def history(self, actor):
         with self.store.transaction():
             self._member(actor)
-            return [self._order(r) for r in self.store.db.execute('SELECT * FROM billing_orders WHERE tenant=? ORDER BY created_at DESC,order_id LIMIT 50', (actor.tenant,)).fetchall()]
+            return [self._order(r) for r in self.store.db.execute('SELECT o.*,e.starts_at AS access_starts_at,e.expires_at AS access_expires_at,e.enabled AS access_enabled FROM billing_orders o LEFT JOIN qwen_member_entitlements e ON e.tenant=o.tenant AND e.grant_id=o.grant_id WHERE o.tenant=? ORDER BY o.created_at DESC,o.order_id LIMIT 50', (actor.tenant,)).fetchall()]
 
     def claim_checkout(self, actor, order_id):
         self.order(actor,order_id)
@@ -122,6 +123,13 @@ class BillingRepository:
             self.worker.connection.execute('SET LOCAL ROLE hcla_billing_worker')
             row = self.worker.connection.execute('SELECT * FROM hcla.billing_orders WHERE provider=%s AND merchant=%s AND external_order_id=%s', (provider,merchant,reference)).fetchone()
             return self._order(row) if row else None
+
+    def claim_verification(self, order_id):
+        owner=str(uuid.uuid4())
+        return owner if self.worker.call('billing_claim_query',(order_id,owner)) else None
+
+    def finish_verification(self, order_id, owner):
+        self.worker.call('billing_finish_query',(order_id,owner))
 
     def apply_verified(self, proof):
         return self.worker.call('billing_apply_verified',(proof.order_id,json.dumps(asdict(proof))))

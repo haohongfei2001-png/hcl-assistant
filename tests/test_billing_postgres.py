@@ -5,6 +5,8 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 import unittest
 import uuid
+from unittest.mock import Mock
+from packages.billing.service import BillingService
 
 from packages.billing.contracts import BillingError, Checkout, PaymentState, VerifiedPayment
 from packages.billing.postgres import BillingActor, BillingRepository, BillingWorker
@@ -30,6 +32,7 @@ class BillingPostgresTests(unittest.TestCase):
     ready=readiness.MemberReadinessPostgresTests.ready
     budget=readiness.MemberReadinessPostgresTests.budget
     complete=readiness.MemberReadinessPostgresTests.complete
+    http=readiness.MemberReadinessPostgresTests.http
 
     def enabled(self,amount=990):
         self.ready()
@@ -37,9 +40,10 @@ class BillingPostgresTests(unittest.TestCase):
         self.admin.execute("INSERT INTO hcla.billing_plan_versions(plan_id,version,title,enabled,amount_minor,duration_days,max_requests,max_cost_cny,temporary_enabled,persistent_enabled,terms_digest,approved_at) VALUES('fixture-plan',1,'Offline fixture',true,%s,30,20,25,true,true,repeat('b',64),clock_timestamp())",(amount,))
 
     def repository(self,name='a'):
-        app,_,tenant,_=self.member(name,grant=False)
+        app,cookie,tenant,_=self.member(name,grant=False)
         connection=self.connect();connection.execute('SET ROLE hcla_billing_worker');self.addCleanup(connection.close)
         repo=BillingRepository(app.stores.persistent,BillingWorker(connection))
+        repo.application=app;repo.cookie=cookie
         return repo,BillingActor(tenant,app.stores.persistent.member_session_key)
 
     def new_order(self,repo,actor,key=None):
@@ -197,3 +201,129 @@ class BillingPostgresTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:orders=list(pool.map(create,((left,la),(right,ra))))
         self.assertEqual(orders[0]['order_id'],orders[1]['order_id'])
         self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.billing_orders').fetchone()['n'],1)
+
+    def test_member_http_catalog_orders_and_confirmation_do_not_trust_client_payment(self):
+        self.enabled();repo,actor=self.repository();app=repo.application
+        provider=Mock();provider.name='fixture';provider.merchant='offline-merchant';provider.checkout_origins={'https://checkout.example.test'}
+        provider.create_checkout.side_effect=lambda o:Checkout(provider.name,provider.merchant,o['order_id'],'external-'+o['order_id'],'https://checkout.example.test/pay/'+o['order_id'])
+        app.billing=BillingService(repo,provider,source_fixture=True)
+        code,raw=self.http(app,'/v1/member/billing/catalog',cookie=repo.cookie);self.assertEqual(code,200,raw)
+        self.assertTrue(json.loads(raw)['available'])
+        body={'plan_id':'fixture-plan','version':1,'idempotency_key':'api-order','terms_digest':'b'*64}
+        code,raw=self.http(app,'/v1/member/billing/orders',cookie=repo.cookie,body=body);self.assertEqual(code,200,raw)
+        public=json.loads(raw);oid=public['order_id']
+        self.assertNotIn('tenant',public);self.assertNotIn('merchant',public);self.assertNotIn('payment_id',public)
+        code,raw=self.http(app,'/v1/member/billing/orders/'+oid+'/checkout',cookie=repo.cookie,body={});self.assertEqual(code,200,raw)
+        self.assertTrue(json.loads(raw)['checkout_url'].startswith('https://checkout.example.test/'))
+        code,_=self.http(app,'/v1/member/billing/orders/'+oid+'/reconcile',cookie=repo.cookie,body={'paid':True});self.assertEqual(code,400)
+        provider.query_order.assert_not_called()
+        o=repo.order(actor,oid)
+        provider.query_order.return_value=VerifiedPayment('fixture','offline-merchant',oid,o['external_order_id'],'payment-'+oid,o['product_id'],990,'CNY',PaymentState.CAPTURED,o['created_at'],0,'c'*64)
+        code,raw=self.http(app,'/v1/member/billing/orders/'+oid+'/reconcile',cookie=repo.cookie,body={});self.assertEqual(code,200,raw);self.assertEqual(json.loads(raw)['state'],'FULFILLED')
+        self.assertEqual(provider.create_checkout.call_count,1);self.assertEqual(provider.query_order.call_count,1)
+        code,raw=self.http(app,'/v1/member/billing/orders',cookie=repo.cookie);self.assertEqual(code,200,raw);self.assertEqual(len(json.loads(raw)['orders']),1)
+        outsider,_=self.app();self.assertEqual(self.http(outsider,'/v1/member/billing/orders')[0],401)
+        other,other_actor=self.repository('b');other.application.billing=BillingService(other,provider,source_fixture=True)
+        code,_=self.http(other.application,'/v1/member/billing/orders/'+oid,cookie=other.cookie);self.assertEqual(code,404)
+
+    def test_member_http_default_closed_and_no_ordinary_owner_billing_bypass(self):
+        repo,actor=self.repository();app=repo.application
+        code,raw=self.http(app,'/v1/member/billing/catalog',cookie=repo.cookie);self.assertEqual(code,200,raw);self.assertFalse(json.loads(raw)['available'])
+        code,raw=self.http(app,'/v1/member/billing/orders',cookie=repo.cookie,body={});self.assertEqual(code,503,raw)
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.billing_orders').fetchone()['n'],0)
+        unsigned,_=self.app();self.assertEqual(self.http(unsigned,'/v1/billing/catalog')[0],401)
+
+    def test_verified_pending_or_failed_does_not_create_or_undo_a_paid_grant(self):
+        self.enabled();repo,actor=self.repository();proof=self.proof(repo,actor)
+        pending=replace(proof,state=PaymentState.PENDING,payment_id=None,paid_at=None)
+        repo.apply_verified(pending)
+        self.assertEqual(repo.order(actor,proof.order_id)['verification_state'],'VERIFIED_PENDING')
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_member_entitlements').fetchone()['n'],0)
+        repo.apply_verified(replace(pending,state=PaymentState.FAILED))
+        self.assertEqual(repo.order(actor,proof.order_id)['verification_state'],'VERIFIED_FAILED')
+        repo.apply_verified(proof);repo.apply_verified(pending)
+        self.assertEqual(repo.order(actor,proof.order_id)['verification_state'],'VERIFIED')
+        self.assertTrue(self.admin.execute('SELECT enabled FROM hcla.qwen_member_entitlements').fetchone()['enabled'])
+
+    def test_public_notification_is_only_a_hint_and_never_echoes_order_or_grants(self):
+        self.enabled();repo,actor=self.repository();proof=self.proof(repo,actor)
+        provider=Mock();provider.name='fixture';provider.merchant='offline-merchant'
+        provider.notification_reference.return_value=proof.external_order_id
+        provider.query_order.return_value=replace(proof,state=PaymentState.PENDING,payment_id=None,paid_at=None)
+        app=repo.application;app.billing=BillingService(repo,provider,source_fixture=True)
+        code,raw=self.http(app,'/v1/billing/notification/fixture',body={'state':'CAPTURED','amount_minor':1,'tenant':'forged'})
+        self.assertEqual(code,202,raw);self.assertEqual(json.loads(raw),{'accepted':True})
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_member_entitlements').fetchone()['n'],0)
+        self.assertEqual(provider.query_order.call_args.args[0]['amount_minor'],990)
+        code,_=self.http(app,'/v1/billing/notification/unselected',body={});self.assertEqual(code,503)
+        self.assertEqual(provider.query_order.call_count,1)
+        self.admin.execute("UPDATE hcla.billing_query_attempts SET started_at=clock_timestamp()-interval '11 seconds' WHERE order_id=%s",(proof.order_id,))
+        provider.query_order.side_effect=TimeoutError()
+        code,raw=self.http(app,'/v1/billing/notification/fixture',body={});self.assertEqual(code,503,raw)
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_member_entitlements').fetchone()['n'],0)
+
+    def test_pending_order_limit_preserves_idempotent_recovery(self):
+        self.enabled();repo,actor=self.repository()
+        first=self.new_order(repo,actor,'first-pending')
+        for index in range(4):self.new_order(repo,actor,'pending-'+str(index))
+        with self.assertRaises(Exception):self.new_order(repo,actor,'sixth')
+        self.assertEqual(self.new_order(repo,actor,'first-pending')['order_id'],first['order_id'])
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.billing_orders').fetchone()['n'],5)
+
+    def test_callback_body_limit_and_duplicate_hints_do_not_fan_out_queries(self):
+        self.enabled();repo,actor=self.repository();proof=self.proof(repo,actor)
+        provider=Mock();provider.name='fixture';provider.merchant='offline-merchant';provider.notification_reference.return_value=proof.external_order_id
+        provider.query_order.return_value=replace(proof,state=PaymentState.PENDING,payment_id=None,paid_at=None)
+        repo.application.billing=BillingService(repo,provider,source_fixture=True)
+        code,_=self.http(repo.application,'/v1/billing/notification/fixture',body={'payload':'x'*8193});self.assertEqual(code,413);provider.query_order.assert_not_called()
+        codes=[self.http(repo.application,'/v1/billing/notification/fixture',body={'order':'hint'})[0] for _ in range(3)]
+        self.assertEqual(codes,[202,429,429])
+        self.assertEqual(provider.query_order.call_count,1)
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.billing_query_attempts').fetchone()['n'],1)
+
+    def test_query_leases_coalesce_across_instances_and_bound_global_concurrency(self):
+        self.enabled();repo,actor=self.repository();orders=[self.new_order(repo,actor) for _ in range(5)]
+        workers=[]
+        for _ in range(2):
+            conn=self.connect();conn.execute('SET ROLE hcla_billing_worker');self.addCleanup(conn.close);workers.append(BillingWorker(conn))
+        barrier=threading.Barrier(2)
+        def claim(index):
+            barrier.wait();return workers[index].call('billing_claim_query',(orders[0]['order_id'],str(uuid.uuid4())))
+        with ThreadPoolExecutor(max_workers=2) as pool:self.assertEqual(sum(pool.map(claim,range(2))),1)
+        for order in orders[1:4]:self.assertIsNotNone(repo.claim_verification(order['order_id']))
+        self.assertIsNone(repo.claim_verification(orders[4]['order_id']))
+        first=self.admin.execute('SELECT owner,order_id FROM hcla.billing_query_attempts LIMIT 1').fetchone()
+        repo.finish_verification(first['order_id'],first['owner'])
+        self.assertIsNotNone(repo.claim_verification(orders[4]['order_id']))
+        self.assertIsNone(repo.claim_verification(first['order_id']))
+
+    def test_global_query_rate_survives_fast_completed_calls(self):
+        self.enabled();repo,actor=self.repository();first=self.new_order(repo,actor);second=self.new_order(repo,actor)
+        # Synthetic pre-existing completed query audit, not provider calls.
+        for _ in range(60):self.admin.execute("INSERT INTO hcla.billing_query_attempts(owner,order_id,expires_at,finished) VALUES(%s,%s,clock_timestamp()+interval '30 seconds',true)",(str(uuid.uuid4()),first['order_id']))
+        self.assertIsNone(repo.claim_verification(second['order_id']))
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.billing_query_attempts').fetchone()['n'],60)
+
+    def test_owner_path_cannot_use_stale_member_application_context(self):
+        repo,actor=self.repository();app=repo.application
+        self.assertIsNotNone(app.member_context)
+        # Synthetic authenticated owner request against a deliberately reused
+        # application must still require the explicit member route boundary.
+        app.development_auth.require=lambda cookie:'hcla-owner'
+        app.development_auth.boundary=lambda request,mutation=False:None
+        self.assertEqual(self.http(app,'/v1/billing/catalog')[0],403)
+        self.assertEqual(self.http(app,'/v1/billing/orders',body={})[0],403)
+
+    def test_query_finish_failure_does_not_turn_committed_payment_into_a_new_sale(self):
+        self.enabled();repo,actor=self.repository();proof=self.proof(repo,actor)
+        provider=Mock();provider.name='fixture';provider.query_order.return_value=proof
+        service=BillingService(repo,provider,source_fixture=True)
+        def unavailable(*args):raise RuntimeError('offline cleanup uncertainty')
+        repo.finish_verification=unavailable
+        with self.assertRaises(RuntimeError):service.reconcile(actor,proof.order_id)
+        self.assertEqual(repo.order(actor,proof.order_id)['state'],'FULFILLED')
+        # The durable lease coalesces a repeated query; it does not create a
+        # checkout, revoke payment truth or charge the customer again.
+        self.assertTrue(service.reconcile(actor,proof.order_id)['verification_deferred'])
+        self.assertEqual(provider.query_order.call_count,1);provider.create_checkout.assert_not_called()
+        self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_member_entitlements').fetchone()['n'],1)

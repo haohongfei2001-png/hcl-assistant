@@ -58,6 +58,7 @@ class CloudApplication:
             self.stores=CloudStores(store)
             startup.mark(StartupCode.OWNER_AUTH)
             self.development_auth=CloudAuth(store,config.origin,config.login,config.verifier)
+            self.billing=None  # No live payment adapter/worker is configured by this source slice.
             self.member_auth=None;self.member_context=None;self.entitlements=None;self.recovery_auth=None
             if getattr(config,'member_provider',None) or member_provider:
                 from packages.cloud.member_auth import MemberAuth,SupabaseAuthProvider

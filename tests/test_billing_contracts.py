@@ -84,3 +84,9 @@ class BillingContractTests(unittest.TestCase):
         service.reconcile(None,'order-1')
         provider.query_order.assert_called_once_with(repository.order.return_value)
         repository.apply_verified.assert_called_once_with(payment());provider.create_checkout.assert_not_called()
+
+    def test_coalesced_query_wake_never_contacts_provider_or_mutates_membership(self):
+        repository=Mock();repository.order.return_value=order();repository.claim_verification.return_value=None
+        provider=Mock();provider.name='fixture'
+        result=BillingService(repository,provider,source_fixture=True).reconcile(None,'order-1')
+        self.assertTrue(result['verification_deferred']);provider.query_order.assert_not_called();repository.apply_verified.assert_not_called()

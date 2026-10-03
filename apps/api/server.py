@@ -73,28 +73,41 @@ def handler(application):
             if not getattr(self.application,'cloud',False):raise Fault(404,'Unknown API route')
             if getattr(self.application,'member_auth',None) is None:raise Fault(503,'普通账号服务尚未启用')
             canonical='/v1/'+path[len('/v1/member/'):]
-            if not re.fullmatch(r'/v1/(?:budget|conversations(?:/[^/]+(?:/events)?)?|topics|history/search|runs/[^/]+(?:/(?:events|execute|cancel|retry))?|context|sources(?:/[^/]+)?|answers/[^/]+/explain|lab/(?:runs|export)/[^/]+|temporary/(?:execute|cancel))',canonical):
+            if not re.fullmatch(r'/v1/(?:billing/(?:catalog|orders(?:/[^/]+(?:/(?:checkout|reconcile))?)?)|budget|conversations(?:/[^/]+(?:/events)?)?|topics|history/search|runs/[^/]+(?:/(?:events|execute|cancel|retry))?|context|sources(?:/[^/]+)?|answers/[^/]+/explain|lab/(?:runs|export)/[^/]+|temporary/(?:execute|cancel))',canonical):
                 raise Fault(404,'Unknown account route')
             self.member_tenant=self.application.authenticate_member(self)
             return canonical
 
         def body(self):
             length=int(self.headers.get('Content-Length','0'))
-            if length<0 or length>(1048576 if getattr(self.application,'cloud',False) and urlparse(self.path).path in {'/v1/temporary/execute','/v1/trial/execute','/v1/member/temporary/execute'} else 262144): raise Fault(413,'Request too large')
+            if length<0 or length>(8192 if urlparse(self.path).path.startswith('/v1/billing/notification/') else 1048576 if getattr(self.application,'cloud',False) and urlparse(self.path).path in {'/v1/temporary/execute','/v1/trial/execute','/v1/member/temporary/execute'} else 262144): raise Fault(413,'Request too large')
             try: obj=json.loads(self.rfile.read(length))
             except (ValueError,UnicodeError): raise Fault(400,'Invalid complete JSON')
             if not isinstance(obj,dict): raise Fault(400,'JSON object required')
             return obj
 
-        def json(self, status, obj, cookie=None):
+        def json(self, status, obj, cookie=None, retry_after=None):
             payload=json.dumps(obj,ensure_ascii=False).encode()
             self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.send_header('Referrer-Policy','no-referrer'); self.send_header('Content-Length',str(len(payload)));
             if cookie:self.send_header('Set-Cookie',cookie)
+            if retry_after is not None:self.send_header('Retry-After',str(retry_after))
             self.end_headers(); self.wfile.write(payload)
 
         def do_POST(self):
             try:
                 path=self.request_path()
+                if path.startswith('/v1/billing/notification/'):
+                    service=getattr(self.application,'billing',None)
+                    if service is None or not service.available or path!='/v1/billing/notification/'+service.provider.name:
+                        raise Fault(503,'Payment notifications are not configured')
+                    # The adapter extracts a bounded reference only; its server
+                    # query supplies financial proof. Never echo account/order data.
+                    from packages.billing.contracts import BillingError
+                    try:result=service.notification(self.body())
+                    except BillingError:raise Fault(503,'Payment verification is unconfirmed') from None
+                    if result.get('verification_deferred'):
+                        self.json(429,{'error':'Payment verification deferred'},retry_after=60);return
+                    self.json(202,{'accepted':True});return
                 if path.startswith('/v1/account/recovery/'):
                     recovery=getattr(self.application,'recovery_auth',None)
                     if recovery is None:raise Fault(503,'账号找回服务尚未开放')
@@ -148,6 +161,10 @@ def handler(application):
                     if path in {'/v1/conversations','/v1/topics'}:self.application.entitlements.require('CONVERSATION')
                     if path=='/v1/sources' or (len(parts)==4 and parts[:2]==['v1','conversations'] and parts[3]=='events'):
                         if data.get('event',{}).get('type','message') in {'message','upload'}:self.application.entitlements.require('CONVERSATION')
+                if path.startswith('/v1/billing/'):
+                    if not hasattr(self,'member_tenant'):raise Fault(403,'Member billing route required')
+                    from packages.billing.http import dispatch
+                    self.json(200,dispatch(self.application,'POST',path,data));return
                 if getattr(self.application,'cloud',False):
                     if path=='/v1/development/logout':
                         self.application.development_auth.logout(self.headers.get('Cookie'));self.json(200,{'authenticated':False},'__Host-hcla=; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return
@@ -213,6 +230,10 @@ def handler(application):
                         except Fault:pass
                     self.json(200,{'enabled':self.application.real_chat,'authenticated':authenticated,'configuration':self.application.configuration,'production_enabled':False,'cloud':getattr(self.application,'cloud',False),'request_bound':getattr(self.application,'request_bound',False)});return
                 tenant=self.tenant(); parsed=urlparse(self.path); query=parse_qs(parsed.query); parts=path.strip('/').split('/')
+                if path.startswith('/v1/billing/'):
+                    if not hasattr(self,'member_tenant'):raise Fault(403,'Member billing route required')
+                    from packages.billing.http import dispatch
+                    self.json(200,dispatch(self.application,'GET',path));return
                 if path=='/v1/budget':
                     if not getattr(self.application,'cloud',False):raise Fault(403,'Cloud budget status required')
                     service=self.application.live_chat_service

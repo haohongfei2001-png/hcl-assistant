@@ -57,6 +57,7 @@ CREATE TABLE billing_orders(
  UNIQUE(tenant,idempotency_key),UNIQUE(provider,merchant,external_order_id)
 );
 CREATE INDEX billing_orders_tenant_created ON billing_orders(tenant,created_at DESC);
+CREATE INDEX billing_orders_open_quote ON billing_orders(tenant,expires_at) WHERE state IN('PENDING','CREATING','CHECKOUT_READY','UNCERTAIN');
 CREATE TABLE billing_verified_payments(
  provider text NOT NULL,merchant text NOT NULL,payment_id text NOT NULL,
  order_id text NOT NULL REFERENCES billing_orders(order_id),external_order_id text NOT NULL,
@@ -67,6 +68,13 @@ CREATE TABLE billing_verified_payments(
  verification_source text NOT NULL CHECK(verification_source='AUTHENTICATED_SERVER_ORDER_QUERY'),
  observed_at timestamptz NOT NULL DEFAULT clock_timestamp(),PRIMARY KEY(provider,merchant,payment_id),UNIQUE(order_id)
 );
+CREATE TABLE billing_query_attempts(
+ owner text PRIMARY KEY CHECK(owner ~ '^[a-f0-9-]{36}$'),order_id text NOT NULL REFERENCES billing_orders(order_id),
+ started_at timestamptz NOT NULL DEFAULT clock_timestamp(),expires_at timestamptz NOT NULL,
+ finished boolean NOT NULL DEFAULT false
+);
+CREATE INDEX billing_queries_order_time ON billing_query_attempts(order_id,started_at DESC);
+CREATE INDEX billing_queries_time ON billing_query_attempts(started_at DESC);
 CREATE TABLE billing_audit(
  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,order_id text NOT NULL REFERENCES billing_orders(order_id),
  action text NOT NULL CHECK(action IN('CHECKOUT_CLAIMED','CHECKOUT_READY','CHECKOUT_UNKNOWN','VERIFICATION_UNKNOWN','FULFILLED','REFUNDED','DISPUTED','REVIEW_REQUIRED')),
@@ -91,6 +99,7 @@ BEGIN
    AND (s.refresh_state='idle' OR s.refresh_started_at>clock_timestamp()-interval '20 seconds')
    AND s.auth_generation=COALESCE(g.generation,0) AND NOT COALESCE(g.reset_pending,false)
  ) THEN RAISE EXCEPTION 'verified_member_checkout_required'; END IF;
+ IF (SELECT count(*) FROM hcla.billing_orders WHERE tenant=NEW.tenant AND expires_at>clock_timestamp() AND state IN('PENDING','CREATING','CHECKOUT_READY','UNCERTAIN'))>=5 THEN RAISE EXCEPTION 'pending_order_limit_read_existing_orders'; END IF;
  SELECT * INTO plan FROM hcla.billing_plan_versions WHERE plan_id=NEW.plan_id AND version=NEW.plan_version AND enabled AND approved_at<=clock_timestamp();
  IF NOT FOUND OR NEW.accepted_terms_digest IS DISTINCT FROM plan.terms_digest THEN RAISE EXCEPTION 'approved_current_plan_terms_required'; END IF;
  SELECT * INTO config FROM hcla.billing_configuration WHERE singleton=1 AND enabled;
@@ -176,6 +185,24 @@ BEGIN
  ELSE RAISE EXCEPTION 'invalid_billing_phase'; END IF;
  IF FOUND THEN INSERT INTO hcla.billing_audit(order_id,action) VALUES(oid,CASE WHEN phase='CHECKOUT' THEN 'CHECKOUT_UNKNOWN' ELSE 'VERIFICATION_UNKNOWN' END); END IF;
 END $body$;
+-- Notification hints cannot fan out unlimited merchant queries. These leases
+-- guard transport admission, independently of immutable financial fulfilment.
+CREATE FUNCTION billing_claim_query(oid text,query_owner text) RETURNS boolean
+ LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,hcla SET row_security=off AS $body$
+BEGIN
+ PERFORM pg_advisory_xact_lock(171956945,1);
+ IF query_owner IS NULL OR query_owner !~ '^[a-f0-9-]{36}$' OR NOT EXISTS(SELECT 1 FROM hcla.billing_orders WHERE order_id=oid) THEN RAISE EXCEPTION 'bound_query_required'; END IF;
+ IF EXISTS(SELECT 1 FROM hcla.billing_query_attempts WHERE order_id=oid AND (started_at>clock_timestamp()-interval '10 seconds' OR (NOT finished AND expires_at>clock_timestamp())))
+  OR (SELECT count(*) FROM hcla.billing_query_attempts WHERE started_at>clock_timestamp()-interval '1 minute')>=60
+  OR (SELECT count(*) FROM hcla.billing_query_attempts WHERE NOT finished AND expires_at>clock_timestamp())>=4 THEN RETURN false; END IF;
+ INSERT INTO hcla.billing_query_attempts(owner,order_id,expires_at) VALUES(query_owner,oid,clock_timestamp()+interval '30 seconds');
+ RETURN true;
+END $body$;
+CREATE FUNCTION billing_finish_query(oid text,query_owner text) RETURNS void
+ LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,hcla SET row_security=off AS $body$
+BEGIN
+ UPDATE hcla.billing_query_attempts SET finished=true WHERE order_id=oid AND owner=query_owner;
+END $body$;
 CREATE FUNCTION billing_apply_verified(oid text,proof jsonb) RETURNS jsonb
  LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog,hcla SET row_security=off AS $body$
 DECLARE o hcla.billing_orders%ROWTYPE; previous hcla.billing_verified_payments%ROWTYPE;
@@ -205,7 +232,10 @@ BEGIN
  IF o.external_order_id IS NULL THEN
   UPDATE hcla.billing_orders SET external_order_id=proof->>'external_order_id' WHERE order_id=oid RETURNING * INTO o;
  END IF;
- IF status IN('PENDING','FAILED') THEN RETURN jsonb_build_object('order_id',oid,'state',o.state,'membership_changed',false); END IF;
+ IF status IN('PENDING','FAILED') THEN
+  UPDATE hcla.billing_orders SET verification_state='VERIFIED_'||status WHERE order_id=oid AND state IN('CREATING','UNCERTAIN','CHECKOUT_READY');
+  RETURN jsonb_build_object('order_id',oid,'state',o.state,'membership_changed',false);
+ END IF;
  IF COALESCE(proof->>'payment_id','') !~ '^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$'
   OR jsonb_typeof(proof->'paid_at') IS DISTINCT FROM 'number'
   OR COALESCE(proof->>'paid_at','') !~ '^[1-9][0-9]{0,10}$' THEN RAISE EXCEPTION 'verified_payment_identity_and_time_required'; END IF;
@@ -245,7 +275,7 @@ BEGIN
 END $body$;
 
 DO $body$ DECLARE name text; BEGIN
- FOREACH name IN ARRAY ARRAY['billing_configuration','billing_plan_versions','billing_orders','billing_verified_payments','billing_audit'] LOOP
+ FOREACH name IN ARRAY ARRAY['billing_configuration','billing_plan_versions','billing_orders','billing_verified_payments','billing_audit','billing_query_attempts'] LOOP
   EXECUTE format('ALTER TABLE hcla.%I ENABLE ROW LEVEL SECURITY',name);
   EXECUTE format('ALTER TABLE hcla.%I FORCE ROW LEVEL SECURITY',name);
   EXECUTE format('REVOKE ALL ON hcla.%I FROM PUBLIC',name);
@@ -257,14 +287,14 @@ CREATE POLICY billing_plan_metadata ON billing_plan_versions FOR SELECT TO hcla_
 CREATE POLICY own_billing_orders ON billing_orders TO hcla_app USING(tenant=current_setting('hcla.tenant',true)) WITH CHECK(tenant=current_setting('hcla.tenant',true));
 GRANT SELECT ON billing_configuration,billing_plan_versions,billing_orders TO hcla_app;
 GRANT INSERT(order_id,tenant,plan_id,plan_version,idempotency_key,accepted_terms_digest) ON billing_orders TO hcla_app;
-GRANT SELECT ON billing_configuration,billing_plan_versions,billing_orders,billing_verified_payments,billing_audit TO hcla_billing_worker;
-REVOKE ALL ON FUNCTION guard_billing_configuration(),billing_require_member(text,text),billing_claim_checkout(text,text,text),billing_complete_checkout(text,text,text),billing_mark_unknown(text,text),guard_billing_plan(),billing_capacity(),guard_billing_order_insert(),guard_billing_order_update(),billing_apply_verified(text,jsonb) FROM PUBLIC;
+GRANT SELECT ON billing_configuration,billing_plan_versions,billing_orders,billing_verified_payments,billing_audit,billing_query_attempts TO hcla_billing_worker;
+REVOKE ALL ON FUNCTION billing_claim_query(text,text),billing_finish_query(text,text),guard_billing_configuration(),billing_require_member(text,text),billing_claim_checkout(text,text,text),billing_complete_checkout(text,text,text),billing_mark_unknown(text,text),guard_billing_plan(),billing_capacity(),guard_billing_order_insert(),guard_billing_order_update(),billing_apply_verified(text,jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION billing_capacity(),guard_billing_order_insert() TO hcla_app;
-GRANT EXECUTE ON FUNCTION billing_claim_checkout(text,text,text),billing_complete_checkout(text,text,text),billing_mark_unknown(text,text),billing_apply_verified(text,jsonb) TO hcla_billing_worker;
+GRANT EXECUTE ON FUNCTION billing_claim_query(text,text),billing_finish_query(text,text),billing_claim_checkout(text,text,text),billing_complete_checkout(text,text,text),billing_mark_unknown(text,text),billing_apply_verified(text,jsonb) TO hcla_billing_worker;
 DO $body$ DECLARE role_name text; BEGIN
  FOREACH role_name IN ARRAY ARRAY['anon','authenticated'] LOOP
   IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname=role_name) THEN
-   EXECUTE format('REVOKE ALL ON hcla.billing_configuration,hcla.billing_plan_versions,hcla.billing_orders,hcla.billing_verified_payments,hcla.billing_audit FROM %I',role_name);
+   EXECUTE format('REVOKE ALL ON hcla.billing_configuration,hcla.billing_plan_versions,hcla.billing_orders,hcla.billing_verified_payments,hcla.billing_audit,hcla.billing_query_attempts FROM %I',role_name);
   END IF;
  END LOOP;
 END $body$;

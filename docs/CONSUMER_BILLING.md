@@ -10,11 +10,12 @@ commitment, credential, grant or database permission is adopted by this document
 
 ## Current deliverable and outstanding work
 
-This slice prepares the provider-neutral CNY financial boundary and disposable
-contract/database tests. It is not a functioning checkout. No live adapter is
-registered, no configuration or offer rows are seeded, and no account receives
-membership. The ordinary purchase/order UI and selected merchant integration
-remain M3-01 work; a passing foundation test is not M3-01 completion.
+This slice prepares the provider-neutral CNY financial boundary, authenticated
+purchase/order API, ordinary membership/order UI and disposable contract/database/
+browser tests. No live adapter is registered, no configuration or offer rows are
+seeded, and no account receives membership. The selected merchant integration
+and eligible live activation remain M3-01 work; source fixtures are not a working
+commercial checkout and cannot close M3-01.
 
 The single canonical queue remains `control/plan.json.product_development`.
 Historical packages/evidence and the L3/private-data/Controller/runtime gates are
@@ -35,7 +36,9 @@ calls. Price values in tests are synthetic examples, not proposed prices.
   An already-issued merchant checkout may settle after capacity changes; genuine
   payment is still recorded and fulfilled without lifting the model budget.
 - Account sessions and accepted terms bind each immutable order. Same-account
-  idempotency keys return the same order; a changed payload conflicts. The browser
+  idempotency keys return the same order; a changed payload conflicts. At most
+  five unexpired unfinished quotes per account bound unpaid-order accumulation;
+  rereading/retrying the same key remains available. The browser
   cannot set price, currency, provider, product, state or entitlement.
 - Checkout creation is durably claimed once before transport. A lost response
   becomes uncertain; no blind second creation or automatic payment retry occurs.
@@ -57,6 +60,48 @@ calls. Price values in tests are synthetic examples, not proposed prices.
   paid terms occurs. A later decision is required for customer-support remediation.
 - TEST_ONLY remains visibly non-paid. A genuine fulfilled purchase disables the
   account's exceptional testing grant, avoiding ambiguous simultaneous rights.
+
+## Notification/query admission
+
+Unsigned-looking notifications are wake-up hints only. The public notification
+body is capped at 8 KiB. Before any selected adapter query, a private database
+claim coalesces the same order for 10 seconds, permits at most four active query
+leases globally, and admits at most 60 queries in a rolling minute. Completed
+queries still count against the rate limit. Independent instances share these
+limits and admission is serialized; rejected wakes do not contact the provider
+or alter membership. Deferred public notifications return retryable HTTP429 with
+Retry-After 60 rather than acknowledging unperformed verification; the selected
+adapter must verify its merchant retry contract. A lease expires after 30 seconds
+for crash recovery. A finish/connection failure can occur after fulfilment has
+already committed. The UI directs the account to reread/reconcile the same order,
+never to assume payment failed, create another checkout or pay again.
+
+A selected live adapter must independently enforce an HTTP wall deadline of at
+most 10 seconds, response-size bounds and its documented authentication/signature
+checks. This deadline must be shorter than the lease. There is no registered live
+adapter here; live activation cannot rely on an unbounded transport. Query audit
+metadata has no automatic destructive retention policy in this source slice.
+
+## Ordinary account interaction
+
+Ordinary accounts can open membership/orders directly from the composer or
+Settings, including before purchase or after expiry. A versioned offer requires explicit review of its
+price, duration, capped usage and shared-capacity disclosure. Creation sends only
+plan/version, accepted terms digest and a stable in-flight idempotency key. The
+user opens the approved HTTPS merchant checkout themselves, then explicitly asks
+the server to reconcile it. No client success flag grants membership. A successful
+reconciliation rereads account status; drafts/history stay in place. Uncertain
+creation is query-only, with no automatic payment or retry. Auth restoration aborts and invalidates in-flight UI work, removes stale checkout
+links/order projections, and blocks mutation. After verified-session recovery it
+only rereads account-owned orders; no checkout/query mutation is replayed. A failed
+order-history read also prevents new purchase until prior orders can be checked.
+
+Order history exposes only the current account's public order/entitlement-period
+projection, never merchant receipts, tenant/session IDs or verification digests.
+Future renewal dates are shown without silently advancing them after a refund.
+The optional still-active trial is a collapsed secondary entry below login. An
+expired trial is absent from the entry; its server history and admission rules are
+unchanged and it is never reactivated by the UI.
 
 ## Least-privilege boundary
 
