@@ -217,9 +217,9 @@
     "authority": "SOLE_CURRENT_PRODUCT_DEVELOPMENT_QUEUE",
     "canonical_document": "DEVELOPMENT_PLAN.md",
     "product_plan_version": "1.2/A2-Product",
-    "phase": "ASSISTANT_FIRST_REFINEMENT_COMPLETE",
-    "next_ready": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
-    "next_package_id": null,
+    "phase": "ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING",
+    "next_ready": "M3-01_CONSUMER_MEMBERSHIP_AND_PAYMENTS",
+    "next_package_id": "M3-01",
     "adoption_gate": "A2_MERGED_MAIN_AND_EXACT_SHA_CI_VERIFIED",
     "current_request_scope": "AUTHORIZED_DISABLED_PASSWORD_RECOVERY_ZERO_PROVIDER",
     "current_executor_stop_after": "M2-01_EXACT_MAIN_VERIFIED",
@@ -466,6 +466,25 @@
           "M12"
         ],
         "evidence": "docs/M2_01_EVIDENCE.md; reviewed source 5345736; run36941191007 passed both jobs; final exact-head/main checks required"
+      },
+      {
+        "id": "M3-01",
+        "task": "M3-01_CONSUMER_MEMBERSHIP_AND_PAYMENTS",
+        "depends_on": [
+          "M2-01"
+        ],
+        "state": "NEXT_READY",
+        "delta": "完整普通用户会员购买、订单核验、主动续费与到期路径；CNY共享预算及隔离保持，商户和价格未选定，默认关闭",
+        "acceptance": [
+          "M13",
+          "M14",
+          "M15",
+          "M16",
+          "M17",
+          "M18",
+          "M19"
+        ],
+        "evidence": "NOT_IMPLEMENTED"
       }
     ],
     "after_all_complete_if_l3_gates_unmet": "STOP_WITH_HANDOFF_L3_PRODUCTION_ACTIVATION_GATED",
@@ -529,11 +548,19 @@
       "live_activation_authorized": false,
       "live_mail_authorized": false,
       "document": "docs/PASSWORD_RECOVERY.md"
+    },
+    "consumer_billing": {
+      "implementation_authorized": true,
+      "provider_selected": false,
+      "pricing_adopted": false,
+      "live_activation_authorized": false,
+      "automatic_debit_authorized": false,
+      "document": "docs/CONSUMER_BILLING.md"
     }
   },
   "writer": {
-    "branch": "product/member-readiness-transition",
-    "scope": "ORDINARY_READINESS_AND_TEST_ONLY_SOURCE_NO_LIVE_ACTIVATION",
+    "branch": "product/consumer-billing-foundation",
+    "scope": "DEFAULT_CLOSED_CONSUMER_ORDER_AND_PAYMENT_FOUNDATION_NO_LIVE_ACTIVATION",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

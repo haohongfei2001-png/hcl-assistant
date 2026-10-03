@@ -13,13 +13,14 @@ function harness(t){
  const hooks={useState(initial){const slot=index++;if(!(slot in state))state[slot]=initial;return [state[slot],next=>state[slot]=typeof next==='function'?next(state[slot]):next]},useRef(initial){const slot=index++;if(!(slot in state))state[slot]={current:initial};return state[slot]},useEffect(fn,deps){const slot=index++,old=effects[slot];if(!old||deps.some((value,i)=>value!==old.deps[i]))scheduled.push(()=>{old?.cleanup?.();effects[slot]={deps,cleanup:fn()}})}};
  t.mock.method(globalThis,'setInterval',fn=>{const id=++serial;intervals.set(id,fn);return id});t.mock.method(globalThis,'clearInterval',id=>intervals.delete(id));t.mock.method(globalThis,'setTimeout',()=>++serial);t.mock.method(globalThis,'clearTimeout',()=>{});
  const broadcast=Object.getOwnPropertyDescriptor(globalThis,'BroadcastChannel');Object.defineProperty(globalThis,'BroadcastChannel',{configurable:true,writable:true,value:class{constructor(){channels.push(this)}postMessage(){}close(){}}});t.after(()=>Object.defineProperty(globalThis,'BroadcastChannel',broadcast));
+ const window=new EventTarget();
  const api={api:(path,body,signal)=>new Promise((resolve,reject)=>requests.push({path,body,signal,resolve,reject})),configureCloud(){},setMemberReady(){}};
  const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,module={exports:{}};
- new Function('require','module','exports',output)(id=>id==='react'?hooks:id==='./api'?api:id==='./cloud-temporary'?{clearTemporary(){}}:id==='./RecoveryEntry'?{RecoveryEntry(){}}:id.endsWith('.css')?{}:require(id),module,module.exports);
+ new Function('require','module','exports','window',output)(id=>id==='react'?hooks:id==='./api'?api:id==='./cloud-temporary'?{clearTemporary(){}}:id==='./RecoveryEntry'?{RecoveryEntry(){}}:id.endsWith('.css')?{}:require(id),module,module.exports,window);
  function render(){index=0;tree=module.exports.MemberEntry({onOwner(){},children:(logout,scope,notice,renewing,logoutPending,generation)=>({type:'signed-in',props:{logout,scope,notice,renewing,logoutPending,generation}})});while(scheduled.length)scheduled.shift()();return tree}
  function nodes(node){if(!node||typeof node!=='object')return [];return [node,...[node.props?.children].flat(Infinity).flatMap(nodes)]}
  t.after(()=>{for(const effect of effects)effect?.cleanup?.()});
- return {requests,render,poll(){for(const fn of [...intervals.values()])fn()},broadcast(){channels[0].onmessage({data:{type:'signed-in'}})},get signedIn(){return tree.type==='signed-in'},get notice(){return tree.props.notice},get generation(){return tree.props.generation},get alerts(){return nodes(tree).filter(n=>n.props?.role==='alert').map(n=>n.props.children)},logout(){tree.props.logout()},form(){return nodes(tree).find(n=>n.type==='form')},inputs(){return nodes(tree).filter(n=>n.type==='input')},buttons(){return nodes(tree).filter(n=>n.type==='button')}};
+ return {requests,render,refreshMembership(){window.dispatchEvent(new Event('hcla-member-status-refresh'))},poll(){for(const fn of [...intervals.values()])fn()},broadcast(){channels[0].onmessage({data:{type:'signed-in'}})},get signedIn(){return tree.type==='signed-in'},get notice(){return tree.props.notice},get generation(){return tree.props.generation},get alerts(){return nodes(tree).filter(n=>n.props?.role==='alert').map(n=>n.props.children)},logout(){tree.props.logout()},form(){return nodes(tree).find(n=>n.type==='form')},inputs(){return nodes(tree).filter(n=>n.type==='input')},buttons(){return nodes(tree).filter(n=>n.type==='button')}};
 }
 async function enter(h){h.render();h.requests[0].resolve(authenticated);await tick();h.render();assert.equal(h.signedIn,true)}
 test('successful logout aborts and fences a status read begun while logout was pending',async t=>{
@@ -62,4 +63,10 @@ test('active paid membership exposes its own expiry while unavailable model rema
  const h=harness(t);h.render();const expiry=Math.floor(Date.now()/1000)+3600;
  h.requests[0].resolve({...authenticated,model_enabled:false,entitlements:{...authenticated.entitlements,membership_required:true,expires_at:expiry}});await tick();h.render();
  assert.equal(h.generation.model,false);assert.deepEqual(h.generation.membership,{enabled:true,expires_at:expiry});assert.match(h.notice,/模型服务尚未启用/);
+});
+
+test('membership payment notification rereads server truth without locally granting access',async t=>{
+ const h=harness(t);h.render();h.requests[0].resolve({...authenticated,model_enabled:false,entitlements:{enabled:false,membership_required:true}});await tick();h.render();
+ h.refreshMembership();assert.equal(h.requests[1].path,'/v1/account/status');h.render();assert.equal(h.generation.model,false);
+ h.requests[1].resolve({...authenticated,entitlements:{...authenticated.entitlements,membership_required:true,access_kind:'PAID_MEMBERSHIP'}});await tick();h.render();assert.equal(h.generation.model,true);
 });

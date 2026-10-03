@@ -25,3 +25,11 @@
 .member-entry .account-admin summary {min-height:44px;display:flex;align-items:center;cursor:pointer}
 .member-entry .account-admin button {margin-top:8px;color:#3654c4}
 @media(max-width:480px){.account-screen{padding:20px 12px;align-items:start}.account-screen .member-entry{padding:24px 20px;border-radius:20px}.account-brand{margin-bottom:22px}.member-entry h1{font-size:26px}}
+
+.member-entry .account-trial {margin-top:24px;padding-top:16px;border-top:1px solid #e1e8f8;color:#52607b;font-size:13px}
+.member-entry .account-trial summary {min-height:44px;cursor:pointer;align-content:center}
+.member-entry .account-trial h2 {font-size:18px}
+.member-commerce article,.member-commerce li {padding:16px 0;border-bottom:1px solid #e1e8f8;overflow-wrap:anywhere}
+.member-commerce ul {list-style:none;padding:0}
+.member-commerce button,.member-commerce a {margin:6px 8px 6px 0}
+.member-commerce input[type=checkbox] {width:auto;min-height:0;margin-right:8px}

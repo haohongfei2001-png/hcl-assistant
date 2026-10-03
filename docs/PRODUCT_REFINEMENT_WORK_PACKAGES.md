@@ -97,3 +97,14 @@ Owner requested 2026-10-01 21:18 UTC. Refine ordinary-user journeys on the exist
 ## M2-01 Bounded password recovery
 
 One disabled consumer-account slice after U2-01: server-side PKCE, recovery-only cookies, purpose-encrypted transient material, one-use mutation and session-generation fencing. Accept M07–M12 in [the contract](PASSWORD_RECOVERY.md), with [exact-head/main evidence](M2_01_EVIDENCE.md). No MFA, social login, billing or live activation.
+
+## M3-01 Consumer membership and payments
+
+The user adopted the complete consumer journey on 2026-10-02. Continue the
+provider-neutral CNY order/verified-payment boundary, isolated fulfilment,
+user-initiated renewal/expiry/refund-event handling and ordinary consumer UI.
+Accept M13–M19 in [the contract](CONSUMER_BILLING.md). Source-only preparation
+does not select a provider/price, create credentials, grant membership or activate
+charges. Historical M2-01's billing exclusion applies to that completed package,
+not this separately adopted continuation. M3-01 remains NEXT_READY until its
+complete evidence is reviewed; no early completion from a generic adapter.

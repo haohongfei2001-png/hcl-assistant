@@ -58,3 +58,9 @@ P0/P1完成不开放L3或把Judge升级实现。真实日常MVP、中文多轮�
 | M10 | Reset revokes local sessions and fences login/refresh/dispatch across instances | Old links/grants and concurrent mutations refused; uncertain remote writes retain a barrier | M2-01 |
 | M11 | Mobile/desktop request, password rejection, expiry and locked-state recovery are clear | No automatic mutation replay or misleading restart advice; no live email required for tests | M2-01 |
 | M12 | Disposable PostgreSQL concurrency/RLS, actual browser evidence and exact-main verification | Schema compatibility or fake-provider success does not establish live consumer readiness | M2-01 |
+
+## Full consumer membership continuation
+
+M13–M19 are defined in [the consumer billing contract](CONSUMER_BILLING.md).
+They are pending M3-01 obligations, not claimed implemented or live. Existing
+L3/private-data/runtime and shared-budget gates are unchanged.
