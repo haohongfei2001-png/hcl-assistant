@@ -7,7 +7,7 @@ Authorized 2026-10-01 19:40 UTC. One ordinary-user registration/login slice in t
 - M01: separate account registration/login/logout routes and `__Host-hcla-member` opaque Secure/HttpOnly/SameSite cookie. Supabase verifies the exact access token at `/auth/v1/user`; issuer is fixed server configuration, subject is the canonical verified UUID. Email and user-editable metadata never grant identity or rights. Registration requires email confirmation and never logs in from an unverified signup response
 - M02: `/v1/member/*` is an explicit product-route allowlist. Member cookies cannot access owner or guest routes. Every pooled transaction resets tenant and session-hash context. Product rows, execution leases/cancellation/recovery, temporary snapshot heads and account accounting are tenant isolated by RLS. Temporary execution keys/signatures also bind the member session
 - M03: account entitlements are server-owned, default absent, time bounded and runtime read-only. Per-user admission and the existing global operator cap commit in one database transaction under the same lock. Unknown/failed/cancelled costs retain conservative full reservations. Existing guest trial grants cannot fund member persistent or temporary dispatch; no request/JWT plan field grants capacity
-- M04: only an opaque cookie reaches the browser. Upstream refresh material is AES-GCM encrypted server-side with a versioned HKDF key derived from the existing high-entropy application signing key; AAD binds issuer, subject, session hash and immutable absolute deadline. Fresh nonces are required. Verified windows last at most15 minutes and never exceed the upstream token expiry. Automatic renewal has a fixed12-hour absolute limit. A durable fenced refresh lease prevents duplicate rotation; uncertain/crashed refreshes require reauthentication, never blind token reuse. Logout or expiry during refresh prevents commit/resurrection
+- M04: HCLA login/refresh returns only an opaque app cookie to the browser. Upstream implicit email-confirmation redirects may temporarily contain access/refresh fragments; the early bootstrap discards those fields before UI initialization without accepting or persisting an upstream session. Unrelated safe hash routing and the dedicated PKCE recovery path are preserved. Upstream refresh material is AES-GCM encrypted server-side with a versioned HKDF key derived from the existing high-entropy application signing key; AAD binds issuer, subject, session hash and immutable absolute deadline. Fresh nonces are required. Verified windows last at most15 minutes and never exceed the upstream token expiry. Automatic renewal has a fixed12-hour absolute limit. A durable fenced refresh lease prevents duplicate rotation; uncertain/crashed refreshes require reauthentication, never blind token reuse. Logout or expiry during refresh prevents commit/resurrection
 - M05: provider-free tests cover two users, cross-account IDs and operations, sessions, origin/CSRF, quota races, stale/revoked rights, automatic renewal, logout/refresh races, and delayed frontend responses/export after logout. Browser verification uses injected Auth/provider fixtures and disposable localhost Postgres, never live accounts or models
 - M06: exact-head review/CI, merge, exact-main CI and inactive hosted checks are required. A passing synthetic fixture is not evidence that public registration or real email delivery has been enabled
 
@@ -28,3 +28,19 @@ Implementation and verification evidence: [M1-01 evidence](M1_01_EVIDENCE.md).
 ## Primary references
 
 [Supabase identity verification](https://supabase.com/docs/guides/auth/jwts), [session limits and logout caveats](https://supabase.com/docs/guides/auth/sessions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [AES-GCM](https://cryptography.io/en/latest/hazmat/primitives/aead/), [HKDF](https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#hkdf). Checked 2026-10-01. The Supabase shared JWT-signing secret is never configured or used; user_metadata never authorizes access.
+
+
+## Confirmation-return privacy follow-on (2026-10-03)
+
+Supabase documents that implicit email confirmation returns access/refresh tokens
+in the URL fragment: [implicit flow](https://supabase.com/docs/guides/auth/sessions/implicit-flow)
+and [password signup](https://supabase.com/docs/guides/auth/passwords). HCLA does
+not use those tokens for app login. The parser-blocking same-origin bootstrap,
+already before the UI module, discards recognized auth fields from non-recovery
+fragments. It does not log, transmit, persist or exchange them, create a cookie,
+claim verified email, or install membership. Users still log in normally and the
+server verifies identity/email. Safe unrelated hash fields and query routing are
+preserved; recovery's existing one-use PKCE handling remains unchanged.
+
+All tests use clearly synthetic canaries. This source fix does not change live
+Auth redirect URLs, email templates/settings, accounts, passwords or credentials.
