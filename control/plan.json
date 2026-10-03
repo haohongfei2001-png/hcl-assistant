@@ -559,8 +559,8 @@
     }
   },
   "writer": {
-    "branch": "product/billing-capacity-alignment",
-    "scope": "ALIGN_DORMANT_SALES_CAPACITY_AND_CHECKOUT_QUOTE_EXPIRY_NO_LIVE_ACTIVATION",
+    "branch": "product/confirmation-return-privacy",
+    "scope": "CONFIRMATION_RETURN_PRIVACY_SOURCE_ONLY_NO_AUTH_ACTIVATION",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

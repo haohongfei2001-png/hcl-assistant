@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import ts from 'typescript';
+import vm from 'node:vm';
 const require=createRequire(import.meta.url);
 const source=readFileSync(new URL('../../apps/web/src/MemberEntry.tsx',import.meta.url),'utf8');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
@@ -69,4 +70,46 @@ test('membership payment notification rereads server truth without locally grant
  const h=harness(t);h.render();h.requests[0].resolve({...authenticated,model_enabled:false,entitlements:{enabled:false,membership_required:true}});await tick();h.render();
  h.refreshMembership();assert.equal(h.requests[1].path,'/v1/account/status');h.render();assert.equal(h.generation.model,false);
  h.requests[1].resolve({...authenticated,entitlements:{...authenticated.entitlements,membership_required:true,access_kind:'PAID_MEMBERSHIP'}});await tick();h.render();assert.equal(h.generation.model,true);
+});
+
+
+const bootstrap=readFileSync(new URL('../../apps/web/public/recovery-bootstrap.js',import.meta.url),'utf8');
+function bootstrapReturn({pathname='/',search='',hash='',failHistory=false}={}){
+ const calls=[],window={stop:()=>calls.push(['stop'])};
+ const history={state:{safe:'router-state'},replaceState:(state,title,url)=>{if(failHistory)throw new Error('offline fixture');calls.push(['replace',state,url])}};
+ const location={origin:'https://hcla.example.test',pathname,search,hash,replace:url=>calls.push(['navigate',url])};
+ vm.runInNewContext(bootstrap,{window,history,location,URLSearchParams,Set});
+ return {calls,window};
+}
+test('implicit confirmation credentials are discarded without storing or accepting a session',()=>{
+ const value=bootstrapReturn({hash:'#access_token=SYNTHETIC_ACCESS_CANARY&refresh_token=SYNTHETIC_REFRESH_CANARY&type=signup&expires_in=3600&token_type=bearer'});
+ assert.equal(value.calls.length,1);assert.equal(value.calls[0][2],'https://hcla.example.test/');assert.deepEqual(Object.keys(value.window),['stop']);
+ assert.doesNotMatch(JSON.stringify(value),/SYNTHETIC_(ACCESS|REFRESH)_CANARY/);
+});
+test('unrelated safe hash routing and query state survive confirmation-return cleanup',()=>{
+ assert.deepEqual(bootstrapReturn({hash:'#/settings?view=notes'}).calls,[]);
+ assert.deepEqual(bootstrapReturn({hash:'#note=access_token%3Dordinary-text'}).calls,[]);
+ const value=bootstrapReturn({search:'?view=welcome',hash:'#view=notes&%61ccess_token=SYNTHETIC_CANARY&provider_refresh_token=SYNTHETIC_PROVIDER_CANARY&type=signup'});
+ assert.equal(value.calls[0][2],'https://hcla.example.test/?view=welcome#view=notes');assert.deepEqual(value.calls[0][1],{safe:'router-state'});
+});
+test('history cleanup failure stops initialization and navigates only to the clean same-origin path',()=>{
+ const value=bootstrapReturn({pathname:'/admin',hash:'#ACCESS_TOKEN=SYNTHETIC_CANARY',failHistory:true});
+ assert.deepEqual(value.calls,[['stop'],['navigate','https://hcla.example.test/admin']]);assert.doesNotMatch(JSON.stringify(value),/SYNTHETIC_CANARY/);
+});
+test('existing PKCE recovery bootstrap retains its purpose-bound code and scrubs all callback material',()=>{
+ const code='12345678-1234-1234-1234-123456789abc';
+ const value=bootstrapReturn({pathname:'/account/recovery',search:'?code='+code,hash:'#access_token=SYNTHETIC_IGNORED_CANARY'});
+ assert.equal(value.window.__hclaRecovery.code,code);assert.equal(value.window.__hclaRecovery.invalid,false);assert.equal(value.calls[0][2],'/account/recovery');
+ assert.doesNotMatch(JSON.stringify(value),/SYNTHETIC_IGNORED_CANARY/);
+});
+
+test('discard fallback cannot turn a double-slash path into a cross-origin navigation',()=>{
+ const value=bootstrapReturn({pathname:'//unrelated.example.test/',hash:'#access_token=SYNTHETIC_CANARY',failHistory:true});
+ assert.equal(new URL(value.calls[1][1]).origin,'https://hcla.example.test');
+ assert.equal(value.calls[1][1],'https://hcla.example.test//unrelated.example.test/');
+});
+test('auth-return discard bootstrap precedes the UI module in the document',()=>{
+ const html=readFileSync(new URL('../../apps/web/index.html',import.meta.url),'utf8');
+ assert(html.indexOf('src="/recovery-bootstrap.js"')<html.indexOf('type="module"'));
+ assert(!html.slice(0,html.indexOf('src="/recovery-bootstrap.js"')).includes('https://'));
 });
