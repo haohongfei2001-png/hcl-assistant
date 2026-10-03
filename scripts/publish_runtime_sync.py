@@ -19,6 +19,41 @@ PRODUCT = 'haohongfei2001-png/hcl-assistant'
 MARKER = '<!-- hcla-verified-runtime-sync-v1 -->'
 
 
+def github_failure(error, method, endpoint):
+    """Classify a bounded response without exposing its body, URL or headers."""
+    operation = {
+        ('POST', 'pulls'): 'CREATE_PULL_REQUEST',
+        ('POST', 'git/blobs'): 'CREATE_BLOB',
+        ('POST', 'git/trees'): 'CREATE_TREE',
+        ('POST', 'git/commits'): 'CREATE_COMMIT',
+        ('POST', 'git/refs'): 'CREATE_BRANCH',
+        ('POST', 'actions/workflows/hcl-assistant-planning.yml/dispatches'): 'DISPATCH_ACCEPTANCE',
+        ('GET', 'branches/main/protection'): 'READ_MAIN_PROTECTION',
+    }.get((method, endpoint), 'OTHER_REPOSITORY_REQUEST')
+    category = 'UNCLASSIFIED'
+    try:
+        payload = error.read(8193)
+        body = json.loads(payload) if len(payload) <= 8192 else None
+        message = body.get('message') if isinstance(body, dict) else None
+        if error.code == 403 and isinstance(message, str):
+            category = {
+                'GitHub Actions is not permitted to create or approve pull requests.': 'ACTIONS_PR_POLICY_REFUSED',
+                'Resource not accessible by integration': 'INTEGRATION_ACCESS_REFUSED',
+                'Resource not accessible by personal access token': 'TOKEN_ACCESS_REFUSED',
+            }.get(message, 'UNCLASSIFIED')
+        elif error.code == 401 and message == 'Bad credentials':
+            category = 'AUTHENTICATION_REFUSED'
+    except (OSError, ValueError, UnicodeError, RecursionError):
+        pass
+    # GitHub documents this exact header/status pair for primary rate limits;
+    # a plain 403 alone never establishes an authorization/configuration cause.
+    if error.code in (403, 429) and error.headers and error.headers.get('x-ratelimit-remaining') == '0':
+        category = 'PRIMARY_RATE_LIMIT_EXHAUSTED'
+    status = error.code if type(error.code) is int and 100 <= error.code <= 599 else 0
+    return RuntimeError(json.dumps({'status': 'GITHUB_REQUEST_FAILED', 'http_status': status,
+                                   'operation': operation, 'category': category}))
+
+
 def github(method, endpoint, data=None):
     request = urllib.request.Request('https://api.github.com/repos/' + PRODUCT + '/' + endpoint,
         method=method, data=None if data is None else json.dumps(data).encode(), headers={
@@ -28,8 +63,14 @@ def github(method, endpoint, data=None):
         with urllib.request.urlopen(request, timeout=30) as response:
             return json.load(response) if response.status != 204 else None
     except urllib.error.HTTPError as error:
-        if error.code == 404 and method == 'GET': return None
-        raise
+        try:
+            if error.code == 404 and method == 'GET': return None
+            failure = github_failure(error, method, endpoint)
+        finally:
+            error.close()
+        # Keep failure/nonzero behavior and do not retry or change credentials.
+        # Suppress the original exception chain, which may contain unsafe text.
+        raise failure from None
 
 
 def validate_evidence(root, output):
