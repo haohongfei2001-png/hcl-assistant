@@ -14,6 +14,8 @@ async function fixture(page,{owner=false,available=false,member=false,rights,mod
   }else if(path==='/v1/account/register')body={confirmation_required:true,message:'请检查邮箱完成确认后登录'};
   else if(path==='/v1/account/login'){state.member=true;body={};}
   else if(path==='/v1/member/budget')body={currency:'CNY',period:'2026-10',timezone:'Asia/Shanghai',scope:'AUTHENTICATED_SHARED',charged_cost_cny:'0',actor_charged_cost_cny:'0',max_cost_cny:'500',remaining_cny:'500'};
+  else if(path==='/v1/member/billing/catalog')body={available:false,plans:[],reason:'会员购买尚未开放；注册不会自动开通会员'};
+  else if(path==='/v1/member/billing/orders')body={available:false,orders:[]};
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)}).catch(()=>{});
  });
  return state;
@@ -92,12 +94,16 @@ test('membership expiry blocks sends immediately while preserving the account an
  await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();
 });
 
-test('unpaid member sees membership and shared platform budget without a purchase action',async({page})=>{
+test('unpaid member reads closed purchase information without any financial action',async({page})=>{
  const state=await fixture(page,{available:true,member:true,rights:{enabled:false,membership_required:true,temporary:false,persistent:false,reason:'会员未开通、已到期或已停用'}});
  await page.goto('/');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();
  await page.getByRole('button',{name:'设置',exact:true}).click();
  await expect(page.getByRole('region',{name:'会员状态'})).toContainText('注册账号不包含模型使用权限');
  await expect(page.getByRole('region',{name:'人民币月额度'})).toContainText('所有获准用户与测试共用同一个总额度');
- expect(state.posts).toEqual([]);await expect(page.getByRole('button',{name:/购买|支付|充值/})).toHaveCount(0);
+ await page.getByRole('button',{name:'查看购买与订单',exact:true}).click();
+ await expect(page.getByRole('region',{name:'会员购买与订单'})).toContainText('会员购买尚未开放');
+ expect(state.reads).toContain('/v1/member/billing/catalog');expect(state.reads).toContain('/v1/member/billing/orders');
+ expect(state.posts).toEqual([]);await expect(page.getByRole('button',{name:/创建订单|打开.*支付|核验.*付款|充值/})).toHaveCount(0);
+ await expect(page.getByRole('link',{name:/支付/})).toHaveCount(0);
 });

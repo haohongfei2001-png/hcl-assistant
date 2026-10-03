@@ -327,3 +327,20 @@ class BillingPostgresTests(unittest.TestCase):
         self.assertTrue(service.reconcile(actor,proof.order_id)['verification_deferred'])
         self.assertEqual(provider.query_order.call_count,1);provider.create_checkout.assert_not_called()
         self.assertEqual(self.admin.execute('SELECT count(*) AS n FROM hcla.qwen_member_entitlements').fetchone()['n'],1)
+
+    def test_reused_handler_clears_member_marker_before_the_next_owner_path(self):
+        from apps.api.server import handler
+        repo,actor=self.repository();app=repo.application
+        klass=handler(app);request=klass.__new__(klass);responses=[]
+        request.command='GET';request.close_connection=False
+        request.headers={'Cookie':repo.cookie,'Host':'hcla.example.test','Origin':'https://hcla.example.test','X-HCLA-Request':'1'}
+        request.json=lambda status,body,**kwargs:responses.append((status,body))
+        request.path='/v1/member/billing/catalog';request.do_GET()
+        self.assertEqual(responses[-1][0],200);self.assertEqual(request.member_tenant,actor.tenant)
+        # Reuse the exact handler/application while supplying a separately
+        # verified synthetic owner principal at the owner-auth boundary.
+        app.development_auth.require=lambda cookie:'hcla-owner'
+        app.development_auth.boundary=lambda request,mutation=False:None
+        request.path='/v1/billing/catalog';request.do_GET()
+        self.assertEqual(responses[-1][0],403);self.assertFalse(hasattr(request,'member_tenant'))
+        self.assertIsNotNone(app.member_context)

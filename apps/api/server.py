@@ -68,6 +68,9 @@ def handler(application):
             return 'synthetic-'+identity
 
         def request_path(self):
+            # BaseHTTPRequestHandler may reuse this instance for keep-alive.
+            # A member marker is valid only for the current parsed request.
+            self.__dict__.pop('member_tenant',None)
             path=urlparse(self.path).path
             if not path.startswith('/v1/member/'):return path
             if not getattr(self.application,'cloud',False):raise Fault(404,'Unknown API route')
