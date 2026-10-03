@@ -17,8 +17,11 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
  const flight=useRef<{epoch:number;promise:Promise<void>;controller:AbortController}|null>(null);
  function suspend(){setMemberReady(false);setRenewing(true)}
  function clear(){clearTemporary();configureCloud(true);scope.current='';setRenewing(false);setLogoutError('');setStatus(value=>value?{...value,authenticated:false}:value)}
- async function refresh():Promise<void>{const epoch=revision.current;
-  if(flight.current){if(flight.current.epoch===epoch)return flight.current.promise;await flight.current.promise;if(live.current&&epoch===revision.current)return refresh();return}
+ async function refresh(completingAuth?:AbortController):Promise<void>{const epoch=revision.current;
+  // Credential submission owns this transition. Polling must not reuse an
+  // earlier signed-out snapshot or renew the old session alongside a login.
+  if(authFlight.current&&authFlight.current!==completingAuth)return;
+  if(flight.current){if(flight.current.epoch===epoch)return flight.current.promise;await flight.current.promise;if(live.current&&epoch===revision.current)return refresh(completingAuth);return}
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
   const task=(async()=>{try{
    let next=await api<Status>('/v1/account/status',undefined,controller.signal);if(!live.current||epoch!==revision.current)return;
@@ -38,7 +41,7 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
  }
  useEffect(()=>{live.current=true;void refresh();const poll=setInterval(()=>void refresh(),10000);
   const refreshMembership=()=>void refresh();window.addEventListener('hcla-member-status-refresh',refreshMembership);
-  if(typeof BroadcastChannel!=='undefined'){channel.current=new BroadcastChannel('hcla-member-session');channel.current.onmessage=()=>{revision.current++;flight.current?.controller.abort();authFlight.current?.abort();setBusy(false);clear();void refresh()}}
+  if(typeof BroadcastChannel!=='undefined'){channel.current=new BroadcastChannel('hcla-member-session');channel.current.onmessage=()=>{revision.current++;flight.current?.controller.abort();flight.current=null;authFlight.current?.abort();authFlight.current=null;setPassword('');setShowPassword(false);setBusy(false);clear();void refresh()}}
   return()=>{live.current=false;revision.current++;flight.current?.controller.abort();authFlight.current?.abort();clearInterval(poll);window.removeEventListener('hcla-member-status-refresh',refreshMembership);channel.current?.close();clearTemporary()};
  },[]);
  useEffect(()=>{if(!status?.authenticated||!status.expires_at)return;const timer=setTimeout(()=>{suspend();void refresh()},Math.max(0,status.expires_at*1000-Date.now()));return()=>clearTimeout(timer)},[status?.authenticated,status?.expires_at]);
@@ -72,14 +75,17 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
   return children(()=>void logout(),status.account_scope,busy?'正在退出账号…':error||logoutError||(renewing?'正在恢复账号登录，当前内容暂时只读':!enabled?reason:!status.model_enabled?'模型服务尚未启用，已有记录仍可查看':''),renewing||busy,busy,generation);
  }
  async function submit(event:React.FormEvent){
-  event.preventDefault();if(busy||!status?.available)return;setBusy(true);setError('');setMessage('');
-  const epoch=++revision.current;flight.current?.controller.abort();authFlight.current?.abort();
+  event.preventDefault();if(busy||authFlight.current||!status?.available)return;setBusy(true);setError('');setMessage('');
+  // The synchronous controller also rejects repeated submit events before
+  // React has rendered disabled controls. A superseded read cannot hold up
+  // the verified post-login read, even if its transport settles late.
+  const epoch=++revision.current;flight.current?.controller.abort();flight.current=null;
   const controller=new AbortController();authFlight.current=controller;const timeout=setTimeout(()=>controller.abort(),15000);
   try{
    const result=await api<{message?:string}>(register?'/v1/account/register':'/v1/account/login',{email,password},controller.signal);
    if(!live.current||epoch!==revision.current)return;
    if(register){setMessage(result.message||'请检查邮箱完成确认后登录');setRegister(false)}
-   else{channel.current?.postMessage({type:'signed-in'});await refresh()}
+   else{channel.current?.postMessage({type:'signed-in'});await refresh(controller)}
   }catch{if(live.current&&epoch===revision.current)setError(controller.signal.aborted?'连接等待过久，请重新检查连接后再试；不会自动重复提交':register?'暂时无法创建账号，请检查输入或稍后重试':'登录未完成，请确认邮箱已验证、账号密码正确，或稍后重试')}
   finally{clearTimeout(timeout);if(authFlight.current===controller){authFlight.current=null;if(live.current){setPassword('');setShowPassword(false);setBusy(false)}}}
  }

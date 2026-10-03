@@ -24,6 +24,35 @@ function harness(t){
  return {requests,render,refreshMembership(){window.dispatchEvent(new Event('hcla-member-status-refresh'))},poll(){for(const fn of [...intervals.values()])fn()},broadcast(){channels[0].onmessage({data:{type:'signed-in'}})},get signedIn(){return tree.type==='signed-in'},get notice(){return tree.props.notice},get generation(){return tree.props.generation},get alerts(){return nodes(tree).filter(n=>n.props?.role==='alert').map(n=>n.props.children)},logout(){tree.props.logout()},form(){return nodes(tree).find(n=>n.type==='form')},inputs(){return nodes(tree).filter(n=>n.type==='input')},buttons(){return nodes(tree).filter(n=>n.type==='button')}};
 }
 async function enter(h){h.render();h.requests[0].resolve(authenticated);await tick();h.render();assert.equal(h.signedIn,true)}
+async function entry(h,{register=false}={}){
+ h.render();h.requests[0].resolve({available:true,authenticated:false});await tick();h.render();
+ if(register){h.buttons().find(n=>n.props.children==='没有账号，注册').props.onClick();h.render()}
+ h.inputs().find(n=>n.props.type==='email').props.onChange({target:{value:'synthetic@example.test'}});
+ h.inputs().find(n=>n.props.id==='member-password').props.onChange({target:{value:'synthetic offline password'}});h.render();
+}
+for(const register of [false,true])test(`${register?'registration':'login'} admits only one submission before the next render`,async t=>{
+ const h=harness(t);await entry(h,{register});const submit=h.form().props.onSubmit;
+ submit({preventDefault(){}});submit({preventDefault(){}});
+ assert.equal(h.requests.length,2);assert.equal(h.requests[1].path,register?'/v1/account/register':'/v1/account/login');assert.equal(h.requests[1].signal.aborted,false);
+ h.requests[1].reject(new Error('Error: 503: synthetic refusal'));await tick();h.render();
+ assert.equal(h.inputs().find(n=>n.props.id==='member-password').props.value,'');assert.equal(h.inputs().every(n=>!n.props.disabled),true);
+});
+test('login completion reads fresh status without waiting on a superseded pre-login read',async t=>{
+ const h=harness(t);await entry(h);h.poll();const old=h.requests[1];
+ h.form().props.onSubmit({preventDefault(){}});h.render();assert.equal(old.signal.aborted,true);
+ h.poll();h.refreshMembership();assert.equal(h.requests.length,3);
+ h.requests[2].resolve({});await tick();assert.equal(h.requests.length,4);assert.equal(h.requests[3].path,'/v1/account/status');
+ h.requests[3].resolve(authenticated);await tick();h.render();assert.equal(h.signedIn,true);
+ old.resolve({available:true,authenticated:false});await tick();h.render();assert.equal(h.signedIn,true);
+});
+test('a different-tab account change cancels submission and cannot clear a newer attempt',async t=>{
+ const h=harness(t);await entry(h);h.form().props.onSubmit({preventDefault(){}});h.render();const old=h.requests[1];
+ h.broadcast();assert.equal(old.signal.aborted,true);assert.equal(h.requests[2].path,'/v1/account/status');
+ h.requests[2].resolve({available:true,authenticated:false});await tick();h.render();assert.equal(h.inputs().find(n=>n.props.id==='member-password').props.value,'');
+ h.inputs().find(n=>n.props.id==='member-password').props.onChange({target:{value:'new synthetic password'}});h.render();h.form().props.onSubmit({preventDefault(){}});h.render();
+ old.resolve({});await tick();h.render();assert.equal(h.inputs().find(n=>n.props.id==='member-password').props.value,'new synthetic password');assert(h.inputs().every(n=>n.props.disabled));
+ h.requests[3].reject(new Error('Error: 401: synthetic rejection'));await tick();h.render();assert.equal(h.signedIn,false);
+});
 test('successful logout aborts and fences a status read begun while logout was pending',async t=>{
  const h=harness(t);await enter(h);h.logout();h.render();h.poll();assert.equal(h.requests[2].path,'/v1/account/status');
  h.requests[1].resolve({});await tick();h.render();assert.equal(h.signedIn,false);assert.equal(h.requests[2].signal.aborted,true);
