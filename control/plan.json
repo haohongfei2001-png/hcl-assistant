@@ -559,8 +559,8 @@
     }
   },
   "writer": {
-    "branch": "product/consumer-billing-foundation",
-    "scope": "DEFAULT_CLOSED_CONSUMER_ORDER_AND_PAYMENT_FOUNDATION_NO_LIVE_ACTIVATION",
+    "branch": "product/billing-capacity-alignment",
+    "scope": "ALIGN_DORMANT_SALES_CAPACITY_AND_CHECKOUT_QUOTE_EXPIRY_NO_LIVE_ACTIVATION",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
