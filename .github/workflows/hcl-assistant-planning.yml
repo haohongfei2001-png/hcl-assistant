@@ -107,6 +107,20 @@ jobs:
           runtime_dir="$RUNNER_TEMP/hcl-assistant-development-runtime"
           python3 scripts/fetch_development_runtime.py "$runtime_dir" | tee ../development-runtime-source.json
           echo "HCL_DEVELOPMENT_ARTIFACT=$runtime_dir" >> "$GITHUB_ENV"
+      - name: Verify member startup from the deployment dependency manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd product-export
+          python3 -m venv "$RUNNER_TEMP/hcla-deployment-python"
+          deployment_python="$RUNNER_TEMP/hcla-deployment-python/bin/python"
+          python3 - "$deployment_python" <<'PY'
+          import subprocess, sys, tomllib
+          with open('pyproject.toml', 'rb') as source:
+              dependencies = tomllib.load(source)['project']['dependencies']
+          subprocess.run([sys.argv[1], '-m', 'pip', 'install', '--only-binary=:all:', *dependencies], check=True)
+          PY
+          "$deployment_python" -I tests/test_cloud_dependencies.py -v
       - name: Validate product contracts, root boundary and complete migration
         shell: bash
         run: |
