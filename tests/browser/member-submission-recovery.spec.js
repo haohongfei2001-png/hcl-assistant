@@ -40,25 +40,25 @@ for(const register of [false,true])test(`${register?'registration':'login'} repe
 });
 
 test('slow pre-login status cannot delay a successful login or replace its account',async({page})=>{
- const state=await fixture(page);let pending,release;
- const stale=async route=>{pending=route;await new Promise(resolve=>{release=resolve});await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,authenticated:false})}).catch(()=>{})};
+ const state=await fixture(page);let pending,release,settle;const settled=new Promise(resolve=>{settle=resolve});
+ const stale=async route=>{pending=route;await new Promise(resolve=>{release=resolve});await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,authenticated:false})}).catch(()=>{});settle()};
  await page.route('**/v1/account/status',stale);
  await page.evaluate(()=>window.dispatchEvent(new Event('hcla-member-status-refresh')));await expect.poll(()=>Boolean(pending)).toBe(true);
  await page.unroute('**/v1/account/status',stale);
  try{
   await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
-  await page.getByLabel('消息',{exact:true}).fill('SYNTHETIC_POST_LOGIN_DRAFT');release();
+  await page.getByLabel('消息',{exact:true}).fill('SYNTHETIC_POST_LOGIN_DRAFT');release();await settled;
   await expect(page.getByLabel('消息',{exact:true})).toHaveValue('SYNTHETIC_POST_LOGIN_DRAFT');expect(state.posts).toEqual(['/v1/account/login']);
  }finally{release()}
 });
 
 test('another tab supersedes a pending login and clears its credentials before a new attempt',async({page})=>{
- const state=await fixture(page);let pending,release;
- const held=async route=>{pending=route;await new Promise(resolve=>{release=resolve});await route.fulfill({status:200,contentType:'application/json',body:'{}'}).catch(()=>{})};
+ const state=await fixture(page);let pending,release,settle;const settled=new Promise(resolve=>{settle=resolve});
+ const held=async route=>{pending=route;await new Promise(resolve=>{release=resolve});await route.fulfill({status:200,contentType:'application/json',body:'{}'}).catch(()=>{});settle()};
  await page.route('**/v1/account/login',held);await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect.poll(()=>Boolean(pending)).toBe(true);
  await page.evaluate(()=>{const channel=new BroadcastChannel('hcla-member-session');channel.postMessage({type:'signed-out'});channel.close()});
  await expect(page.getByLabel('用户密码',{exact:true})).toHaveValue('');await expect(page.getByLabel('用户密码',{exact:true})).toBeEnabled();
  await page.unroute('**/v1/account/login',held);await page.getByLabel('用户密码',{exact:true}).fill('new synthetic offline password');
  await page.getByRole('button',{name:'登录账号',exact:true}).click();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
- release();await expect(page.getByLabel('消息',{exact:true})).toBeVisible();expect(state.posts).toEqual(['/v1/account/login']);
+ release();await settled;await expect(page.getByLabel('消息',{exact:true})).toBeVisible();expect(state.posts).toEqual(['/v1/account/login']);
 });
