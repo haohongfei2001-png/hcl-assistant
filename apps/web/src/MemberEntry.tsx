@@ -86,6 +86,8 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
  return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="account-heading"><div className="account-brand">HCL <span>Assistant</span></div>
   <h1 id="account-heading">{register?'创建你的账号':'继续你的对话'}</h1><p className="account-intro">登录后，在你的设备上继续自己的对话。当前仅开放合成内容体验，请勿输入真实私密资料。</p>
   <p className="account-hint account-membership">注册并验证邮箱后仍需开通有效会员，才能使用模型。在线购买会员暂未开放。{provider==='qwen'?'所有会员与测试共用平台每月500元总额度。':''}</p>
+  {/* Remove this deployment notice only after public email delivery is configured and verified. */}
+  {status?.available&&<p className="account-hint">当前使用测试邮件服务，仅项目团队邮箱能收到注册和找回密码邮件。公开注册邮件服务尚未开放。</p>}
   {notice&&<p className="account-feedback" role="alert">{notice}</p>}
   {error&&<p className="account-feedback" role="alert">{error}</p>}{message&&<p className="account-feedback" role="status">{message}</p>}
   {!status?<p role="status">正在检查账号服务…</p>:!status.available?<div className="account-unavailable">{!serviceError&&<p>普通账号服务暂未开放，请稍后再来</p>}<button className="account-secondary" disabled={busy} onClick={()=>void refresh()}>重新检查连接</button></div>:<form onSubmit={event=>void submit(event)}>

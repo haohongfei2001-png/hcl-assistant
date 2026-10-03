@@ -34,6 +34,8 @@ export function RecoveryEntry({onBack,initialEmail='',callback=false}:{onBack:()
  function restart(){invalidCallback.current=false;exchangeFailed.current=false;revision.current++;flight.current?.abort();code.current=null;exchangeStarted.current=true;setBusy(false);setError('');setMessage('');setPassword('');setConfirmation('');setStatus({available:true,ready:false})}
  return <main className="account-screen"><section className="development-entry member-entry" aria-labelledby="recovery-heading"><div className="account-brand">HCL <span>Assistant</span></div><h1 id="recovery-heading">{status?.updated?'密码已更新':status?.ready?'设置新密码':'找回账号'}</h1>
   <p className="account-intro">恢复链接仅用于修改密码，不能查看对话。请使用发起申请的浏览器打开链接。</p>
+  {/* Keep the initial request honest while the deployment uses restricted test email delivery. */}
+  {status?.available&&!status.ready&&!status.updated&&<p className="account-hint">当前使用测试邮件服务，仅项目团队邮箱能收到注册和找回密码邮件。公开注册邮件服务尚未开放。</p>}
   {error&&<p role="alert" className="account-feedback">{error}</p>}{message&&<p role="status" className="account-feedback">{message}</p>}
   {!status?<p role="status">正在检查恢复服务…</p>:!status.available?<p>账号找回服务尚未开放</p>:status.updated?<p>请返回登录，使用新密码继续。</p>:status.locked?<p role="status">上次密码修改结果尚未确认，恢复暂时锁定。请联系管理员核对服务端结果；重新申请链接不会解除锁定。</p>:status.ready?<form onSubmit={event=>void complete(event)}>
    <label>新密码<input type="password" autoComplete="new-password" minLength={12} maxLength={1024} value={password} onChange={event=>setPassword(event.target.value)} disabled={busy} required/></label>

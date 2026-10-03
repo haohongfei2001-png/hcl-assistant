@@ -559,8 +559,8 @@
     }
   },
   "writer": {
-    "branch": "product/confirmation-return-privacy",
-    "scope": "CONFIRMATION_RETURN_PRIVACY_SOURCE_ONLY_NO_AUTH_ACTIVATION",
+    "branch": "product/auth-mail-limitation",
+    "scope": "ACCURATE_RESTRICTED_EMAIL_NOTICE_BEFORE_APPROVED_ACCOUNT_DEPLOYMENT",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
