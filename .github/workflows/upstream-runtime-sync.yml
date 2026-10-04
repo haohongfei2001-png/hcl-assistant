@@ -28,6 +28,8 @@ jobs:
           persist-credentials: false
       - id: base
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Install the locked product runtime dependencies
+        run: python3 -m pip install -r requirements.lock
       - name: Validate exact candidate through existing bridge and full regressions
         id: validate
         env:
