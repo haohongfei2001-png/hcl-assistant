@@ -31,7 +31,7 @@ function availableScope(preferred:string,generation?:AccountSession['generation'
 }
 function generationRefusal(scope:string|null,account?:AccountSession){
  if(account?.renewing)return '账号状态正在恢复，暂时无法发送';
- if(!scope)return account?.generation?.temporary||account?.generation?.persistent?'所选范围暂不可用，请在设置中选择可用范围；已有记录仍可查看':'当前账号没有可用的对话范围，已有记录仍可查看';
+ if(!scope)return (account?.generation?.reason?account.generation.reason+'；':'')+(account?.generation?.temporary||account?.generation?.persistent?'所选范围暂不可用，请在设置中选择可用范围；已有记录仍可查看':'当前账号没有可用的对话范围，已有记录仍可查看');
  if(!account?.generation)return '';
  if(!account.generation.model)return account.generation.reason||'模型服务暂未开放，已有记录仍可查看';
  return scopePermitted(scope,account.generation)?'':'当前账号暂不能使用这种对话范围，已有记录仍可查看';

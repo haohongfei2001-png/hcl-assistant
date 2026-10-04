@@ -53,6 +53,10 @@ test('no permitted scope refuses new conversation without a mutation',async t=>{
  assert.equal(h.memory.props.value,'');const result=Promise.resolve().then(()=>h.props.onNew());await assert.rejects(result,/可用.*范围/);h.render();
  assert.equal(h.requests.filter(r=>r.body).length,0);assert.equal(h.props.sendDisabled,true);assert.match(h.props.error,/可用.*范围/);assert.equal(h.memory.props.value,'');
 });
+for(const reason of ['会员未开通','会员已到期'])test(`scope refusal preserves the authoritative account reason: ${reason}`,async t=>{
+ const h=harness(t,account('member-synthetic',{model:false,temporary:false,persistent:false,reason}));h.render();await h.history();assert(h.props.error.includes(reason));assert.match(h.props.error,/没有可用/);assert.equal(h.props.sendDisabled,true);
+ await assert.rejects(Promise.resolve().then(()=>h.props.onNew()),new RegExp(reason));assert.equal(h.requests.filter(r=>r.body).length,0);
+});
 test('permissions revoked during conversation creation prevent the later event',async t=>{
  const h=harness(t);h.render();await h.history();h.consent();h.render();h.props.setDraft('Original synthetic draft');h.render();
  const sending=h.props.onSend();await tick();const creation=h.requests.find(r=>r.path==='/v1/conversations'&&r.body);assert(creation);

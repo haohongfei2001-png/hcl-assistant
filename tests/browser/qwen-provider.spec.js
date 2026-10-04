@@ -28,7 +28,9 @@ test('Qwen owner smoke names the actual provider and sends its explicit policy a
  await page.getByRole('button',{name:'设置',exact:true}).click();
  await expect(page.getByRole('region',{name:'人民币月额度'})).toContainText('500');
  await expect(page.getByLabel('记忆范围',{exact:true})).toHaveValue('TEMPORARY');
- await expect(page.getByLabel('记忆范围',{exact:true}).locator('option[value="CONVERSATION"]')).toBeDisabled();
+ await expect(page.getByLabel('记忆范围',{exact:true}).locator('option[value="CONVERSATION"]')).toHaveAttribute('disabled','');
+ await page.getByLabel('记忆范围',{exact:true}).press('Home');
+ await expect(page.getByLabel('记忆范围',{exact:true})).toHaveValue('TEMPORARY');
  await page.getByLabel('本次仅使用原创合成输入，并使用服务器已批准额度').check();
  await page.getByRole('button',{name:'发送原创 HCL 合成样例（计一次调用）'}).click();
  await expect.poll(()=>seen.length).toBe(1);
