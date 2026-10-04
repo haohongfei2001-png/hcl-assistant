@@ -1,0 +1,173 @@
+name: Fixed-tree internal self-use synthetic tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/internal-self-use-candidate-tests.yml'
+      - 'tests/fixtures/internal-self-use-af5e6f6.patch'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hcla-fixed-tree-tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  fixed-candidate-tests:
+    if: github.repository == 'haohongfei2001-png/hcl-assistant' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'ci/internal-self-use-fixed-tree'
+    runs-on: ubuntu-24.04
+    # The two existing browser suites run sequentially in this disposable job.
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: offline-fixture
+          POSTGRES_DB: hcla_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d hcla_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      HARNESS_SHA: ${{ github.event.pull_request.head.sha }}
+      CANDIDATE_BASE: c69cfaab730345c275211b1f735fe43833428af2
+      CANDIDATE_SOURCE_COMMIT: af5e6f60ba94a06fb2b28544dc60c90cdc5402a6
+      CANDIDATE_SOURCE_TREE: da88fce1c54e61c3c25468dab7c31dfae80b1531
+      CANDIDATE_PATCH_SHA256: 3907461739815dc587ad3aaf6d237b5f771b5ebfe834b246426f3d519e221fcf
+      HCLA_TEST_POSTGRES_DSN: postgresql://postgres:offline-fixture@127.0.0.1:5432/hcla_test
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: bash
+        working-directory: candidate
+    steps:
+      - name: Read the CI-only head without persisting credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: harness
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Materialize the adopted base in a separate test checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: c69cfaab730345c275211b1f735fe43833428af2
+          path: candidate
+          persist-credentials: false
+      - name: Verify CI-only boundary and exact applied source tree
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_BASE"
+          test "$(git -C ../harness rev-parse HEAD)" = "$HARNESS_SHA"
+          git diff --quiet
+          git diff --cached --quiet
+          # The deployable head may differ from the adopted base only here.
+          actual="$(git -C ../harness diff --name-only "$CANDIDATE_BASE" HEAD)"
+          expected="$(printf '%s\n' '.github/workflows/internal-self-use-candidate-tests.yml' 'tests/fixtures/internal-self-use-af5e6f6.patch')"
+          test "$actual" = "$expected"
+          patch=../harness/tests/fixtures/internal-self-use-af5e6f6.patch
+          printf '%s  %s\n' "$CANDIDATE_PATCH_SHA256" "$patch" | sha256sum --check --strict
+          git apply --check "$patch"
+          git apply --index "$patch"
+          test "$(git write-tree)" = "$CANDIDATE_SOURCE_TREE"
+          git diff --quiet
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          receipt = {
+              'verification_scope': 'EXISTING_SYNTHETIC_TESTS_ONLY',
+              'github_workflow_head': os.environ['HARNESS_SHA'],
+              'checkout_base_commit': os.environ['CANDIDATE_BASE'],
+              'patch_sha256': os.environ['CANDIDATE_PATCH_SHA256'],
+              'applied_source_tree': os.environ['CANDIDATE_SOURCE_TREE'],
+              'equivalent_local_candidate_commit': os.environ['CANDIDATE_SOURCE_COMMIT'],
+              'identity_statement': 'Applied source-tree equivalence; not a GitHub check on the local candidate commit.',
+              'adoption': 'NOT_ADOPTED',
+              'security_review': 'NOT_PERFORMED_BY_THIS_WORKFLOW',
+              'production_migrations_allowed': False,
+              'live_provider_calls_allowed': 0,
+          }
+          Path(os.environ['RUNNER_TEMP'], 'hcla-candidate-source-identity.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          PY
+      - name: Install existing pinned test dependencies
+        run: |
+          set -euo pipefail
+          python3 -m pip install -r requirements.lock
+          npm ci --ignore-scripts
+      - name: Acquire only the existing reviewed provider-free runtime
+        run: |
+          set -euo pipefail
+          python3 scripts/fetch_development_runtime.py "$RUNNER_TEMP/hcla-candidate-runtime"
+          echo "HCL_DEVELOPMENT_ARTIFACT=$RUNNER_TEMP/hcla-candidate-runtime" >> "$GITHUB_ENV"
+      - name: Existing isolated owner-schema compatibility tests
+        env:
+          HCLA_TEST_OWNER_SCHEMA_ONLY: '1'
+        run: python3 -m unittest tests.test_qwen_owner_schema -v
+      - name: Existing real PostgreSQL regressions and fixed candidate tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests.test_cloud tests.test_cloud_startup tests.test_cloud_postgres tests.test_cloud_trial tests.test_cloud_members tests.test_cloud_recovery tests.test_qwen_provider tests.test_qwen_postgres tests.test_qwen_monthly tests.test_qwen_shared tests.test_qwen_member_readiness tests.test_billing_postgres tests.test_billing_capacity tests.test_internal_self_use -v 2>&1 | tee "$RUNNER_TEMP/hcla-candidate-postgres.txt"
+      - name: Build the existing synthetic browser fixtures
+        id: browser-build
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp
+          npm run build
+          npm run build:cloud
+          npx playwright install --with-deps chromium --only-shell
+      - name: Existing ordinary browser suite (cloud-only cases remain skipped here)
+        run: |
+          set -euo pipefail
+          env -u HCLA_TEST_POSTGRES_DSN npm run test:browser -- --output=test-results/ordinary 2>&1 | tee "$RUNNER_TEMP/hcla-candidate-ordinary-browser.txt"
+      - name: Existing 45 cloud browser cases with disposable PostgreSQL
+        if: ${{ !cancelled() && steps.browser-build.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          npx playwright test --config playwright.cloud.config.js --output=test-results/cloud 2>&1 | tee "$RUNNER_TEMP/hcla-candidate-cloud-browser.txt"
+      - name: Verify tested tracked source still matches the fixed tree
+        if: always()
+        run: |
+          set -euo pipefail
+          git diff --quiet
+          test "$(git write-tree)" = "$CANDIDATE_SOURCE_TREE"
+      - name: Record test identity and honest stage results
+        if: always()
+        run: |
+          {
+            echo '## Fixed applied-tree synthetic tests only'
+            echo 'GitHub checks belong to the CI-only workflow head. The candidate exists only in the isolated test checkout; source-tree equivalence is not adoption, activation, or a security-review result.'
+            if test -f "$RUNNER_TEMP/hcla-candidate-source-identity.json"; then
+              echo '```json'
+              cat "$RUNNER_TEMP/hcla-candidate-source-identity.json"
+              echo '```'
+            else
+              echo 'Source identity verification did not complete; do not treat later stages as verified.'
+            fi
+            for log in "$RUNNER_TEMP"/hcla-candidate-{postgres,ordinary-browser,cloud-browser}.txt; do
+              echo "### $(basename "$log")"
+              if test -f "$log"; then
+                echo '```text'
+                tail -n 10 "$log"
+                echo '```'
+              else
+                echo 'NOT_RUN'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain only source identity and synthetic test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: internal-self-use-fixed-tree-synthetic-tests
+          path: |
+            ${{ runner.temp }}/hcla-candidate-source-identity.json
+            ${{ runner.temp }}/hcla-candidate-postgres.txt
+            ${{ runner.temp }}/hcla-candidate-ordinary-browser.txt
+            ${{ runner.temp }}/hcla-candidate-cloud-browser.txt
+            candidate/test-results
+          retention-days: 7
+          if-no-files-found: warn
