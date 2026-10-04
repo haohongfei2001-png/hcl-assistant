@@ -7,7 +7,10 @@ async function mockedQwen(page,enabled=true){
   let body=[];
   if(path==='/v1/development/status')body={enabled:true,authenticated:true,cloud:true,request_bound:false,configuration:{configured:true,provider:'qwen',provider_enabled:enabled,owner_smoke_only:enabled}};
   else if(path==='/v1/budget')body={currency:'CNY',period:'2026-10',timezone:'Asia/Shanghai',charged_cost_cny:'0',max_cost_cny:'500',remaining_cny:'500'};
-  else if(path==='/v1/conversations'&&request.method()==='POST')body={id:'qwen-fixture',title:'新对话',memory:'TEMPORARY',topic_id:null};
+  else if(path==='/v1/conversations'&&request.method()==='POST'){
+   expect(request.postDataJSON().memory).toBe('TEMPORARY');
+   body={id:'qwen-fixture',title:'新对话',memory:request.postDataJSON().memory,topic_id:null};
+  }
   else if(path==='/v1/conversations/qwen-fixture')body={runs:[],state_version:0};
   else if(path.endsWith('/events')&&request.method()==='POST'){
    seen.push(request.postDataJSON());
@@ -24,7 +27,8 @@ test('Qwen owner smoke names the actual provider and sends its explicit policy a
  await expect(page.locator('body')).toContainText('千问3.8-Max');
  await page.getByRole('button',{name:'设置',exact:true}).click();
  await expect(page.getByRole('region',{name:'人民币月额度'})).toContainText('500');
- await page.getByLabel('记忆范围',{exact:true}).selectOption('TEMPORARY');
+ await expect(page.getByLabel('记忆范围',{exact:true})).toHaveValue('TEMPORARY');
+ await expect(page.getByLabel('记忆范围',{exact:true}).locator('option[value="CONVERSATION"]')).toBeDisabled();
  await page.getByLabel('本次仅使用原创合成输入，并使用服务器已批准额度').check();
  await page.getByRole('button',{name:'发送原创 HCL 合成样例（计一次调用）'}).click();
  await expect.poll(()=>seen.length).toBe(1);
