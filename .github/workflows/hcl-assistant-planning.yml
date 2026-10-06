@@ -184,6 +184,24 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Retain clear glass product captures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: clear-glass-product-captures
+          path: |
+            product-export/test-results/chat-refinement*/**/glass-shared-*.png
+            product-export/test-results/member-entry-separation*/**/*.png
+            product-export/test-results/member-commerce*/**/*.png
+            product-export/test-results/continuum-visual*/**/evidence-1448.png
+            product-export/test-results/continuum-visual*/**/source-1448-scrolled.png
+            product-export/test-results/continuum-visual*/**/correction-exact-target-before-submit.png
+            product-export/test-results/continuum-visual*/**/revision-committed-pending-analysis.png
+            product-export/test-results/continuum-visual*/**/source-320-full-route.png
+            product-export/test-results/continuum-visual*/**/revision-committed-answer-failed.png
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Retain focused initial connection captures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

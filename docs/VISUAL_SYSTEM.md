@@ -1,39 +1,80 @@
-# Visual System — Canonical A2 / Continuum V1
+# Visual System — Canonical A2 / Clear Glass
 
-产品架构仍为 [Product Master Plan 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md) / A2-Product；交互语义见 [UX](UX_SPEC.md)。本次是 Owner 已批准的视觉稿正式采用，不重开产品定位。五张批准设计稿已按 [manifest](design/continuum-v1/asset-manifest.json) 以无损文本封装入库，原始 PNG 可逐字节恢复；这是仓库存储适配，不改变像素内容。本变更通过 exact-head/main 核验并合入后，`CONTINUUM-V1-20261001` 即为唯一当前视觉基准。
+Product architecture remains [Master Plan 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md)
+and interaction semantics remain [UX](UX_SPEC.md). The owner accepted the actual
+white/transparent Home at `d50dbec800389b9e788c42c03e873dbe6dffac69` and authorized
+this language across the existing product. The [Home evidence](GLASS_HOME_PROPOSAL.md)
+records that acceptance. Full-product implementation is under exact-head review;
+passing Home checks alone is not full-product adoption.
 
-## 1. 唯一视觉基准
+## Current appearance
 
-视觉身份：`CONTINUUM-V1-20261001`。对应三张产品状态 UI-01 首页、UI-02 多轮对话的长回答视口、UI-03 依据与修订展开；数字形象 M-01 悬浮核心与 M-02 输入容器均保留，无唯一选择。文件映射及原图哈希见 [manifest](design/continuum-v1/asset-manifest.json)。
+`CLEAR-GLASS-20261006` replaces conflicting Continuum color/surface targets.
+Use bright white or transparent backgrounds and inputs, opaque near-black text,
+fine purple-blue edges, white rim highlights and restrained soft shadows.
+There is no gray page wash or gray inset input. Local light color may establish
+transparent depth, but should not tint the whole page. Avoid heavy opaque cards,
+large glows, unrelated decoration and promotional-card layouts.
 
-采用后保留本轮图稿的布局、浅冰蓝/淡紫配色、白色半透明表面、深蓝文字、蓝紫操作色、柔和边缘光感和圆润层叠材质。背景只作纯色或低存在感的毛玻璃底，不放风景、建筑、家具、物品或吸引注意力的科幻场景。不再设计第五套风格；不能用“实现方便”退回旧界面。
+The shared chat remains the center. Home geometry from the accepted capture is
+preserved. Its compact glass composer extends to conversation with actual
+attachment, Send and Stop controls. The input starts at one line and grows to
+seven; long drafts scroll inside it. Preserve composition, Enter/Shift+Enter,
+file staging, consent, account gates and independent drafts.
 
-原来“安静、轻量编辑器式”、暖白/灰绿、仅哑光/青绿/接缝的方案不再是本次采用后的视觉目标。其原始文件按 Git blob 原字节保存在 [A2 visual baseline](VISUAL_SYSTEM_A2_BASELINE_20261001.md)，只作历史，不产生第二套可选实施方案。已有 P1-01 代码和验收仍是完成事实，但不是新图稿视觉还原的验收结果。
+Conversation, sidebar/search, evidence/source/revision, memory, settings,
+account/membership/login/recovery and the read-only inspector use this same
+material. Detail layers keep source navigation, selected-answer association,
+reading anchors and explicit return actions. On narrow screens the sidebar
+collapses and detail layers use the full screen. A long dialog keeps its Close
+control reachable while its content scrolls. Tables/code scroll locally rather
+than widening the page or reducing body text.
 
-## 2. 规格落点
+## Readability and states
 
-[Implementation Spec](design/continuum-v1/IMPLEMENTATION_SPEC.md) 是本视觉规范的组成部分，给出布局、surface、起始 tokens、字体/图标/圆角、页面组件映射、长内容/文件、依据/来源/返回、修订状态、动效、响应式与键盘规格。图稿决定外观方向，补充规格覆盖静态图未表达的行为，不借此重新设计。
+Reference implementation colors are primary text `#292A35` / `#34343E`, secondary
+text `#585B68`, placeholder `#60616E`, and focus `#6257AA`. These are implementation
+values, not measurements extracted from the supplied image. Surfaces are white
+with alpha where supported. Inputs and account cards use thin light rims;
+primary actions use local lavender light with dark readable labels.
 
-起始值仅用于忠实实现并校准，不伪称来自原设计文件的精确 tokens：背景 #EDF3FD；阅读/输入表面 rgba(255,255,255,0.94)；主文字 #151D43；次级文字 #576486；操作色 #526BEE；深色主按钮 #283047。实现须与图稿逐区域核对，并测量实际叠色后的可读性。不得因为这些近似值通过测试就忽略视觉差异。
+Keep body text readable and fully opaque. Do not blur text or hide notices in
+low contrast. At least 44px hit targets, visible keyboard focus, semantic labels,
+normal selection/copy, Chinese IME, reduced motion, white opaque fallback and
+system forced colors are required. Small checkbox visuals retain a 44px label
+hit area. Failure, uncertainty, redaction, expiry and unavailable states remain
+explicit; their semantic feedback is not replaced with a decorative success.
 
-中文正文 16–17px / 27–28px；控件 14px；次级说明不靠 10–11px 小字隐藏。文字不可毛玻璃化。表格/代码可以局部横向滚动，正文不可为容纳过多栏而缩成细小字。支持正常选取、复制、中文 IME、键盘可达、可见焦点和触屏操作。
+## Original references and capability boundaries
 
-保留图中的轻量导航/顶部搜索/阅读区域/输入体/附着依据层关系；导航项名称仍服从真实产品架构。窄屏先收起导航，来源在同一详情层内替换；手机详情全屏且可回到原阅读位置，不硬挤三栏。没有 blur 支持时使用色彩匹配的不透明 fallback，并记录视觉核对。
+The original five Continuum image payloads, their hashes and historical adoption
+receipts remain immutable in [the design archive](design/continuum-v1/README.md).
+They remain history and behavioral context, not a competing current palette.
+Conversation-answer companion A/B/off preferences are retained; Home has no orb.
+Decorative forms do not imply listening, understanding or successful processing.
 
-本轮明确采用的是 light 参考；不以探索另一套 dark 方案阻塞。既有真实主题控制不假装可用或被静默移除；如实现 dark，保持同一材质关系并提供对应对比度与截图验收，不把自动反色当设计完成。
+No visual request grants a new capability, opens an account, enables commerce,
+changes budget/rights or activates a model. Synthetic/demo state, privacy notices,
+member/owner route separation, server-owned admission, research isolation and
+source truth remain authoritative. Do not add reference-image logos, microphone
+or external integrations without real implemented and authorized functionality.
 
-## 3. 动效与数字形象
+## Verification and adoption
 
-动效是对象身份和真实状态的连续呈现：Home 到对话保持输入对象；依据从相关回答展开；来源在同一层深入；修订只高亮实际受影响条目；返回恢复原阅读锚点。已显示文字稳定，向上阅读不被流式内容拉回底部。没有实际进度不制造阶段、百分比或 Judge 动画。减少动态效果时关闭位移/形变/循环，但保留状态、焦点和错误反馈。
+Run existing planning/repository, build, Node, Python, actual PostgreSQL and
+browser gates at the final head. Retain unchanged contrast thresholds (4.5 for
+normal text, 3 for disabled controls) and 44px target checks. A conservative
+composited-color calculation complements actual unedited pixels; neither replaces
+the other. Do not mask screenshots or inject presentation-only CSS to pass.
 
-两套 companion 共用可关闭的插槽，提供 A/B/off 核对状态；不选择唯一赢家，不因为首页画了 A 就将其固定为最终品牌。保留其轮廓、光感和材质；不得替换为图库小球、真人/动物形象。工作态小尺寸或隐藏，不常驻抢占长内容注意力。装饰姿态不等于麦克风、后台处理或理解完成。
+Required current-head captures include Home default/focus/draft/fallback at
+1440 and 390; conversation; desktop and narrow sidebar/search; populated memory;
+settings including its scrolled Close control; evidence/source/revision and
+return; account/login/register/recovery and membership/orders; empty, failure,
+uncertain and expired states. Existing 320px, doubled-text, long-reading and
+interrupted/repeated-flow tests remain in force. All fixtures remain synthetic.
 
-## 4. 真实能力和示例边界
-
-图片中的 HCL Technologies、白皮书、引用、数字、文件格式、模型/搜索/智能体按钮只是视觉占位，不能成为产品事实或启用凭证。按设计目录的逐项语义映射替换为真实支持的控件和原创 synthetic fixture；保留其余外观。mock/experimental 环境标识持续可见。能力、权限、真实数据、研究隔离、I06/L3、Judge/Act 边界全部不变。
-
-## 5. 视觉还原验收
-
-[Visual Acceptance](design/continuum-v1/ACCEPTANCE.md) 的 V01–V10 纳入 P1-03 的 R19/R20 完成条件：实际浏览器截图与原图并排/叠图；至少三轮长内容和真实支持文件；依据/来源展开及返回；修订已提交/未重评；两套形象和关闭状态；响应式/键盘/异常/减少动效；真实操作视频或可播放 trace。原图、实际页面、静态样例和运行证据分别标识，不能互相冒充。
-
-不能只验收“功能能点”。未忠实实现的区域记录预期、实际、原因、影响和审阅处置；重大布局/材质/配色偏差不能静默换成默认组件。不得改写原参考图或用新页面截图自动重设基线。设计采用不表示 V1 已实现；现有 checker 不自动验证新增视觉义务。
+Source review and actual pixel review precede merge. Verify exact main and the
+existing deployment afterward. The owner's accepted direction authorizes routine
+consistent implementation without repeated style confirmations; it does not
+waive factual verification or authorize new live services.

@@ -81,3 +81,16 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 机器 `product_plan_version` 保持 `1.2/A2-Product`；不为视觉采用修改当前 checker/tests/workflows 已采用的 package identities、依赖或验收数组。三个 V1 交付切片从属既有 P1-03，不持有独立 NEXT_READY 或执行者，不构成第二队列。其原 R17–R20 义务和全部既有回归仍适用，新增 V 验收必须有实际证据。
 
 任何并发 main 前进都需重新基线协调，只在最新树上重放本次资产/规格/计划差异并保留新 main 父历史。不得 force-push、重置已完成状态、覆盖历史证据/固定锁/维护配置或以过期 CI 合并新 head。
+
+## Accepted clear-glass direction, 2026-10-06
+
+The owner accepted the white/transparent Home rendered by
+`d50dbec800389b9e788c42c03e873dbe6dffac69` and authorized applying its material to
+all existing product screens. [Visual System](VISUAL_SYSTEM.md) is the current
+appearance specification. [GLASS_HOME_PROPOSAL.md](GLASS_HOME_PROPOSAL.md) records
+the accepted baseline and evidence, despite its retained historical filename.
+This supersedes earlier Home-only restrictions and conflicting Continuum color/
+surface targets. Original reference payloads and behavioral/permission boundaries
+remain intact. The rejected opaque/gray full-site refresh is not adopted.
+Source and actual responsive verification still precede merge and exact-main
+adoption; style acceptance does not activate accounts, providers or commerce.

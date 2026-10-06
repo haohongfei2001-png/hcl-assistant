@@ -1,0 +1,112 @@
+/* Shared application surfaces follow the accepted clear Home material.
+   Load before glass-home.css so its reviewed Home geometry remains exact. */
+.continuum-shell:not(.is-home) {
+ --sidebar:216px;--muted:#585b68;--line:rgba(155,147,188,.22);--accent:#6257aa;
+ --continuum-ink:#292a35;--continuum-focus:#6257aa;
+ color:#292a35;
+ background:radial-gradient(ellipse 32% 23% at 67% 47%,rgba(223,214,255,.07),transparent 100%),radial-gradient(ellipse 26% 22% at 42% 57%,rgba(219,233,255,.07),transparent 100%),#fff;
+}
+.continuum-shell:not(.is-home) :is(button,summary):hover {background:rgba(235,229,255,.24)}
+.continuum-shell:not(.is-home) button:disabled {opacity:1;color:#686976;background:rgba(255,255,255,.48);box-shadow:none}
+.continuum-shell:not(.is-home) #sidebar {background:rgba(255,255,255,.28);border-right:1px solid rgba(189,181,208,.16);box-shadow:inset -1px 0 0 rgba(255,255,255,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.continuum-shell:not(.is-home) .brand {color:#33343e;font-size:18px;letter-spacing:-.04em}
+.continuum-shell:not(.is-home) #sidebar .new-conversation {min-height:44px;border-radius:15px;color:#464652;font-weight:500;background:linear-gradient(155deg,rgba(255,255,255,.72),rgba(255,255,255,.25));border:1px solid rgba(202,194,224,.32);box-shadow:inset 0 1px 0 #fff,0 4px 10px rgba(75,80,105,.04)}
+.continuum-shell:not(.is-home) #sidebar nav button,.continuum-shell:not(.is-home) .sidebar-bottom button {color:#585b68}
+.continuum-shell:not(.is-home) #sidebar nav button[aria-current=true] {background:rgba(238,232,255,.38);color:#403b72;box-shadow:inset 2px 0 0 #9688ce}
+.continuum-shell:not(.is-home) .sidebar-bottom {border-color:rgba(175,179,192,.18)}
+.continuum-shell:not(.is-home) .chat-workspace>header>button:first-child {color:#646573}
+.continuum-shell:not(.is-home) .conversation-identity strong {color:#34343e}
+.continuum-shell:not(.is-home) .header-search {flex:0 1 230px;max-width:230px;padding:8px 12px;font-size:13px;color:#585b68;background:rgba(255,255,255,.3);border-color:rgba(181,169,211,.25);box-shadow:inset 0 1px 0 #fff}
+.continuum-shell:not(.is-home) .header-search kbd {background:rgba(255,255,255,.6);border-color:rgba(181,169,211,.2)}
+.continuum-shell:not(.is-home) .environment {color:#585b68;background:transparent;border-color:transparent}
+.continuum-shell:not(.is-home) .user-message {color:#34343e;background:rgba(244,239,255,.28);border-color:rgba(194,181,225,.26);box-shadow:inset 0 1px 0 #fff,0 3px 12px rgba(78,68,113,.025)}
+.continuum-shell:not(.is-home) .assistant-message {color:#34343e;background:rgba(255,255,255,.62);border-color:rgba(190,180,216,.22);box-shadow:0 -3px 20px rgba(87,74,123,.025)}
+.continuum-shell:not(.is-home) .turn-actions {color:#585b68;background:rgba(255,255,255,.62);border-color:rgba(190,180,216,.22)}
+.continuum-shell:not(.is-home) .turn-actions :is(button,summary) {color:#514579}
+.continuum-shell:not(.is-home) .turn-actions>button:first-child {background:rgba(255,255,255,.68);border-color:rgba(167,148,208,.28)}
+.continuum-shell:not(.is-home) .answer-identity {color:#474451}
+.continuum-shell:not(.is-home) .markdown :is(h1,h2,h3,h4) {color:#292a35}
+.continuum-shell:not(.is-home) .markdown blockquote {color:#555161;background:rgba(245,240,255,.35);border-left-color:#ad9acc}
+.continuum-shell:not(.is-home) .markdown a {color:#5b4794}
+.continuum-shell:not(.is-home) .markdown :not(pre)>code {color:#4e416c;background:rgba(246,241,255,.4);border-color:rgba(188,174,215,.22)}
+.continuum-shell:not(.is-home) .code-block,.continuum-shell:not(.is-home) .table-scroll {background:rgba(255,255,255,.7);border-color:rgba(180,165,206,.26)}
+.continuum-shell:not(.is-home) .code-block>div {color:#585b68;background:rgba(245,240,255,.25);border-color:rgba(180,165,206,.2)}
+.continuum-shell:not(.is-home) .code-block pre,.continuum-shell:not(.is-home) table {color:#34343e}
+.continuum-shell:not(.is-home) :is(th,td) {border-color:rgba(180,165,206,.22)}
+.continuum-shell:not(.is-home) th {color:#474451;background:rgba(245,240,255,.3)}
+.continuum-shell:not(.is-home) td,.continuum-shell:not(.is-home) tbody tr:nth-child(even) td {background:rgba(255,255,255,.6)}
+.continuum-shell:not(.is-home) .message-menu {background:rgba(255,255,255,.9);border-color:rgba(174,158,202,.28);box-shadow:0 7px 22px rgba(72,62,104,.06)}
+.continuum-shell:not(.is-home) :is(.file-reference,.operation-feedback,.empty-history button,.history-recovery button) {color:#514579;background:rgba(255,255,255,.74);border-color:rgba(174,158,202,.27)}
+.continuum-shell:not(.is-home) .composer-note,.continuum-shell:not(.is-home) .composer-consent {color:#585b68}
+.continuum-shell:not(.is-home) .composer,.continuum-shell:not(.is-home) .composer:focus-within {padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.continuum-shell:not(.is-home) .composer-surface {position:relative;isolation:isolate;display:grid;grid-template-columns:50px minmax(0,1fr) 50px;align-items:center;gap:12px;padding:12px;border-radius:39px;background:linear-gradient(135deg,rgba(255,255,255,.64),rgba(255,255,255,.29) 55%,rgba(255,255,255,.5));border:1px solid rgba(158,151,210,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.94),inset 0 -1px 1px rgba(132,125,178,.12),0 9px 21px rgba(71,73,99,.07),0 2px 4px rgba(72,76,98,.025);backdrop-filter:blur(18px) saturate(115%);-webkit-backdrop-filter:blur(18px) saturate(115%)}
+.continuum-shell:not(.is-home) .composer-surface::before {content:"";position:absolute;inset:-1px;z-index:-1;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(105deg,rgba(195,179,236,.8),rgba(190,199,237,.38) 38%,rgba(147,146,216,.82));mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor}
+.continuum-shell:not(.is-home) .composer-surface:focus-within {border-color:#7770b2;box-shadow:inset 0 0 0 1px #fff,0 0 0 2px rgba(154,145,213,.14),0 10px 25px rgba(71,73,99,.08)}
+.continuum-shell:not(.is-home) .composer textarea {grid-column:2;grid-row:1;min-height:50px;padding:13px 19px;border:0;border-radius:26px;font-size:16px;line-height:24px;color:#34343e;background:rgba(255,255,255,.3);box-shadow:inset 0 1px 3px rgba(255,255,255,.55),0 1px 0 rgba(255,255,255,.8)}
+.continuum-shell:not(.is-home) .composer textarea::placeholder {color:#60616e;opacity:1}
+.continuum-shell:not(.is-home) .composer-controls {display:contents}
+.continuum-shell:not(.is-home) .composer-controls>button {display:grid;place-items:center;grid-column:1;grid-row:1;align-self:center;width:50px;height:50px;min-width:50px;min-height:50px;margin:0;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.92);color:#646573;background:linear-gradient(145deg,rgba(255,255,255,.85),rgba(247,248,251,.35));box-shadow:inset 0 1px 1px #fff,0 4px 8px rgba(85,88,109,.09),0 1px 1px rgba(85,88,109,.05)}
+.continuum-shell:not(.is-home) .composer-controls>button:last-child {grid-column:3}
+.continuum-shell:not(.is-home) .composer-controls svg {display:block;width:23px;height:23px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.continuum-shell:not(.is-home) .composer-controls .send {color:#403b72;background:radial-gradient(ellipse at 55% 55%,rgba(161,174,236,.67),rgba(200,189,242,.56) 45%,rgba(255,255,255,.86) 78%);border-color:rgba(255,255,255,.96);box-shadow:inset 0 1px 2px #fff,inset 0 -2px 7px rgba(255,255,255,.8),0 4px 10px rgba(108,101,166,.12)}
+.continuum-shell:not(.is-home) .composer-controls .send:disabled {color:#747584;background:linear-gradient(140deg,rgba(255,255,255,.85),rgba(229,228,242,.42));border-color:rgba(255,255,255,.9);box-shadow:inset 0 1px 1px #fff,0 3px 7px rgba(85,88,109,.06)}
+.continuum-shell:not(.is-home) .composer-controls>button:focus-visible {outline:2px solid #6257aa;outline-offset:4px}
+.continuum-shell:not(.is-home) .composer-surface>.attachment {grid-column:1/-1;background:rgba(255,255,255,.6);border-color:rgba(158,151,190,.28);color:#545665;margin:0;border-radius:18px}
+.continuum-shell:not(.is-home) .composer-consent {padding:12px 8px 0}
+
+/* Detail layers keep their original navigation, scrolling and source anchors. */
+.continuum-shell :is(.overlay,.dialog-panel),.continuum-shell>.context-panel {color:#34343e;background:rgba(255,255,255,.92);border-color:rgba(169,151,209,.25);box-shadow:inset 0 1px 0 #fff,0 14px 44px rgba(65,54,95,.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.continuum-shell :is(.overlay,.dialog-panel)::backdrop {background:rgba(45,35,69,.1);backdrop-filter:blur(3px)}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(h2,h3,h4),.continuum-shell .panel-header {color:#292a35}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(p,li,dd,dt,label,small,summary) {color:inherit}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(input,select,textarea) {color:#34343e;background:rgba(255,255,255,.75);border-color:rgba(137,119,175,.4);border-radius:13px;box-shadow:inset 0 1px 0 #fff}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(input,textarea)::placeholder {color:#60616e;opacity:1}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(button,summary):focus-visible,.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(input,select,textarea):focus-visible {outline:3px solid #6257aa;outline-offset:3px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) button {color:#514579;border-color:rgba(173,156,206,.22);background:rgba(255,255,255,.5);border-radius:13px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) button:hover:not(:disabled) {background:rgba(243,235,255,.32)}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) .danger {color:#a43147;border-color:rgba(185,85,108,.25)}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) button:disabled {color:#686976;background:rgba(255,255,255,.4);opacity:1}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) form,.continuum-shell .change-columns section,.continuum-shell .context-panel .source-content {background:rgba(255,255,255,.6);border-color:rgba(183,166,213,.23)}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(dd,dt) {color:#514d60}
+.continuum-shell :is(.memory-card,.search-hit) {border-color:rgba(180,165,206,.23)}
+.continuum-shell .context-panel .panel-header {background:rgba(255,255,255,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.continuum-shell .context-panel .source-list>button,.continuum-shell .source-return {background:rgba(255,255,255,.65);border-color:rgba(171,150,207,.28);color:#514579}
+.continuum-shell .context-panel button[aria-current=true],.continuum-shell .context-panel .source-list>button[aria-current=true] {background:rgba(241,232,255,.5);border-color:#9e89c9;box-shadow:inset 2px 0 #9e89c9}
+.continuum-shell .context-panel mark {color:#403451;background:#eae0fa}
+.continuum-shell .overlay:not(.context-panel) .panel-header {position:sticky;top:0;z-index:2;margin-top:-12px;padding:12px 0;background:rgba(255,255,255,.97);box-shadow:0 1px 0 rgba(180,165,206,.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) label:has(input[type=checkbox]) {display:flex;flex-direction:row;align-items:center;gap:9px;min-height:44px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) input[type=checkbox] {flex:none;width:18px;height:18px;min-height:18px;margin:0;accent-color:#6257aa}
+.continuum-shell .member-commerce :is(article,li) {border-color:rgba(180,165,206,.23)}
+.continuum-shell .member-commerce a {color:#5b4794;overflow-wrap:anywhere}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) [role=alert] {color:#8b303e;background:rgba(255,238,242,.6);border-radius:12px;padding:10px 12px}
+
+@media(max-width:959px) {
+ .continuum-shell:not(.is-home) #sidebar {background:rgba(255,255,255,.9)}
+}
+@media(max-width:767px) {
+ .continuum-shell:not(.is-home) .header-search {order:3;flex:1 1 140px;max-width:none}
+ .continuum-shell:not(.is-home) .composer-surface {grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;padding:9px;border-radius:33px}
+ .continuum-shell:not(.is-home) .composer textarea {min-height:44px;padding:10px 12px;border-radius:23px;font-size:16px;line-height:24px}
+ .continuum-shell:not(.is-home) .composer-controls>button {width:44px;height:44px;min-width:44px;min-height:44px}
+ .continuum-shell:not(.is-home) .composer-controls svg {width:21px;height:21px}
+ .continuum-shell :is(.overlay,.dialog-panel),.continuum-shell>.context-panel {background:rgba(255,255,255,.97)}
+ .continuum-shell .overlay:not(.context-panel) .panel-header {top:0;margin-top:calc(-12px - env(safe-area-inset-top));padding-top:calc(12px + env(safe-area-inset-top))}
+}
+.continuum-shell:not(.is-home)[data-transparency=opaque] {background:#fff}
+.continuum-shell[data-transparency=opaque] :is(#sidebar,.header-search,.composer-surface,.assistant-message,.turn-actions,.overlay,.dialog-panel,.context-panel,.panel-header) {background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+.continuum-shell:not(.is-home)[data-transparency=opaque] .composer {background:transparent}
+.continuum-shell:not(.is-home)[data-transparency=opaque] .composer textarea {background:#fff}
+@media(prefers-reduced-transparency:reduce) {
+ .continuum-shell:not(.is-home) #sidebar {background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .continuum-shell:not(.is-home) {background:#fff}
+ .continuum-shell :is(#sidebar,.header-search,.composer-surface,.assistant-message,.turn-actions,.overlay,.dialog-panel,.context-panel,.panel-header) {background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .continuum-shell:not(.is-home) .composer {background:transparent}
+ .continuum-shell:not(.is-home) .composer textarea {background:#fff}
+}
+@media(forced-colors:active) {
+ .continuum-shell:not(.is-home) #sidebar {background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .continuum-shell:not(.is-home) {background:Canvas;color:CanvasText}
+ .continuum-shell :is(#sidebar,.header-search,.composer-surface,.composer textarea,.composer-controls>button,.assistant-message,.turn-actions,.overlay,.dialog-panel,.context-panel,.panel-header) {background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .continuum-shell:not(.is-home) .composer-surface::before {display:none}
+ .continuum-shell:not(.is-home) :is(button,input,select,textarea):focus-visible,.continuum-shell:not(.is-home) .composer :is(button,textarea):focus-visible,.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(button,input,select,textarea):focus-visible {outline:3px solid Highlight}
+}

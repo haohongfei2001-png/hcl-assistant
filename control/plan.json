@@ -556,11 +556,20 @@
       "live_activation_authorized": false,
       "automatic_debit_authorized": false,
       "document": "docs/CONSUMER_BILLING.md"
+    },
+    "visual_refresh": {
+      "id": "CLEAR-GLASS-20261006",
+      "owner_direction": "ACCEPTED_HOME_AND_AUTHORIZED_PRODUCT_WIDE_APPLICATION",
+      "accepted_home_sha": "d50dbec800389b9e788c42c03e873dbe6dffac69",
+      "document": "docs/VISUAL_SYSTEM.md",
+      "implementation_status": "IN_REVIEW",
+      "changes_permissions": false,
+      "new_top_level_queue": false
     }
   },
   "writer": {
-    "branch": "product/order-feedback-refresh",
-    "scope": "REPAIR_STALE_ORDER_REFRESH_FEEDBACK_SYNTHETIC_ONLY",
+    "branch": "product/glass-home-preview",
+    "scope": "APPLY_ACCEPTED_CLEAR_GLASS_TO_EXISTING_PRODUCT_SURFACES",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
