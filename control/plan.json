@@ -559,8 +559,8 @@
     }
   },
   "writer": {
-    "branch": "product/order-feedback-refresh",
-    "scope": "REPAIR_STALE_ORDER_REFRESH_FEEDBACK_SYNTHETIC_ONLY",
+    "branch": "product/glass-home-preview",
+    "scope": "SINGLE_HOME_GLASS_MATERIAL_PROPOSAL_PENDING_OWNER_VISUAL_ACCEPTANCE",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
