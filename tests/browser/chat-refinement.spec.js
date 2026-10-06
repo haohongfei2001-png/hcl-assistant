@@ -116,3 +116,40 @@ for(const width of [1440,390]) test(`glass Home material and actual controls at 
  await page.screenshot({path:info.outputPath(`glass-home-forced-colors-${width}.png`),fullPage:true});
  expect(posts).toBe(0);
 });
+
+for(const width of [1440,390]) test(`clear glass conversation, search, memory and settings at ${width}`,async({page},info)=>{
+ await page.setViewportSize({width,height:width===390?844:960});await page.emulateMedia({reducedMotion:'reduce'});
+ const calls=[];page.on('request',request=>{if(request.method()==='POST'||new URL(request.url()).pathname.startsWith('/v1/'))calls.push(request.url())});
+ await page.goto(pages);await send(page,'记录：周六上午先读一本书，再整理笔记。');
+ const composer=page.getByLabel('消息',{exact:true});await composer.fill('这是一份保留的合成草稿');
+ const shot=async name=>{expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath(`glass-shared-${name}-${width}.png`),fullPage:true,animations:'disabled'})};
+ const navigation=page.getByRole('button',{name:'切换侧栏',exact:true});
+ await shot('conversation');
+ expect((await page.locator('.composer-surface').boundingBox()).height).toBeLessThanOrEqual(width===390?66:78);
+ if(await navigation.getAttribute('aria-expanded')==='false')await navigation.click();await shot('sidebar');
+ if(width===390)await page.getByRole('button',{name:'关闭侧栏',exact:true}).click();
+ await page.getByRole('button',{name:'搜索对话',exact:true}).click();await page.getByLabel('搜索历史').fill('周六');
+ await expect(page.locator('.search-hit').first()).toContainText('周六');await shot('search');await page.getByRole('button',{name:'关闭搜索对话',exact:true}).click();
+ if(await navigation.getAttribute('aria-expanded')==='false')await navigation.click();
+ await page.getByRole('button',{name:'记忆管理',exact:true}).click();await expect(page.locator('.memory-card').first()).toContainText('周六');await shot('memory');
+ await page.getByRole('button',{name:'关闭记忆管理',exact:true}).click();await page.getByRole('button',{name:'设置',exact:true}).click();await shot('settings');
+ const dialog=page.getByRole('dialog',{name:'设置',exact:true});await dialog.evaluate(node=>node.scrollTop=node.scrollHeight);
+ await expect(page.getByRole('button',{name:'关闭设置',exact:true})).toBeInViewport({ratio:1});await shot('settings-scrolled');
+ await page.getByRole('button',{name:'关闭设置',exact:true}).click();
+ if(width===390&&await page.locator('.nav-scrim').isVisible())await page.getByRole('button',{name:'关闭侧栏',exact:true}).click();
+ await expect(composer).toHaveValue('这是一份保留的合成草稿');
+ // Exercise the real CSS media preference, not an injected screenshot style.
+ const cdp=await page.context().newCDPSession(page);
+ await cdp.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-transparency',value:'reduce'}]});
+ expect(await page.evaluate(()=>matchMedia('(prefers-reduced-transparency: reduce)').matches)).toBe(true);
+ if(await navigation.getAttribute('aria-expanded')==='false')await navigation.click();
+ expect(await page.locator('#sidebar').evaluate(el=>getComputedStyle(el).backdropFilter)).toBe('none');
+ expect(await page.locator('.composer-surface').evaluate(el=>getComputedStyle(el).backdropFilter)).toBe('none');
+ await shot('reduced-transparency');await cdp.send('Emulation.setEmulatedMedia',{features:[]});await cdp.detach();
+ await page.emulateMedia({reducedMotion:'reduce',forcedColors:'active'});
+ expect(await page.locator('#sidebar').evaluate(el=>getComputedStyle(el).backdropFilter)).toBe('none');
+ if(width===390)await page.getByRole('button',{name:'关闭侧栏',exact:true}).click();
+ await composer.focus();expect(await composer.evaluate(el=>parseFloat(getComputedStyle(el).outlineWidth))).toBeGreaterThanOrEqual(2);
+ expect(await page.locator('.composer-surface').evaluate(el=>getComputedStyle(el).backdropFilter)).toBe('none');
+ await shot('forced-colors');expect(calls).toEqual([]);
+});

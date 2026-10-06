@@ -82,11 +82,15 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 
 任何并发 main 前进都需重新基线协调，只在最新树上重放本次资产/规格/计划差异并保留新 main 父历史。不得 force-push、重置已完成状态、覆盖历史证据/固定锁/维护配置或以过期 CI 合并新 head。
 
-## Single-screen visual proposal, 2026-10-06
+## Accepted clear-glass direction, 2026-10-06
 
-The owner's latest visual correction authorizes a Home-only glass-material
-proposal described in [GLASS_HOME_PROPOSAL.md](GLASS_HOME_PROPOSAL.md). This
-supersedes conflicting Home appearance constraints for the candidate only.
-It does not adopt the rejected full-site refresh, replace the original reference
-payloads or declare the proposal accepted. Desktop/mobile visual acceptance is
-pending; conversation/account surfaces and capability truth remain unchanged.
+The owner accepted the white/transparent Home rendered by
+`d50dbec800389b9e788c42c03e873dbe6dffac69` and authorized applying its material to
+all existing product screens. [Visual System](VISUAL_SYSTEM.md) is the current
+appearance specification. [GLASS_HOME_PROPOSAL.md](GLASS_HOME_PROPOSAL.md) records
+the accepted baseline and evidence, despite its retained historical filename.
+This supersedes earlier Home-only restrictions and conflicting Continuum color/
+surface targets. Original reference payloads and behavioral/permission boundaries
+remain intact. The rejected opaque/gray full-site refresh is not adopted.
+Source and actual responsive verification still precede merge and exact-main
+adoption; style acceptance does not activate accounts, providers or commerce.

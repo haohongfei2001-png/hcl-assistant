@@ -54,7 +54,7 @@ test('an existing owner cookie never selects owner chat on the ordinary route',a
 test('ordinary signup and recovery disclose restricted test email before any submission',async({page},info)=>{
  await page.setViewportSize({width:390,height:844});const state=await fixture(page,{available:true});
  const disclosure='当前使用测试邮件服务，仅项目团队邮箱能收到注册和找回密码邮件。公开注册邮件服务尚未开放。';
- await page.goto('/');await expect(page.getByText(disclosure,{exact:true})).toBeVisible();
+ await page.setViewportSize({width:1440,height:960});await page.goto('/');await expect(page.getByLabel('用户邮箱',{exact:true})).toBeVisible();await page.screenshot({path:info.outputPath('clear-glass-login-desktop.png'),fullPage:true,animations:'disabled'});await page.setViewportSize({width:390,height:844});await expect(page.getByText(disclosure,{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'没有账号，注册',exact:true}).click();
  await expect(page.getByText(disclosure,{exact:true})).toBeVisible();
  await expect(page.locator('body')).toContainText('注册不会自动开通会员');

@@ -108,6 +108,7 @@ test('a superseded order read cannot restore old success after a newer refund re
 
 test('consumer explicitly prepares one bound order and server-confirmed membership preserves chat draft',async({page},info)=>{
  const state=await fixture(page);const button=page.getByRole('button',{name:'创建订单并准备支付',exact:true});await expect(button).toBeDisabled();
+ const consent=page.getByLabel(/我已核对 离线会员套餐/);const box=await consent.boundingBox();expect(box.width).toBeLessThanOrEqual(20);expect(box.height).toBeLessThanOrEqual(20);expect((await consent.locator('..').boundingBox()).height).toBeGreaterThanOrEqual(44);
  await page.getByLabel(/我已核对 离线会员套餐/).check();await button.evaluate(node=>{node.click();node.click()});
  const link=page.getByRole('link',{name:'在支付服务打开订单',exact:true});await expect(link).toHaveAttribute('href','https://checkout.example.test/offline-order-1');
  expect(state.created).toHaveLength(1);expect(state.checkout).toHaveLength(1);expect(state.queries).toHaveLength(0);
@@ -129,8 +130,9 @@ test('uncertain checkout remains query-only and cannot unlock a member from a br
  await page.screenshot({path:info.outputPath('membership-order-uncertain-mobile.png'),fullPage:true,animations:'disabled'});
 });
 
-test('unconfigured billing displays no offers and never dispatches a payment operation',async({page})=>{
+test('unconfigured billing displays no offers and never dispatches a payment operation',async({page},info)=>{
  const state=await fixture(page,{closed:true});await expect(page.getByRole('region',{name:'会员购买与订单',exact:true})).toContainText('会员购买尚未开放');
+ await page.screenshot({path:info.outputPath('clear-glass-closed-membership-desktop.png'),fullPage:true,animations:'disabled'});await page.setViewportSize({width:390,height:600});const dialog=page.getByRole('dialog',{name:'设置',exact:true});expect(await dialog.evaluate(node=>{node.scrollTop=node.scrollHeight;return node.scrollTop})).toBeGreaterThan(0);await expect(page.getByRole('button',{name:'关闭设置',exact:true})).toBeInViewport({ratio:1});await page.screenshot({path:info.outputPath('clear-glass-membership-short-phone.png'),fullPage:true,animations:'disabled'});
  await expect(page.getByRole('button',{name:'创建订单并准备支付'})).toHaveCount(0);expect(state.created).toHaveLength(0);expect(state.checkout).toHaveLength(0);expect(state.queries).toHaveLength(0);
 });
 

@@ -1,31 +1,34 @@
-# Home glass-material proposal
+# Accepted clear-glass Home baseline
 
-Status: candidate awaiting actual desktop/mobile captures and owner visual
-acceptance. The previously proposed full-site color refresh was rejected and
-has not been adopted. This proposal starts from main a7b7619718e301d43edfa4a71eeb3fdcfc667b2e.
+The owner accepted the actual bright white/transparent Home captures from
+`d50dbec800389b9e788c42c03e873dbe6dffac69` on 2026-10-06 and requested the same
+visual language across the existing product. The earlier gray substrate and
+recessed gray input proposals were not accepted. The filename is retained for
+existing links; this is now baseline evidence, not a pending Home-only proposal.
 
-The owner's two supplied close-ups establish material, not a promotional-card
-layout: a milky translucent shell over a cool gray substrate, a fine purple-blue
-rim and white inner highlight, recessed input, softly raised circular controls.
-The implementation uses the actual Home composer, with attachment and Send;
-it adds no microphone, third-party integration, avatar or security claim.
-Reference images remain outside this public repository.
+Use white or transparent surfaces with fine purple-blue rims, white inner
+highlights, light shadows and softly raised circular attachment/Send controls.
+Glass depth comes from the edge/light layers, not gray fills, a large colored
+canvas, opaque heavy cards or unrelated decoration. The actual app layout is
+retained; no promotional-card wrapper, microphone, third-party integration,
+avatar or security claim is added. User reference images remain outside this
+public repository.
 
-Scope is the empty Home screen only. Remove its decorative orb, reduce heavy
-chrome, retain real environment/privacy/error information and three supported
-actions. Input starts at one text line, grows through seven, and keeps the actual
-IME/Enter, draft, attachment, consent, send, stop and disabled-state behavior.
-Conversation rendering and account, membership, billing and server logic do not
-change. Existing companion selections remain available on conversation answers.
+The shared input starts at one line and grows through seven. Preserve actual
+IME/Enter, draft, attachment, consent, Send, Stop and disabled-state behavior.
+Conversation-answer companion preferences remain available; Home has no orb.
+Text remains opaque and readable. Controls retain at least 44px hit areas,
+visible focus, reduced-motion, opaque and forced-color fallbacks.
 
-CSS translucency affects surfaces only. Text stays opaque and readable. Buttons
-retain at least 44px hit areas; keyboard focus, reduced motion, opaque and forced
-color fallbacks remain available. Real synthetic Pages/browser captures at
-1440px and 390px, empty and with an unsent draft, are required. Screenshots are
-unedited and use no mask or injected presentation CSS. Existing behavior,
-contrast and cloud/member admission regressions remain required.
+Accepted Home evidence: workflow run `37520848015`, head `d50dbec8`, with actual
+1440x960 and 390x844 default, focused, draft, opaque and forced-color captures.
+Its 158 generic browser, 45 cloud browser, 193 PostgreSQL, 501 Python and 82 Node
+checks passed. The images were unedited and used synthetic content only.
+These historical results do not validate a later full-product candidate.
 
-Local browser launch is blocked by the executor's socket restriction; the
-existing hosted synthetic browser workflow supplies actual pixel evidence.
-No production adoption or extension to other screens follows from passing CI:
-owner visual acceptance is still required.
+The current extension is governed by [Visual System](VISUAL_SYSTEM.md). It needs
+actual conversation, search/sidebar, evidence/source/revision, memory, settings,
+account/membership, empty/error and narrow-screen images at its final source
+head, plus all existing behavioral and admission checks. Local Chromium remains
+unavailable due the executor socket restriction; existing hosted browser gates
+supply actual pixels. No provider calls or production activation are inferred.

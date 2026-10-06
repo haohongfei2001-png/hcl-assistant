@@ -114,12 +114,15 @@ all-user shared500, tenant isolation, no self-grant and no automatic paid call.
 Live schema/security/config, test rights and commercial activation remain separate.
 See docs/MEMBER_READINESS_TRANSITION.md.
 
-## Single Home material proposal (2026-10-06)
+## Accepted clear-glass product continuation (2026-10-06)
 
-The owner rejected the unmerged full-site color refresh and requested visible
-glass material and finer actual controls. Prepare only the real Home surface:
-translucent milky shell, fine rim, recessed input and circular attach/send.
-Actual desktop/mobile captures require owner visual acceptance before extending
-the treatment or adopting it. No marketing-card layout, decorative integrations,
-new capability, account/provider/payment/security change is included. See
-[the bounded proposal](docs/GLASS_HOME_PROPOSAL.md).
+The owner accepted the actual bright white/transparent Home captures from
+`d50dbec800389b9e788c42c03e873dbe6dffac69` and requested the same language across
+all existing HCLA screens. Preserve that Home baseline while applying clear
+surfaces, fine purple-blue rims and light shadows to conversation, detail,
+search, memory, settings, account and membership views. Gray page/input fills
+and the rejected full-site color refresh are not the target. This presentation
+work changes no capability, account/provider/payment/security rule. Actual
+responsive captures, existing behavioral gates, source review and exact-head/
+main checks remain adoption conditions. See [Visual System](docs/VISUAL_SYSTEM.md)
+and [the accepted Home baseline](docs/GLASS_HOME_PROPOSAL.md).
