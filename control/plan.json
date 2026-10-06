@@ -559,8 +559,8 @@
     }
   },
   "writer": {
-    "branch": "product/member-runtime-dependencies",
-    "scope": "REPAIR_MEMBER_AUTH_DEPLOYMENT_DEPENDENCIES_NO_NEW_AUTHORIZATION",
+    "branch": "product/order-feedback-refresh",
+    "scope": "REPAIR_STALE_ORDER_REFRESH_FEEDBACK_SYNTHETIC_ONLY",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
