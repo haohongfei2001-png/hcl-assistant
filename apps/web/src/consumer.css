@@ -1,0 +1,220 @@
+/* Consumer visual refresh, 2026-10-06. Presentation only; shared by Web and Pages. */
+:root {
+ --ui-canvas:#f4f5f8;
+ --ui-surface:#ffffff;
+ --ui-soft:#f7f8fa;
+ --ui-ink:#171923;
+ --ui-muted:#626875;
+ --ui-line:#e5e7ed;
+ --ui-focus:#5f58c8;
+ --ui-accent:#615bc9;
+ --ui-selected:#eeedf8;
+ --ui-shadow:0 8px 32px rgba(28,32,48,.045),0 1px 3px rgba(28,32,48,.025);
+ --ui-radius:24px;
+ color:var(--ui-ink);
+ background:var(--ui-canvas);
+ --accent:var(--ui-focus);
+ --muted:var(--ui-muted);
+ --line:var(--ui-line);
+}
+.continuum-shell {
+ --sidebar:224px;
+ --muted:var(--ui-muted);
+ --line:var(--ui-line);
+ --accent:var(--ui-accent);
+ --continuum-ink:var(--ui-ink);
+ --continuum-field:var(--ui-canvas);
+ --continuum-frost:var(--ui-soft);
+ --continuum-surface:var(--ui-surface);
+ --continuum-selected:var(--ui-selected);
+ --continuum-focus:var(--ui-focus);
+ --continuum-shadow:var(--ui-shadow);
+ background:var(--ui-canvas);
+ color:var(--ui-ink);
+ gap:14px;
+ padding:14px;
+}
+.continuum-shell ::selection {color:var(--ui-ink);background:#dedbf5}
+.continuum-shell :is(button,summary):hover {background:#eeeef3}
+.continuum-shell :is(button,summary,a,input,select,textarea):focus-visible {outline-color:var(--ui-focus)}
+.continuum-shell button:disabled {color:#656b79;background:#eeeef3;border-color:transparent}
+.continuum-shell #sidebar {padding:18px 10px;background:transparent;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.continuum-shell .brand {padding:3px 10px 25px;color:var(--ui-ink);font-size:20px;font-weight:700;letter-spacing:-.045em}
+.continuum-shell .brand span {font-weight:450;color:var(--ui-muted)}
+.continuum-shell #sidebar>button {color:var(--ui-ink);padding-inline:14px}
+.continuum-shell #sidebar .new-conversation {min-height:48px;background:var(--ui-surface);border:1px solid var(--ui-line);border-radius:14px;box-shadow:0 2px 6px #1c203004;color:var(--ui-ink);font-weight:600}
+.continuum-shell #sidebar .new-conversation:hover {background:#fcfcfe;border-color:#d4d5df}
+.continuum-shell #sidebar nav {gap:4px;margin-top:14px}
+.continuum-shell #sidebar nav button {color:var(--ui-muted);border-radius:12px}
+.continuum-shell #sidebar nav button[aria-current=true] {color:var(--ui-ink);background:#e9eaf0;box-shadow:none;font-weight:600}
+.continuum-shell .sidebar-bottom {border-color:var(--ui-line);padding-top:16px}
+.continuum-shell .sidebar-bottom button {color:var(--ui-muted)}
+.continuum-shell .chat-workspace {border:1px solid var(--ui-line);border-radius:28px;background:var(--ui-surface);box-shadow:var(--ui-shadow)}
+.continuum-shell .chat-workspace>header {padding:15px 22px;min-height:76px;border-bottom:1px solid #f1f2f5;gap:10px}
+.continuum-shell .chat-workspace>header>button:first-child {color:var(--ui-muted)}
+.continuum-shell .conversation-identity strong {color:var(--ui-ink);font-size:16px;font-weight:600}
+.continuum-shell .background-toggle,.continuum-shell .conversation-identity span {color:var(--ui-muted)}
+.continuum-shell .header-search {border-color:var(--ui-line);background:var(--ui-soft);color:var(--ui-muted);max-width:300px;min-height:44px;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:13px}
+.continuum-shell .header-search kbd {border-color:var(--ui-line);background:#fff;color:var(--ui-muted)}
+.continuum-shell .environment {border-color:var(--ui-line);background:#fff;color:var(--ui-muted);border-radius:12px;font-size:12px;max-width:235px}
+.continuum-shell .chat-workspace>main {max-width:860px;padding-inline:26px}
+.continuum-shell .messages {padding-top:26px;padding-bottom:20px}
+.continuum-shell .user-message {background:#f1f2f6;border-color:#ebecef;color:var(--ui-ink);box-shadow:none;border-radius:19px 19px 5px 19px;padding:12px 17px}
+.continuum-shell .assistant-message {padding:20px 18px 4px;color:var(--ui-ink);background:var(--ui-surface);border-color:var(--ui-surface);box-shadow:none}
+.continuum-shell .answer-identity {color:var(--ui-ink);margin-bottom:14px;gap:8px}
+.continuum-shell .answer-identity>small {color:var(--ui-muted)}
+.continuum-shell .turn-actions {padding:4px 10px 16px;background:var(--ui-surface);border-color:var(--ui-surface);color:var(--ui-muted);box-shadow:none}
+.continuum-shell .turn-actions :is(button,summary) {color:var(--ui-muted)}
+.continuum-shell .turn-actions>button:first-child {background:var(--ui-soft);border-color:var(--ui-line);border-radius:12px}
+.continuum-shell .message-menu {background:#fff;border-color:var(--ui-line);box-shadow:var(--ui-shadow)}
+.continuum-shell .markdown :is(h1,h2,h3,h4) {color:var(--ui-ink);font-weight:700}
+.continuum-shell .markdown blockquote {color:#545b69;background:var(--ui-soft);border-color:#cbccd8}
+.continuum-shell .markdown a {color:#514ba6}
+.continuum-shell .markdown :not(pre)>code {color:#414656;background:#f1f2f6;border-color:var(--ui-line)}
+.continuum-shell .code-block {background:var(--ui-soft);border-color:var(--ui-line)}
+.continuum-shell .code-block>div {background:#eeeff4;border-color:var(--ui-line);color:#565d6d}
+.continuum-shell .code-block pre,.continuum-shell table {color:#343b4b}
+.continuum-shell .table-scroll,.continuum-shell :is(th,td) {border-color:var(--ui-line)}
+.continuum-shell th {color:var(--ui-ink);background:#eeeff4}
+.continuum-shell td {background:#fff}
+.continuum-shell tbody tr:nth-child(even) td {background:#f8f9fb}
+.continuum-shell .composer {
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;
+ gap:6px 12px;
+ padding:12px 14px;
+ border:1px solid #dfe1e8;
+ border-radius:26px;
+ background:#fff;
+ box-shadow:0 4px 20px #24253807;
+}
+.continuum-shell .composer::before {content:'';position:absolute;inset:-2px;border-radius:inherit;padding:1px;background:linear-gradient(115deg,#b7a2ee,#929de7);pointer-events:none;opacity:0;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.continuum-shell .composer:focus-within {border-color:var(--ui-focus);box-shadow:0 0 0 3px #b5a9ee24,0 6px 25px #786bb912}
+.continuum-shell .composer:focus-within::before {opacity:1}
+.continuum-shell .composer textarea {grid-column:1;grid-row:1;padding:4px 8px;color:var(--ui-ink);font-size:16px;line-height:26px}
+.continuum-shell .composer textarea::placeholder {color:#697080}
+.continuum-shell .composer-controls {grid-column:2;grid-row:1;display:flex;gap:6px;padding:0;flex-wrap:nowrap}
+.continuum-shell .composer-controls>button {padding:10px 13px;min-height:44px;border-radius:999px;background:var(--ui-soft);border-color:var(--ui-line);color:#535b6a;font-size:13px}
+.continuum-shell .composer-controls :is(.send,button:last-child) {min-height:44px;min-width:58px}
+.continuum-shell .composer-controls .send {background:var(--ui-accent);border-color:var(--ui-accent);color:#fff;box-shadow:0 3px 10px #615bc923;font-weight:600}
+.continuum-shell .composer-controls .send:hover {background:#514bae;border-color:#514bae}
+.continuum-shell .composer-controls .send:disabled {color:#656b79;background:#eeeef3;border-color:#e6e7ed;box-shadow:none}
+.continuum-shell .composer .attachment,.continuum-shell .composer-consent {grid-column:1/-1}
+.continuum-shell .attachment {color:#535b6a;background:var(--ui-soft);border-color:var(--ui-line);border-radius:13px}
+.continuum-shell .composer-consent {padding:6px 6px 0;color:var(--ui-muted)}
+.continuum-shell .composer-consent input {accent-color:var(--ui-accent)}
+.continuum-shell .composer-note {color:var(--ui-muted);font-size:12px;margin:12px 8px max(18px,env(safe-area-inset-bottom))}
+.continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {max-width:870px;padding:28px 34px clamp(24px,7vh,72px);justify-content:center}
+.continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding:0 0 24px;flex:0 0 auto}
+.continuum-shell .home-stage {display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0;padding:0;text-align:center}
+.continuum-shell .home-copy {padding:0;width:100%}
+.continuum-shell .home-copy>small {display:none}
+.continuum-shell .home-copy .home-greeting {font-size:14px;line-height:22px;color:var(--ui-muted);margin:0 auto 10px}
+.continuum-shell .home-copy h1 {font-size:clamp(30px,3.1vw,42px);line-height:1.35;font-weight:700;letter-spacing:-.055em;margin:0 0 16px;color:var(--ui-ink)}
+.continuum-shell .home-copy h1 span {color:inherit}
+.continuum-shell .home-copy>p:not(.home-greeting) {max-width:460px;margin:0 auto 8px;color:var(--ui-muted);font-size:15px;line-height:25px}
+.continuum-shell .home-companion {order:-1;margin:0 0 7px;align-self:center}
+.continuum-shell .home-companion .companion--home {width:86px;height:72px;filter:saturate(.3)}
+.continuum-shell .companion--mini {width:34px;height:30px;filter:saturate(.3)}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer {padding:12px 14px;border-radius:26px}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer textarea {padding:4px 8px;font-size:16px;line-height:26px}
+.continuum-shell:is(.is-home,:has(.home-stage)) .composer-controls {padding:0}
+.continuum-shell .home-suggestions {gap:9px;margin:17px 0 0;grid-template-columns:repeat(3,minmax(0,1fr))}
+.continuum-shell .home-suggestions button {border:1px solid var(--ui-line);border-radius:12px;padding:10px 12px;min-height:44px;background:#fff;color:#5a6170;font-size:13px;line-height:21px}
+.continuum-shell .home-suggestions button:hover {background:var(--ui-soft);border-color:#d3d5df}
+.continuum-shell .home-suggestions button span {color:#8a8e9b}
+.continuum-shell :is(.overlay,.dialog-panel) {border:1px solid var(--ui-line);background:#fff;color:var(--ui-ink);border-radius:var(--ui-radius);box-shadow:0 22px 90px #23263920;width:min(520px,calc(100vw - 40px));padding:26px}
+.continuum-shell .overlay:not(.context-panel) {margin:auto;inset:0}
+.continuum-shell :is(.overlay,.dialog-panel)::backdrop {background:#26293638;backdrop-filter:blur(3px)}
+.continuum-shell .panel-header {color:var(--ui-ink);margin-bottom:22px}
+.continuum-shell .panel-header button {border:1px solid var(--ui-line);background:var(--ui-soft);color:var(--ui-muted);border-radius:12px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(h2,h3,h4) {color:var(--ui-ink);font-weight:650;letter-spacing:-.02em}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(p,li,dd) {color:#545c6b}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) :is(input,select,textarea) {border-color:#d4d7e1;background:#fbfbfd;color:var(--ui-ink);border-radius:12px}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) summary {color:#454c5b}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) dt {color:var(--ui-ink)}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) form {border-color:var(--ui-line);background:var(--ui-soft);border-radius:16px}
+.continuum-shell .memory-card,.continuum-shell .search-hit {border-color:var(--ui-line)}
+.continuum-shell .memory-card button {border:1px solid var(--ui-line);background:var(--ui-soft);margin:3px 3px 3px 0;color:#505867}
+.continuum-shell .change-columns section {background:var(--ui-soft);border-color:var(--ui-line);border-radius:16px}
+.continuum-shell>.context-panel {margin:0;padding:22px;border:1px solid var(--ui-line);border-radius:24px;background:#fff;color:var(--ui-ink);box-shadow:var(--ui-shadow)}
+.continuum-shell .context-panel .panel-header {top:-22px;background:#fff}
+.continuum-shell .context-panel .source-list>button {background:var(--ui-soft);border-color:var(--ui-line);color:var(--ui-ink)}
+.continuum-shell .context-panel :is(.source-list>button,button)[aria-current=true] {background:var(--ui-selected);border-color:#c8c3e7;box-shadow:inset 3px 0 #aaa3d8}
+.continuum-shell .context-panel .source-content {background:var(--ui-soft);border-color:var(--ui-line);border-radius:16px}
+.continuum-shell .source-return {color:#514ba6;background:#f4f3fb;border-color:#dedbf1}
+.continuum-shell mark,.continuum-shell .context-panel mark {color:#29253f;background:#e7e3f6}
+.continuum-shell article.is-context-target .assistant-message,.continuum-shell article.is-context-target .turn-actions {border-color:#d7d3ee;box-shadow:none}
+.continuum-shell .file-reference {background:#fff;border-color:var(--ui-line);color:var(--ui-ink)}
+.continuum-shell .operation-feedback {background:var(--ui-soft);border-color:var(--ui-line);color:#4a5262}
+.continuum-shell .empty-history h1 {color:var(--ui-ink)}
+.continuum-shell .empty-history button,.continuum-shell .history-recovery button,.continuum-shell .account-access-action {color:#514ba6;background:#f6f5fc;border:1px solid #e0ddef;border-radius:12px}
+.continuum-shell .error {color:#923748;background:#fff3f5;border-color:#efd9df}
+.continuum-shell :is(.overlay,.dialog-panel,.context-panel) [role=alert] {color:#923748}
+.continuum-shell .danger {color:#923748}
+.continuum-shell .member-commerce article,.continuum-shell .member-commerce li {padding:17px;border:1px solid var(--ui-line);border-radius:16px;background:var(--ui-soft);margin:12px 0}
+.continuum-shell .member-commerce input[type=checkbox] {width:18px;min-height:18px;height:18px;accent-color:var(--ui-accent)}
+.continuum-shell .member-commerce a {color:#514ba6;text-underline-offset:3px}
+.continuum-shell .member-commerce button {border:1px solid var(--ui-line);background:#fff}
+.continuum-shell .member-commerce button:disabled {background:#eeeef3;color:#656b79}
+.continuum-shell[data-transparency=opaque] {background:var(--ui-canvas)}
+.continuum-shell[data-transparency=opaque] #sidebar {background:var(--ui-canvas)}
+@media(max-width:1279px) {
+ .continuum-shell {--sidebar:200px;gap:10px;padding:10px}
+ .continuum-shell .chat-workspace>header {padding:12px 16px}
+ .continuum-shell .header-search {max-width:250px;flex-basis:150px}
+ .continuum-shell .environment {max-width:220px}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) .chat-workspace>main {padding-inline:14px}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) .composer {grid-template-columns:minmax(0,1fr)}
+ .continuum-shell:is(.has-context,:has(>.context-panel)) .composer-controls {grid-column:1;grid-row:auto}
+}
+@media(max-width:959px) {
+ .continuum-shell {padding:8px;gap:0}
+ .continuum-shell #sidebar {background:var(--ui-canvas);padding:24px 14px;box-shadow:12px 0 36px #22243314}
+ .continuum-shell .nav-scrim {background:#282b3c38}
+ .continuum-shell .chat-workspace {border-radius:22px}
+}
+@media(max-width:767px) {
+ .continuum-shell {padding:0}
+ .continuum-shell .chat-workspace {border:0;border-radius:0;box-shadow:none}
+ .continuum-shell .chat-workspace>header {padding:10px 14px;gap:6px;min-height:64px}
+ .continuum-shell .header-search {max-width:none;flex-basis:145px;background:var(--ui-soft)}
+ .continuum-shell .environment {max-width:none;flex-basis:145px;font-size:12px}
+ .continuum-shell .chat-workspace>main {padding-inline:14px}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {padding:24px 18px 24px;justify-content:center}
+ .continuum-shell:is(.is-home,:has(.home-stage)) .messages {padding-bottom:20px}
+ .continuum-shell .home-stage {display:flex;gap:4px;padding:0}
+ .continuum-shell .home-copy h1 {font-size:31px;margin-bottom:14px}
+ .continuum-shell .home-copy>p:not(.home-greeting) {font-size:14px;line-height:24px;max-width:330px}
+ .continuum-shell .home-companion {margin:0 0 5px;align-self:center}
+ .continuum-shell .home-companion .companion--home {width:72px;height:60px}
+ .continuum-shell .composer,.continuum-shell:is(.is-home,:has(.home-stage)) .composer {grid-template-columns:minmax(0,1fr);padding:11px 12px;border-radius:22px}
+ .continuum-shell .composer-controls {grid-column:1;grid-row:auto}
+ .continuum-shell .composer-controls .send {margin-left:auto}
+ .continuum-shell .home-suggestions {grid-template-columns:1fr;gap:7px;margin-top:14px}
+ .continuum-shell .home-suggestions button {padding:9px 13px;border-radius:12px}
+ .continuum-shell .assistant-message {padding:18px 10px 4px}
+ .continuum-shell .turn-actions {padding-inline:4px}
+ .continuum-shell :is(.overlay,.dialog-panel),.continuum-shell>.context-panel {inset:0;width:100%;height:100dvh;max-height:100dvh;margin:0;border-radius:0;padding:calc(18px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom));background:#fff}
+ .continuum-shell .context-panel .panel-header {background:#fff;top:calc(-18px - env(safe-area-inset-top))}
+ .continuum-shell .change-columns {grid-template-columns:1fr}
+}
+@media(min-width:768px) and (max-width:1023px) {
+ .continuum-shell>.context-panel {position:fixed;inset:12px;width:calc(100% - 24px);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);margin:0;z-index:24;background:#fff}
+}
+@media(max-height:720px) {
+ .continuum-shell:is(.is-home,:has(.home-stage)) .chat-workspace>main {justify-content:flex-start;padding-top:20px;padding-bottom:8px}
+ .continuum-shell .home-companion .companion--home {width:60px;height:50px}
+}
+@media(prefers-reduced-transparency:reduce) {
+ .continuum-shell,.continuum-shell #sidebar {background:var(--ui-canvas)}
+ .continuum-shell :is(.composer,.assistant-message,.turn-actions,.overlay,.dialog-panel,.context-panel) {background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .continuum-shell .overlay::backdrop {backdrop-filter:none}
+}
+@media(forced-colors:active) {
+ .continuum-shell,.continuum-shell #sidebar,.continuum-shell .chat-workspace {background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+ .continuum-shell .composer::before {display:none}
+ .continuum-shell :is(.composer,.assistant-message,.turn-actions,.overlay,.context-panel,.header-search,.environment,.user-message,.member-commerce article,.member-commerce li) {background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none}
+ .continuum-shell :is(button,a,input,textarea,select):focus-visible {outline:3px solid Highlight}
+}
