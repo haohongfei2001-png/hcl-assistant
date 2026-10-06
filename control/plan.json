@@ -568,8 +568,8 @@
     }
   },
   "writer": {
-    "branch": "product/glass-home-preview",
-    "scope": "APPLY_ACCEPTED_CLEAR_GLASS_TO_EXISTING_PRODUCT_SURFACES",
+    "branch": "product/deterministic-diagnostics",
+    "scope": "DETERMINISTIC_OFFLINE_DIAGNOSTIC_FIXTURE_DEADLINE_BOUNDARIES",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
