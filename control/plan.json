@@ -559,8 +559,8 @@
     }
   },
   "writer": {
-    "branch": "product/order-feedback-refresh",
-    "scope": "REPAIR_STALE_ORDER_REFRESH_FEEDBACK_SYNTHETIC_ONLY",
+    "branch": "product/consumer-visual-refresh",
+    "scope": "USER_REQUESTED_SHARED_CONSUMER_VISUAL_REFRESH_NO_CAPABILITY_CHANGES",
     "status": "IN_REVIEW"
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",

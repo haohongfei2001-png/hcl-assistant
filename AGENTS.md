@@ -113,3 +113,16 @@ never a paid membership or product completion. Preserve immutable V3 funding,
 all-user shared500, tenant isolation, no self-grant and no automatic paid call.
 Live schema/security/config, test rights and commercial activation remain separate.
 See docs/MEMBER_READINESS_TRANSITION.md.
+
+## Consumer visual refresh (2026-10-06)
+
+The user explicitly requested applying the supplied minimal consumer reference
+across the existing HCLA interface. Follow the current `docs/VISUAL_SYSTEM.md`:
+cool neutral canvas, white rounded surfaces, near-black typography, quiet chrome,
+and restrained violet-blue focus/primary-action emphasis. This supersedes the
+older Continuum surface palette and scale, while retaining its original assets
+as history and preserving all existing interaction/accessibility contracts.
+Cover the existing chat, navigation, evidence/source, memory, settings, membership,
+account and recovery surfaces with shared styles. No new integration, voice,
+capability, authorization, provider, payment, or production activation follows.
+M3-01's commercial and live activation gates remain unchanged.

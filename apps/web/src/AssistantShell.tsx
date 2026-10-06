@@ -5,6 +5,7 @@ import type {HistoryHit} from './history-view';
 import type {ConversationView,TurnView,AttachmentView} from './product-view';
 import './style.css';
 import './continuum.css';
+import './consumer.css';
 import {Companion} from './Companion';
 import {ReadingAnchorContext,useReadingAnchor} from './ReadingAnchor';
 import {useMessageMenuAnchor} from './MessageMenuAnchor';

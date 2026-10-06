@@ -1,39 +1,44 @@
-# Visual System — Canonical A2 / Continuum V1
+# Visual System — Consumer refresh, 2026-10-06
 
-产品架构仍为 [Product Master Plan 1.2](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md) / A2-Product；交互语义见 [UX](UX_SPEC.md)。本次是 Owner 已批准的视觉稿正式采用，不重开产品定位。五张批准设计稿已按 [manifest](design/continuum-v1/asset-manifest.json) 以无损文本封装入库，原始 PNG 可逐字节恢复；这是仓库存储适配，不改变像素内容。本变更通过 exact-head/main 核验并合入后，`CONTINUUM-V1-20261001` 即为唯一当前视觉基准。
+The user requested the supplied minimal consumer reference across the existing HCLA interface. This is the current visual direction for the same [Assistant-first product](../HCL_ASSISTANT_PRODUCT_MASTER_PLAN.md), with the existing [UX contract](UX_SPEC.md). It replaces the former large ice-blue surfaces and decorative scale; it does not change product capabilities or operating authority.
 
-## 1. 唯一视觉基准
+## Shared visual language
 
-视觉身份：`CONTINUUM-V1-20261001`。对应三张产品状态 UI-01 首页、UI-02 多轮对话的长回答视口、UI-03 依据与修订展开；数字形象 M-01 悬浮核心与 M-02 输入容器均保留，无唯一选择。文件映射及原图哈希见 [manifest](design/continuum-v1/asset-manifest.json)。
+Use a cool light-gray canvas, white rounded surfaces, near-black headings, medium-gray supporting text and generous but functional spacing. Keep violet-blue emphasis concentrated around the composer focus and primary action. Navigation, metadata and secondary controls are quiet neutral tones. Do not copy third-party logos, integration claims, microphone controls or promotional capability text from the reference.
 
-采用后保留本轮图稿的布局、浅冰蓝/淡紫配色、白色半透明表面、深蓝文字、蓝紫操作色、柔和边缘光感和圆润层叠材质。背景只作纯色或低存在感的毛玻璃底，不放风景、建筑、家具、物品或吸引注意力的科幻场景。不再设计第五套风格；不能用“实现方便”退回旧界面。
+The reference image stays outside the public repository. These implementation values are chosen starting points, not measurements claimed to come from its design source:
 
-原来“安静、轻量编辑器式”、暖白/灰绿、仅哑光/青绿/接缝的方案不再是本次采用后的视觉目标。其原始文件按 Git blob 原字节保存在 [A2 visual baseline](VISUAL_SYSTEM_A2_BASELINE_20261001.md)，只作历史，不产生第二套可选实施方案。已有 P1-01 代码和验收仍是完成事实，但不是新图稿视觉还原的验收结果。
+- Canvas: #F4F5F8; surface: #FFFFFF; secondary surface: #F7F8FA
+- Main text: #171923; supporting text: #626875; borders: #E5E7ED
+- Focus: #5F58C8; primary action: #615BC9; subdued selected surface: #EEEDF8
+- Control/card corners: 12–16px; composer and major panels: 22–28px
+- Soft, low-opacity shadows; no blurred text or dominant background illustration
 
-## 2. 规格落点
+`apps/web/src/consumer.css` supplies shared tokens and the final presentation layer for Web and Pages. `account-entry.css` uses the same tokens for existing account screens. The earlier structural styles remain in place so the refresh retains proven scrolling, selection, modal and responsive behavior.
 
-[Implementation Spec](design/continuum-v1/IMPLEMENTATION_SPEC.md) 是本视觉规范的组成部分，给出布局、surface、起始 tokens、字体/图标/圆角、页面组件映射、长内容/文件、依据/来源/返回、修订状态、动效、响应式与键盘规格。图稿决定外观方向，补充规格覆盖静态图未表达的行为，不借此重新设计。
+## Existing surfaces covered
 
-起始值仅用于忠实实现并校准，不伪称来自原设计文件的精确 tokens：背景 #EDF3FD；阅读/输入表面 rgba(255,255,255,0.94)；主文字 #151D43；次级文字 #576486；操作色 #526BEE；深色主按钮 #283047。实现须与图稿逐区域核对，并测量实际叠色后的可读性。不得因为这些近似值通过测试就忽略视觉差异。
+1. Home and conversation: one shared workspace, compact growing composer, existing three supported suggestions, stable long-answer reading and file staging.
+2. Navigation and search: recent conversations, current selection, keyboard search, mobile sidebar and recovery messages.
+3. Evidence, source and changes: attached desktop detail panel, mobile full-screen detail, readable original text and explicit return to the answer.
+4. Memory: current records, corrections, stop-use/delete controls and their real pending/error states.
+5. Settings, membership and orders: the same sections and controls, truthful closed purchase/expiry/budget states and existing order reconciliation.
+6. Account, registration, recovery and existing advanced views: shared surfaces and forms without changing any authentication, recovery, provider or payment operation.
 
-中文正文 16–17px / 27–28px；控件 14px；次级说明不靠 10–11px 小字隐藏。文字不可毛玻璃化。表格/代码可以局部横向滚动，正文不可为容纳过多栏而缩成细小字。支持正常选取、复制、中文 IME、键盘可达、可见焦点和触屏操作。
+No new screen, integration, permission or simulated success is introduced as a visual feature. M3-01 remains incomplete until its own commercial acceptance; visual adoption cannot close that package.
 
-保留图中的轻量导航/顶部搜索/阅读区域/输入体/附着依据层关系；导航项名称仍服从真实产品架构。窄屏先收起导航，来源在同一详情层内替换；手机详情全屏且可回到原阅读位置，不硬挤三栏。没有 blur 支持时使用色彩匹配的不透明 fallback，并记录视觉核对。
+## Layout and interaction
 
-本轮明确采用的是 light 参考；不以探索另一套 dark 方案阻塞。既有真实主题控制不假装可用或被静默移除；如实现 dark，保持同一材质关系并提供对应对比度与截图验收，不把自动反色当设计完成。
+Chat stays central. On desktop, a quiet side navigation sits beside a white workspace; the composer is a compact horizontal object. On smaller screens its actions move beneath the input, with no document-wide horizontal scrolling. Textarea growth retains its existing two-to-seven-line behavior. File controls and required consent remain visible and keyboard reachable.
 
-## 3. 动效与数字形象
+Keep Chinese body text at 16px with comfortable line height; supporting text remains legible. Interactive targets retain at least 44px. Preserve visible keyboard focus, selection contrast, reduced motion, opaque surfaces and forced-colors support. Code and tables may scroll within their own regions. Dialog dismissal, Back/Forward, interrupted requests, drafts, error recovery and reading anchors keep their existing semantics.
 
-动效是对象身份和真实状态的连续呈现：Home 到对话保持输入对象；依据从相关回答展开；来源在同一层深入；修订只高亮实际受影响条目；返回恢复原阅读锚点。已显示文字稳定，向上阅读不被流式内容拉回底部。没有实际进度不制造阶段、百分比或 Judge 动画。减少动态效果时关闭位移/形变/循环，但保留状态、焦点和错误反馈。
+Optional companion A/B/off controls stay available. Their original assets and vector content are not rewritten; the visible slot is smaller and less saturated so decoration does not compete with conversation. Decoration never communicates listening, understanding or completion.
 
-两套 companion 共用可关闭的插槽，提供 A/B/off 核对状态；不选择唯一赢家，不因为首页画了 A 就将其固定为最终品牌。保留其轮廓、光感和材质；不得替换为图库小球、真人/动物形象。工作态小尺寸或隐藏，不常驻抢占长内容注意力。装饰姿态不等于麦克风、后台处理或理解完成。
+## Evidence and adoption
 
-## 4. 真实能力和示例边界
+Required evidence is actual browser rendering for desktop and narrow phone Home, focused composer, conversation, source/evidence, settings/memory, login/recovery and closed membership. Retain the full synthetic behavioral regressions, contrast/target measurements and exact-head/main checks. Screenshots are unedited actual application captures; mock/Pages/account fixtures must be labelled as such and never described as working live chat or checkout.
 
-图片中的 HCL Technologies、白皮书、引用、数字、文件格式、模型/搜索/智能体按钮只是视觉占位，不能成为产品事实或启用凭证。按设计目录的逐项语义映射替换为真实支持的控件和原创 synthetic fixture；保留其余外观。mock/experimental 环境标识持续可见。能力、权限、真实数据、研究隔离、I06/L3、Judge/Act 边界全部不变。
+`CONTINUUM-V1-20261001` assets, earlier captures and [original implementation specifications](design/continuum-v1/IMPLEMENTATION_SPEC.md) remain historical provenance and interaction coverage. They are no longer the current color/scale target. Existing tests retaining those names still exercise behavior and accessibility; old-reference comparison artifacts are historical, not proof of fidelity to the new reference.
 
-## 5. 视觉还原验收
-
-[Visual Acceptance](design/continuum-v1/ACCEPTANCE.md) 的 V01–V10 纳入 P1-03 的 R19/R20 完成条件：实际浏览器截图与原图并排/叠图；至少三轮长内容和真实支持文件；依据/来源展开及返回；修订已提交/未重评；两套形象和关闭状态；响应式/键盘/异常/减少动效；真实操作视频或可播放 trace。原图、实际页面、静态样例和运行证据分别标识，不能互相冒充。
-
-不能只验收“功能能点”。未忠实实现的区域记录预期、实际、原因、影响和审阅处置；重大布局/材质/配色偏差不能静默换成默认组件。不得改写原参考图或用新页面截图自动重设基线。设计采用不表示 V1 已实现；现有 checker 不自动验证新增视觉义务。
+The refresh is a candidate until independent source/visual review, hosted browser acceptance and exact-main adoption. It authorizes no new provider calls, live grants, payment service, account configuration, private-data use or production activation.

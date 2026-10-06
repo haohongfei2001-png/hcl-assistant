@@ -81,3 +81,8 @@ L0_L2_WORK_PACKAGES_BASELINE_20261001.md、ACCEPTANCE_MATRIX_BASELINE_20261001.m
 机器 `product_plan_version` 保持 `1.2/A2-Product`；不为视觉采用修改当前 checker/tests/workflows 已采用的 package identities、依赖或验收数组。三个 V1 交付切片从属既有 P1-03，不持有独立 NEXT_READY 或执行者，不构成第二队列。其原 R17–R20 义务和全部既有回归仍适用，新增 V 验收必须有实际证据。
 
 任何并发 main 前进都需重新基线协调，只在最新树上重放本次资产/规格/计划差异并保留新 main 父历史。不得 force-push、重置已完成状态、覆盖历史证据/固定锁/维护配置或以过期 CI 合并新 head。
+
+
+## 6. Consumer visual refresh (2026-10-06)
+
+The user's later request for the supplied minimal consumer visual language supersedes Continuum V1's surface palette, decorative scale and chrome presentation. The current [Visual System](VISUAL_SYSTEM.md) defines this bounded update across existing screens. Earlier reference assets and receipts remain historical; all interaction, accessibility, source, permission, runtime and activation contracts retain authority. This visual follow-on does not create another product queue or close M3-01.
