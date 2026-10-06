@@ -82,10 +82,37 @@ for(const width of [1440,390]) test(`glass Home material and actual controls at 
  const style=await surface.evaluate(el=>({background:getComputedStyle(el).backgroundImage,blur:getComputedStyle(el).backdropFilter,border:getComputedStyle(el).borderWidth}));
  expect(style.background).toContain('rgba');expect(style.blur).toContain('blur');expect(style.border).toBe('1px');
  await page.screenshot({path:info.outputPath(`glass-home-${width}.png`),fullPage:true});
+ // Placeholder and actual input text must stay readable on the lightest glass
+ // state. This is a conservative floor for both maximum-alpha Home tints.
+ const inputContrast=()=>composer.evaluate(el=>{
+  const luminance=c=>c.map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+  return [getComputedStyle(el),getComputedStyle(el,'::placeholder')].map(style=>{
+   const color=style.color.match(/[\d.]+/g).map(Number);return {opacity:Number(style.opacity),alpha:color[3]??1,ratio:(luminance([250,250,255])+.05)/(luminance(color.slice(0,3))+.05)};
+  });
+ });
+ for(const sample of await inputContrast()){expect(sample.opacity).toBe(1);expect(sample.alpha).toBe(1);expect(sample.ratio).toBeGreaterThanOrEqual(4.5)}
+ await composer.focus();await expect(composer).toBeFocused();
+ await page.screenshot({path:info.outputPath(`glass-home-focus-${width}.png`),fullPage:true});
  await composer.fill('一起理清今天的想法');await expect(send).toBeEnabled();await expect(composer).toBeFocused();
  await page.screenshot({path:info.outputPath(`glass-home-draft-${width}.png`),fullPage:true});
  expect(posts).toBe(0);await composer.fill('第一行\n第二行\n第三行');await expect.poll(async()=>(await surface.boundingBox()).height).toBeGreaterThan(shell.height);
  await composer.fill('');await expect.poll(async()=>(await surface.boundingBox()).height).toBe(shell.height);
  await attach.click();await expect(page.getByRole('dialog',{name:'附加资料'})).toContainText('仅使用合成资料');await page.keyboard.press('Escape');await expect(attach).toBeFocused();
  expect(posts).toBe(0);await expect(page.getByText('只使用合成资料，请勿输入真实私密信息',{exact:true})).toBeVisible();
+ const navigation=page.getByRole('button',{name:'切换侧栏',exact:true});
+ if(await navigation.getAttribute('aria-expanded')==='false')await navigation.click();
+ await page.getByRole('button',{name:'设置',exact:true}).click();
+ await page.getByLabel('表面效果',{exact:true}).selectOption('opaque');await page.getByRole('button',{name:'关闭设置',exact:true}).click();
+ if(await page.locator('.nav-scrim').isVisible())await page.getByRole('button',{name:'关闭侧栏',exact:true}).click();
+ await expect(page.locator('.continuum-shell')).toHaveAttribute('data-transparency','opaque');
+ expect(await surface.evaluate(el=>getComputedStyle(el).backdropFilter)).toBe('none');
+ expect(await composer.evaluate(el=>getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)');
+ for(const sample of await inputContrast())expect(sample.ratio).toBeGreaterThanOrEqual(4.5);
+ await page.screenshot({path:info.outputPath(`glass-home-opaque-${width}.png`),fullPage:true});
+ await page.emulateMedia({reducedMotion:'reduce',forcedColors:'active'});await composer.focus();
+ const forced=await composer.evaluate(el=>({background:getComputedStyle(el).backgroundColor,canvas:getComputedStyle(el.closest('.continuum-shell')).backgroundColor,border:getComputedStyle(el).borderTopStyle,outline:getComputedStyle(el).outlineWidth}));
+ expect(forced.background).toBe(forced.canvas);expect(forced.border).toBe('solid');expect(parseFloat(forced.outline)).toBeGreaterThanOrEqual(2);
+ expect(await surface.evaluate(el=>getComputedStyle(el,'::before').display)).toBe('none');
+ await page.screenshot({path:info.outputPath(`glass-home-forced-colors-${width}.png`),fullPage:true});
+ expect(posts).toBe(0);
 });

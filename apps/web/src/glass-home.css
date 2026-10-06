@@ -8,13 +8,13 @@
  --continuum-focus:#6257aa;
  color:#252631;
  background:
-  radial-gradient(ellipse 32% 23% at 67% 47%,rgba(202,197,216,.07),transparent 100%),
-  radial-gradient(ellipse 26% 22% at 42% 57%,rgba(203,208,216,.07),transparent 100%),
-  linear-gradient(130deg,#f4f4f5 0%,#fafafa 48%,#f2f2f3 100%);
+  radial-gradient(ellipse 32% 23% at 67% 47%,rgba(223,214,255,.07),transparent 100%),
+  radial-gradient(ellipse 26% 22% at 42% 57%,rgba(219,233,255,.07),transparent 100%),
+  #fff;
 }
 .continuum-shell.is-home #sidebar {
  padding:26px 14px 20px;gap:10px;
- background:rgba(245,246,249,.28);border-right:1px solid rgba(255,255,255,.64);
+ background:rgba(255,255,255,.28);border-right:1px solid rgba(255,255,255,.64);
  box-shadow:inset -1px 0 0 rgba(183,187,200,.10);
  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
 }
@@ -73,8 +73,8 @@
 .continuum-shell.is-home .composer textarea {
  grid-column:2;grid-row:1;min-height:50px;padding:13px 19px;border:0;border-radius:26px;
  font-size:16px;line-height:24px;color:#34343e;
- background:rgba(218,221,228,.46);
- box-shadow:inset 0 1px 3px rgba(112,116,137,.08),0 1px 0 rgba(255,255,255,.8);
+ background:rgba(255,255,255,.3);
+ box-shadow:inset 0 1px 3px rgba(255,255,255,.55),0 1px 0 rgba(255,255,255,.8);
 }
 .continuum-shell.is-home .composer textarea::placeholder {color:#60616e;opacity:1}
 .continuum-shell.is-home .composer-controls {display:contents}
@@ -108,7 +108,7 @@
 .continuum-shell.is-home .home-suggestions button:hover {background:rgba(255,255,255,.4)}
 .continuum-shell.is-home .composer-note {margin:17px 0 0;font-size:12px;line-height:18px;color:#585b68}
 @media(max-width:959px) {
- .continuum-shell.is-home #sidebar {background:rgba(241,243,247,.86)}
+ .continuum-shell.is-home #sidebar {background:rgba(255,255,255,.86)}
  .continuum-shell.is-home .chat-workspace>header {padding:14px 20px;gap:8px}
  .continuum-shell.is-home .chat-workspace>main {max-width:780px;padding-inline:26px}
  .continuum-shell.is-home .messages {padding-top:clamp(70px,17vh,140px)}
@@ -136,15 +136,15 @@
  .continuum-shell.is-home .composer-note {margin-top:13px;font-size:12px}
 }
 /* A material effect must not be required for legibility or keyboard use. */
-.continuum-shell.is-home[data-transparency=opaque] {background:#eff0f4}
-.continuum-shell.is-home[data-transparency=opaque] :is(#sidebar,.header-search,.composer-surface) {background:#f7f8fa;backdrop-filter:none;-webkit-backdrop-filter:none}
+.continuum-shell.is-home[data-transparency=opaque] {background:#fff}
+.continuum-shell.is-home[data-transparency=opaque] :is(#sidebar,.header-search,.composer-surface) {background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
 .continuum-shell.is-home[data-transparency=opaque] .composer {background:transparent}
-.continuum-shell.is-home[data-transparency=opaque] .composer textarea {background:#e8e9ee}
+.continuum-shell.is-home[data-transparency=opaque] .composer textarea {background:#fff}
 @media(prefers-reduced-transparency:reduce) {
- .continuum-shell.is-home {background:#eff0f4}
- .continuum-shell.is-home :is(#sidebar,.header-search,.composer-surface) {background:#f7f8fa;backdrop-filter:none;-webkit-backdrop-filter:none}
+ .continuum-shell.is-home {background:#fff}
+ .continuum-shell.is-home :is(#sidebar,.header-search,.composer-surface) {background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
  .continuum-shell.is-home .composer {background:transparent}
- .continuum-shell.is-home .composer textarea {background:#e8e9ee}
+ .continuum-shell.is-home .composer textarea {background:#fff}
 }
 @media(forced-colors:active) {
  .continuum-shell.is-home {background:Canvas;color:CanvasText}
