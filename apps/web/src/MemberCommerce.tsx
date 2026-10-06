@@ -41,7 +41,7 @@ export function MemberCommerce({disabled=false}:{disabled?:boolean}){
  async function load(){
   if(blocked.current)return;
   const token=++epoch.current;flight.current?.abort();const controller=new AbortController();flight.current=controller;const timeout=setTimeout(()=>controller.abort(),15000);
-  setLoading(true);setError('');setCheckout(null);
+  setLoading(true);setError('');setMessage('');setCheckout(null);
   const [offers,history]=await Promise.allSettled([api<Catalog>('/v1/billing/catalog',undefined,controller.signal),api<{available:boolean;orders:Order[]}>('/v1/billing/orders',undefined,controller.signal)]);
   clearTimeout(timeout);if(!active.current||blocked.current||token!==epoch.current)return;
   if(offers.status==='fulfilled'){setCatalog(offers.value);setAccepted(null)}else{setCatalog(null);setError('暂时无法读取套餐，请重新读取；不会自动创建订单')}

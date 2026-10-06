@@ -22,8 +22,89 @@ async function fixture(page,{unknown=false,closed=false,now=Date.now(),quoteSeco
  });
  await page.goto('/');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();await page.getByLabel('消息',{exact:true}).fill('SYNTHETIC_DRAFT_RETAINS_AFTER_BILLING');
  await page.getByRole('button',{name:'会员与订单',exact:true}).click();await page.getByRole('button',{name:'查看购买与订单',exact:true}).click();
- return {created,checkout,queries,offer,advanceServer:milliseconds=>{serverNow+=milliseconds}};
+ return {created,checkout,queries,offer,orders:()=>orders,advanceServer:milliseconds=>{serverNow+=milliseconds}};
 }
+
+async function confirmedOrder(page){
+ const state=await fixture(page);
+ await page.getByLabel(/我已核对 离线会员套餐/).check();
+ await page.getByRole('button',{name:'创建订单并准备支付',exact:true}).click();
+ await expect(page.getByRole('link',{name:'在支付服务打开订单',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'核验此订单付款',exact:true}).click();
+ const region=page.getByRole('region',{name:'会员购买与订单',exact:true});
+ await expect(region).toContainText('付款已由服务器核验。会员状态正在重新读取');
+ return {...state,region};
+}
+
+for(const [state,label] of [['REFUNDED','退款已核验，本订单权益已停用'],['DISPUTED','付款存在争议，本订单权益已停用']]){
+ test(`order refresh clears prior success while pending and displays ${state} from the latest read`,async({page},info)=>{
+  const result=await confirmedOrder(page);let pending,finish,released=false;
+  await page.route('**/v1/member/billing/orders',route=>{if(route.request().method()!=='GET')return route.fallback();pending=route;return new Promise(resolve=>{finish=resolve})});
+  try{
+  await page.getByRole('button',{name:'重新读取套餐与订单',exact:true}).click();
+  await expect.poll(()=>Boolean(pending)).toBe(true);
+  await expect(result.region).toContainText('正在读取套餐与订单');
+  await expect(result.region).not.toContainText('付款已由服务器核验。会员状态正在重新读取');
+  await pending.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,orders:result.orders().map(order=>({...order,state,access_enabled:false}))})});released=true;finish();
+  await expect(result.region).toContainText(label);
+  await expect(result.region).not.toContainText('付款已由服务器核验。会员状态正在重新读取');
+  expect(result.created).toHaveLength(1);expect(result.checkout).toHaveLength(1);expect(result.queries).toHaveLength(1);
+  await page.screenshot({path:info.outputPath(`order-refresh-${state.toLowerCase()}.png`),fullPage:true,animations:'disabled'});
+  }finally{if(pending&&!released)await pending.abort().catch(()=>{});finish?.()}
+ });
+}
+
+test('failed order refresh does not retain a prior payment-success message or repeat mutations',async({page})=>{
+ const result=await confirmedOrder(page);
+ await page.route('**/v1/member/billing/orders',route=>route.request().method()!=='GET'?route.fallback():route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'offline order read failure'})}));
+ await page.getByRole('button',{name:'重新读取套餐与订单',exact:true}).click();
+ await expect(result.region.getByRole('alert')).toContainText('暂时无法读取订单');
+ await expect(result.region).not.toContainText('付款已由服务器核验。会员状态正在重新读取');
+ await expect(page.getByRole('button',{name:'创建订单并准备支付',exact:true})).toBeDisabled();
+ expect(result.created).toHaveLength(1);expect(result.checkout).toHaveLength(1);expect(result.queries).toHaveLength(1);
+});
+
+test('a superseded order read cannot restore old success after a newer refund read',async({page})=>{
+ // Model a read whose transport still completes after cancellation. Only one
+ // explicitly armed fixture GET ignores abort, so the app's epoch guard must
+ // refuse its older result even after a newer read has rendered.
+ await page.addInitScript(()=>{
+  const original=window.fetch.bind(window);
+  window.fetch=(input,init)=>{
+   if(window.__hclaIgnoreNextOrderAbort&&typeof input==='string'&&new URL(input,location.href).pathname==='/v1/member/billing/orders'&&(!init?.method||init.method==='GET')){
+    window.__hclaIgnoreNextOrderAbort=false;
+    window.__hclaIgnoredOrderReads=(window.__hclaIgnoredOrderReads||0)+1;
+    let finishBody;window.__hclaDelayedOrderBody=new Promise(resolve=>{finishBody=resolve});
+    return original(input,{...init,signal:undefined}).then(response=>{
+     const read=response.json.bind(response);
+     response.json=async()=>{try{return await read()}finally{finishBody()}};
+     return response;
+    });
+   }
+   return original(input,init);
+  };
+ });
+ const result=await confirmedOrder(page);let first,finish,reads=0,released=false;
+ const prior=result.orders();
+ await page.route('**/v1/member/billing/orders',async route=>{
+  if(route.request().method()!=='GET')return route.fallback();
+  if(++reads===1){first=route;return new Promise(resolve=>{finish=resolve})}
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,orders:prior.map(order=>({...order,state:'REFUNDED',access_enabled:false}))})});
+ });
+ await page.evaluate(()=>{window.__hclaIgnoreNextOrderAbort=true});
+ try{
+ await page.getByRole('button',{name:'重新读取套餐与订单',exact:true}).click();await expect.poll(()=>Boolean(first)).toBe(true);
+ await page.getByRole('button',{name:'收起购买与订单',exact:true}).click();
+ await page.getByRole('button',{name:'查看购买与订单',exact:true}).click();
+ await expect(result.region).toContainText('退款已核验，本订单权益已停用');
+ await first.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,orders:prior})});released=true;finish();
+ await page.evaluate(async()=>{await window.__hclaDelayedOrderBody;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))});
+ expect(await page.evaluate(()=>window.__hclaIgnoredOrderReads)).toBe(1);
+ await expect(result.region).not.toContainText('付款已由服务器核验。会员状态正在重新读取');
+ await expect(result.region).toContainText('退款已核验，本订单权益已停用');
+ expect(reads).toBe(2);expect(result.created).toHaveLength(1);expect(result.checkout).toHaveLength(1);expect(result.queries).toHaveLength(1);
+ }finally{if(first&&!released)await first.abort().catch(()=>{});finish?.()}
+});
 
 test('consumer explicitly prepares one bound order and server-confirmed membership preserves chat draft',async({page},info)=>{
  const state=await fixture(page);const button=page.getByRole('button',{name:'创建订单并准备支付',exact:true});await expect(button).toBeDisabled();
