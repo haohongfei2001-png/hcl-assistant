@@ -8,9 +8,9 @@
  --continuum-focus:#6257aa;
  color:#252631;
  background:
-  radial-gradient(ellipse 32% 23% at 67% 47%,rgba(189,185,216,.19),transparent 100%),
-  radial-gradient(ellipse 26% 22% at 42% 57%,rgba(188,199,212,.22),transparent 100%),
-  linear-gradient(130deg,#eceef2 0%,#f3f4f7 48%,#e9ecf1 100%);
+  radial-gradient(ellipse 32% 23% at 67% 47%,rgba(202,197,216,.07),transparent 100%),
+  radial-gradient(ellipse 26% 22% at 42% 57%,rgba(203,208,216,.07),transparent 100%),
+  linear-gradient(130deg,#f4f4f5 0%,#fafafa 48%,#f2f2f3 100%);
 }
 .continuum-shell.is-home #sidebar {
  padding:26px 14px 20px;gap:10px;
