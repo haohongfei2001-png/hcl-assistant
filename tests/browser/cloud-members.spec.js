@@ -16,6 +16,47 @@ async function logout(page){await page.getByRole('button',{name:'设置',exact:t
 // with the same browser transport the product uses, retaining Secure cookies.
 async function browserRead(page,path){return page.evaluate(async value=>{const response=await fetch(value);return {status:response.status,body:await response.json()}},path)}
 
+test('ordinary member persistent history survives reload and same-account sign-in without redispatch',async({page},info)=>{
+ const paths=[],writes=[];
+ page.on('request',request=>{const path=new URL(request.url()).pathname;paths.push(path);if(request.method()==='POST'&&path.startsWith('/v1/member/'))writes.push(path)});
+ const firstInput='原创合成设定：会展用的纸灯是蓝色。MEMBER_HISTORY_FIRST';
+ const secondInput='原创合成：前面会展用的纸灯是什么颜色？MEMBER_HISTORY_SECOND';
+ await enter(page);await send(page,firstInput);
+ const id=await page.locator('.chat-workspace').getAttribute('data-current-conversation');expect(id).toBeTruthy();
+ const historyPath='/v1/member/conversations/'+id;
+ const initial=await browserRead(page,historyPath);expect(initial.status).toBe(200);expect(initial.body.runs).toHaveLength(1);
+ const first=initial.body.runs[0];expect(first.pending).toBe(false);expect(first.input_text).toBe(firstInput);expect(first.answer.text).toContain('原创离线自然语言');
+ const firstIdentity={run_id:first.run_id,answer_id:first.answer.answer_id,text:first.answer.text,input:first.input_text};
+ const afterFirst=[...writes];expect(afterFirst).toEqual(['/v1/member/conversations',historyPath+'/events','/v1/member/runs/'+first.run_id+'/execute']);
+ async function restored(){
+  await page.locator('[data-conversation="'+id+'"]').click();
+  await expect(page.locator('.chat-workspace')).toHaveAttribute('data-current-conversation',id);
+  await expect(page.locator('.messages [data-run]')).toHaveCount(1);
+  await expect(page.locator('[data-run="'+first.run_id+'"] .user-message')).toHaveText(firstInput);
+  await expect(page.locator('[data-run="'+first.run_id+'"] .assistant-message')).toContainText(first.answer.text);
+  const saved=await browserRead(page,historyPath);expect(saved.status).toBe(200);expect(saved.body.runs).toHaveLength(1);
+  const run=saved.body.runs[0];expect(run.pending).toBe(false);
+  expect({run_id:run.run_id,answer_id:run.answer.answer_id,text:run.answer.text,input:run.input_text}).toEqual(firstIdentity);
+  expect(writes).toEqual(afterFirst);
+ }
+ await page.reload();await restored();
+ await logout(page);await expect(page.locator('.messages')).toHaveCount(0);
+ await enter(page);await restored();
+ await page.screenshot({path:info.outputPath('ordinary-member-restored-history.png'),fullPage:true,animations:'disabled'});
+ await page.getByLabel('消息',{exact:true}).fill(secondInput);await page.getByRole('button',{name:'发送',exact:true}).click();
+ await expect(page.locator('.assistant-message').last()).toContainText('按前面提供的原创合成设定，纸灯是蓝色。');await expect(page.getByRole('button',{name:'停止',exact:true})).toHaveCount(0);
+ const final=await browserRead(page,historyPath);expect(final.status).toBe(200);expect(final.body.runs).toHaveLength(2);
+ expect(final.body.runs.map(run=>run.input_text)).toEqual([firstInput,secondInput]);
+ expect(final.body.runs.every(run=>!run.pending&&run.run_receipt.outcome==='COMPLETED')).toBe(true);
+ expect(final.body.runs[0].run_id).toBe(first.run_id);expect(final.body.runs[0].answer).toEqual(first.answer);
+ const second=final.body.runs[1];expect(second.run_id).not.toBe(first.run_id);
+ const listed=await browserRead(page,'/v1/member/conversations');expect(listed.status).toBe(200);expect(listed.body).toHaveLength(1);expect(listed.body[0]).toMatchObject({id,memory:'CONVERSATION'});
+ expect(writes).toEqual([...afterFirst,historyPath+'/events','/v1/member/runs/'+second.run_id+'/execute']);
+ expect(paths.filter(path=>path==='/admin'||path==='/v1/development/login'||path==='/v1/conversations'||path==='/v1/topics')).toEqual([]);
+ await expect(page.locator('.messages [data-run]')).toHaveCount(2);
+ await info.attach('ordinary-member-history-identity',{body:JSON.stringify({scope:'DISPOSABLE_POSTGRES_INJECTED_AUTH_AND_MODEL_ONLY',conversation_id:id,first_run_id:first.run_id,second_run_id:second.run_id,member_mutations:writes,live_provider_calls:0}),contentType:'application/json'});
+});
+
 test('registration requires confirmation and exposes no server credential',async({page},info)=>{
  await page.goto('/');await page.getByRole('button',{name:'没有账号，注册'}).click();await page.getByLabel('用户邮箱').fill('new@example.test');await page.getByLabel('用户密码').fill('offline member password');await page.getByRole('button',{name:'注册账号',exact:true}).click();
  await expect(page.getByRole('status')).toContainText('邮箱');await expect(page.getByLabel('消息',{exact:true})).toHaveCount(0);await expect(page.getByLabel('用户密码')).toHaveValue('');
