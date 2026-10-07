@@ -571,15 +571,16 @@
     "delivery_status_document": "docs/DELIVERY_STATUS_20261007.md"
   },
   "writer": {
-    "branch": "product/delivery-status-closeout",
-    "scope": "FACTUAL_DELIVERY_STATUS_RECONCILIATION_ZERO_PROVIDER",
-    "status": "IN_REVIEW",
+    "branch": "product/ordinary-history-durability",
+    "scope": "ORDINARY_MEMBER_PERSISTENT_HISTORY_BROWSER_ACCEPTANCE_ZERO_PROVIDER",
+    "status": "SOURCE_REVIEWED",
     "previous_completed_writer": {
-      "branch": "product/deterministic-diagnostics",
-      "pull_request": 57,
-      "adopted_main_sha": "05e3b8acd35031f9340c367ad2f419caced70db8",
-      "exact_main_ci": "https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/37531970608"
-    }
+      "branch": "product/delivery-status-closeout",
+      "pull_request": 58,
+      "adopted_main_sha": "72b646566cf037027c5bf50d3089fc199a8113ad",
+      "exact_main_ci": "https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/37572130386"
+    },
+    "adoption_status_source": "Actual GitHub PR merge state and passing CI on that exact merged main; SOURCE_REVIEWED records source review only, not delivery acceptance."
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
