@@ -7,12 +7,17 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M3-01。
 
-完整普通用户会员购买、订单核验、主动续费与到期路径；CNY共享预算及隔离保持，商户和价格未选定，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
+普通用户会员订单、核验、主动续费与到期基础已合入；真实商户适配、价格条款与完整商业验收未完成，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
 
 ## 1. 唯一当前任务
+
+2026-10-07收尾：先纠正已采用事实，并核对普通账号→聊天→历史/恢复的缺口；
+仅推进已授权、未受阻的离线工程，再完成M3真实商业链路准备。
+[交付快照](docs/DELIVERY_STATUS_20261007.md)不是第二套包队列。M3仍未完成；
+PR53保持未采用，真实账号/模型/支付启用与HCL固定锁不因本次收尾而改变。
 
 以上机器投影是当前唯一任务，具体scope、正负测试和完成判据见 [当前工作包](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)。依赖按顺序推进；不能把旧L3停止码当成产品全局停止，不能越过P0直接换皮。
 
@@ -32,7 +37,7 @@
 | M1-01 | 普通账号、隔离与自动续期 | U1-01 | COMPLETE |
 | U2-01 | 消费级账号入口与首次聊天 | M1-01 | COMPLETE |
 | M2-01 | 有界密码找回与登录撤销 | U2-01 | COMPLETE |
-| M3-01 | Consumer membership/payment lifecycle; provider/prices/activation pending | M13–M19 | NEXT_READY |
+| M3-01 | Adopted membership/order foundation; live adapter/offers/full acceptance pending | M2-01 | NEXT_READY |
 
 工作包定义见 [Product Refinement Packages](docs/PRODUCT_REFINEMENT_WORK_PACKAGES.md)，验收R01–R20见 [Acceptance Matrix](docs/ACCEPTANCE_MATRIX.md)。表中状态按当前机器队列投影；设计采用本身不填PASS。不按PR数量衡量进展，不重新选择并列产品方案。
 
