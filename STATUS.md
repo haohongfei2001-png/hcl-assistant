@@ -1,5 +1,25 @@
 # HCL Assistant Product Status
 
+## Verified delivery checkpoint — 2026-10-07
+
+Current verified main is `05e3b8acd35031f9340c367ad2f419caced70db8`.
+The accepted full-product clear-glass visual change (PR56) and offline diagnostic
+fixture repair (PR57) are merged; exact-main planning/cloud-Postgres checks and
+Vercel commit status passed. The prior PR57 writer is complete, not awaiting review.
+The [dated delivery record](docs/DELIVERY_STATUS_20261007.md) separates adopted
+engineering, unverified live ordinary-account use, incomplete commercial M3 work,
+and the unchanged HCL activation boundaries. Older checkpoints below remain
+historical evidence, not proof of current live account or provider configuration.
+
+M3 already contains the adopted provider-neutral membership/order/renewal foundation;
+its real merchant adapter, adopted offers/terms and full consumer-commerce acceptance
+remain incomplete. Ordinary personal login/chat readiness is a separate delivery
+question; commercial checkout is not established as its prerequisite by this record.
+Public GETs at 04:03 UTC report account service available and Qwen configured,
+while `owner_smoke_only=true` and `recovery_available=false`. That is configuration
+status, not completed ordinary login/chat/history acceptance. No new readiness,
+payment, provider call or activation was performed by this audit.
+
 ## Current product direction and next task
 
 **Product design: Canonical 1.2 / A2-Product — Assistant-first**（已采用）。正式采用既有Product & Interaction Design Review；P0-01已采用；P1-01共享界面有受限实现/验收证据，P1-02修订/依据/历史闭环已实现并有验收证据；P1-03核心已采用；Continuum V1及整体synthetic验收在a1251e3d/run36809090489通过267 Python、24 Node和66 browser，独立源代码/视觉审查无阻塞项。本PR完成实现验收记录，采用仍须final-head和exact-main核验。
@@ -9,7 +29,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M3-01。
 
-完整普通用户会员购买、订单核验、主动续费与到期路径；CNY共享预算及隔离保持，商户和价格未选定，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
+普通用户会员订单、核验、主动续费与到期基础已合入；真实商户适配、价格条款与完整商业验收未完成，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->

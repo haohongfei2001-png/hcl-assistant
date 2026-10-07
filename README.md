@@ -13,7 +13,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M3-01。
 
-完整普通用户会员购买、订单核验、主动续费与到期路径；CNY共享预算及隔离保持，商户和价格未选定，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
+普通用户会员订单、核验、主动续费与到期基础已合入；真实商户适配、价格条款与完整商业验收未完成，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->
@@ -23,6 +23,11 @@
 当前队列机器投影为 `control/plan.json.product_development`。顶层旧phase/next_ready仅是L0–L2.5完成与L3生产门槛记录，不是第二套live队列；自动消费者迁移列入P0-01，未迁移者不得据旧字段新调度产品任务。
 
 ## Current implementation and entry
+
+For the latest exact-main engineering and remaining delivery scope, read the
+[2026-10-07 delivery checkpoint](docs/DELIVERY_STATUS_20261007.md). Historical
+mock/development and setup descriptions below retain their original evidence scope;
+they are not a fresh inventory of live account or provider settings.
 
 L0–L2 mock产品与L2.5受限development bridge已合入main；基线PR #5与并发合入的维护PR #6见 [adoption record](docs/PRODUCT_REVIEW_ADOPTION.md)。普通Web消息仍MOCK，没有通用模型回答；L2.5只在明确配置的隔离synthetic路径执行固定runtime slice。production remains disabled，efficacy remains NOT_TESTED。P0/P1整改及Continuum V1共享界面已实现，受限验收见[P1-03证据](docs/P1_03_EVIDENCE.md)。
 

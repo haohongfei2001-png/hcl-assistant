@@ -11,7 +11,7 @@
 
 当前产品阶段：ASSISTANT_FIRST_REFINEMENT_IMPLEMENTING。唯一当前任务：M3-01。
 
-完整普通用户会员购买、订单核验、主动续费与到期路径；CNY共享预算及隔离保持，商户和价格未选定，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
+普通用户会员订单、核验、主动续费与到期基础已合入；真实商户适配、价格条款与完整商业验收未完成，默认关闭。验收：M13、M14、M15、M16、M17、M18、M19
 
 任务认领与writer见control/plan.json；exact-head及exact-main验收是采用条件。
 <!-- CURRENT_PRODUCT_QUEUE_END -->。顶层旧phase/packages/next字段只记L0–L2.5完成与L3门槛，不是第二队列，不据旧STOP跳过已采用产品整改。当前checker/报告/advance消费者已迁移到product_development，同时严格保留旧阶段断言。禁止恢复legacy字段调度。

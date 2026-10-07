@@ -62,5 +62,9 @@ P0/P1完成不开放L3或把Judge升级实现。真实日常MVP、中文多轮�
 ## Full consumer membership continuation
 
 M13–M19 are defined in [the consumer billing contract](CONSUMER_BILLING.md).
-They are pending M3-01 obligations, not claimed implemented or live. Existing
-L3/private-data/runtime and shared-budget gates are unchanged.
+M3-01 remains incomplete. Its provider-neutral foundation was adopted through
+PR43, with later capacity and UI corrections in PR44 and PR54; this is bounded
+source/synthetic evidence, not a selected live adapter or verified commercial
+checkout. Full M13–M19 closure still requires the outstanding adapter, offers and
+consumer-readiness evidence. See the [dated delivery record](DELIVERY_STATUS_20261007.md).
+Existing L3/private-data/runtime and shared-budget gates are unchanged.
