@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {createHash} from 'node:crypto';
+import {writeFileSync} from 'node:fs';
 const expectedScope=user=>'member-'+createHash('sha256').update('https://abcdefghijklmnopqrst.supabase.co/auth/v1\n10000000-0000-4000-8000-00000000000'+(user==='a'?'1':'2')).digest('hex');
 test.skip(!process.env.HCLA_TEST_POSTGRES_DSN,'Disposable Postgres + injected auth only');
 test.beforeEach(async({request})=>{await request.post('/v1/fixture/member-mode')});
@@ -54,7 +55,8 @@ test('ordinary member persistent history survives reload and same-account sign-i
  expect(writes).toEqual([...afterFirst,historyPath+'/events','/v1/member/runs/'+second.run_id+'/execute']);
  expect(paths.filter(path=>path==='/admin'||path==='/v1/development/login'||path==='/v1/conversations'||path==='/v1/topics')).toEqual([]);
  await expect(page.locator('.messages [data-run]')).toHaveCount(2);
- await info.attach('ordinary-member-history-identity',{body:JSON.stringify({scope:'DISPOSABLE_POSTGRES_INJECTED_AUTH_AND_MODEL_ONLY',conversation_id:id,first_run_id:first.run_id,second_run_id:second.run_id,member_mutations:writes,live_provider_calls:0}),contentType:'application/json'});
+ const receiptPath=info.outputPath('ordinary-member-history-identity.json');writeFileSync(receiptPath,JSON.stringify({scope:'DISPOSABLE_POSTGRES_INJECTED_AUTH_AND_MODEL_ONLY',conversation_id:id,first_run_id:first.run_id,second_run_id:second.run_id,member_mutations:writes,live_provider_calls:0}));
+ await info.attach('ordinary-member-history-identity',{path:receiptPath,contentType:'application/json'});
 });
 
 test('registration requires confirmation and exposes no server credential',async({page},info)=>{
