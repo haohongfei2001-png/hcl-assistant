@@ -1,15 +1,15 @@
 import {test,expect} from '@playwright/test';
 
 const development={enabled:true,authenticated:false,cloud:true,request_bound:true,configuration:{configured:true,provider_enabled:false,provider:'qwen'}};
-async function fixture(page,{owner=false,available=false,member=false,rights,model=false}={}){
- const state={owner,available,member,rights,model,posts:[],reads:[],holdStatus:null};
+async function fixture(page,{owner=false,available=false,member=false,rights,model=false,historyUnavailable=false}={}){
+ const state={owner,available,member,rights,model,posts:[],reads:[],holdStatus:null,heldStatusReads:0};
  await page.route('**/v1/**',async route=>{
   const request=route.request(),path=new URL(request.url()).pathname;
   if(request.method()==='POST')state.posts.push(path);else state.reads.push(path);
-  let body=[];
+  let body=[],status=200;
   if(path==='/v1/development/status')body={...development,authenticated:state.owner};
   else if(path==='/v1/account/status'){
-   if(state.holdStatus)await state.holdStatus;
+   if(state.holdStatus){state.heldStatusReads++;await state.holdStatus;}
    body={available:state.available,recovery_available:state.available,authenticated:state.member,account_scope:state.member?'member-route-synthetic':undefined,expires_at:Math.floor(Date.now()/1000)+3600,model_enabled:state.model,entitlements:state.rights};
   }else if(path==='/v1/account/recovery/status')body={available:state.available,ready:false};
   else if(path==='/v1/account/register')body={confirmation_required:true,message:'请检查邮箱完成确认后登录'};
@@ -17,7 +17,8 @@ async function fixture(page,{owner=false,available=false,member=false,rights,mod
   else if(path==='/v1/member/budget')body={currency:'CNY',period:'2026-10',timezone:'Asia/Shanghai',scope:'AUTHENTICATED_SHARED',charged_cost_cny:'0',actor_charged_cost_cny:'0',max_cost_cny:'500',remaining_cny:'500'};
   else if(path==='/v1/member/billing/catalog')body={available:false,plans:[],reason:'会员购买尚未开放；注册不会自动开通会员'};
   else if(path==='/v1/member/billing/orders')body={available:false,orders:[]};
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)}).catch(()=>{});
+  else if(path==='/v1/member/conversations'&&historyUnavailable){status=503;body={error:'Synthetic history service unavailable'};}
+  await route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)}).catch(()=>{});
  });
  return state;
 }
@@ -85,11 +86,18 @@ test('registration confirms email but never signs in, starts a trial or grants p
  await page.screenshot({path:info.outputPath('registration-awaiting-confirmation.png'),fullPage:true,animations:'disabled'});
 });
 
-test('membership expiry blocks sends immediately while preserving the account and draft',async({page},info)=>{
+for(const historyUnavailable of [false,true]){
+test('membership expiry blocks sends immediately while preserving the account and draft'+(historyUnavailable?' alongside a history-load alert':''),async({page},info)=>{
  const initial=Math.floor(Date.now()/1000),expiry=initial+600;
  await page.clock.install({time:initial*1000});
- const state=await fixture(page,{available:true,member:true,model:true,rights:{enabled:true,membership_required:true,temporary:true,persistent:true,expires_at:expiry}});
+ const state=await fixture(page,{available:true,member:true,model:true,historyUnavailable,rights:{enabled:true,membership_required:true,temporary:true,persistent:true,expires_at:expiry}});
  await page.goto('/');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
+ // Settle startup reads before advancing their timeout clock. The second case
+ // deliberately retains the independent history error instead of relying on a race.
+ await expect(page.getByRole('navigation',{name:'对话历史'})).toHaveText(historyUnavailable?'对话列表暂不可用':'还没有对话');
+ const historyAlert=page.getByRole('alert').filter({hasText:'暂时无法加载对话列表，你可以重试；当前草稿会保留'});
+ if(historyUnavailable)await expect(historyAlert).toBeVisible();
+ else await expect(page.getByRole('alert')).toHaveCount(0);
  await page.clock.pauseAt((initial+60)*1000);
  await page.getByLabel('消息',{exact:true}).fill('MEMBERSHIP_EXPIRY_DRAFT');
  await page.getByLabel('本次仅使用原创合成内容，并使用账号可用额度').check();
@@ -101,10 +109,15 @@ test('membership expiry blocks sends immediately while preserving the account an
  let release;state.holdStatus=new Promise(resolve=>release=resolve);
  try{
   await page.clock.fastForward(expiry*1000-(await page.evaluate(()=>Date.now()))+1);
+  await expect.poll(()=>state.heldStatusReads).toBeGreaterThan(0);
   await expect(membership).toContainText('会员未开通、已到期或已停用');
   await page.getByRole('button',{name:'关闭设置'}).click();
   await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();
-  await expect(page.getByRole('alert')).toContainText('已到期');
+  const expiryAlert=page.getByRole('alert').filter({hasText:'会员或测试使用权限已到期，已有记录仍可查看'});
+  await expect(expiryAlert).toHaveCount(1);await expect(expiryAlert).toBeVisible();
+  await expect(expiryAlert).toContainText('已到期');
+  await expect(page.getByRole('alert')).toHaveCount(historyUnavailable?2:1);
+  if(historyUnavailable){await expect(historyAlert).toBeVisible();await expect(historyAlert.getByRole('button',{name:'重新加载对话',exact:true})).toBeEnabled();}
   await page.getByLabel('消息',{exact:true}).press('Enter');
   await expect(page.getByLabel('消息',{exact:true})).toHaveValue('MEMBERSHIP_EXPIRY_DRAFT');
   expect(state.posts).toEqual([]);
@@ -113,6 +126,7 @@ test('membership expiry blocks sends immediately while preserving the account an
  // A stale pre-expiry server snapshot also cannot reopen Send after the date.
  await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();
 });
+}
 
 test('unpaid member reads closed purchase information without any financial action',async({page})=>{
  const state=await fixture(page,{available:true,member:true,rights:{enabled:false,membership_required:true,temporary:false,persistent:false,reason:'会员未开通、已到期或已停用'}});
