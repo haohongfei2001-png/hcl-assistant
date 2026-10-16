@@ -71,3 +71,21 @@ test('account replacement cannot inherit an old selection or resume its pending 
  old.resolve({id:'old-account-created',memory:'TOPIC',title:'Old',topic_id:null});await tick();for(const r of first.requests.filter(r=>!r.body))r.resolve([]);await assert.rejects(creating,/切换/);
  assert.equal(second.props.currentId,null);assert.equal(second.requests.filter(r=>r.body).length,0);
 });
+
+test('expired account notice reaches the composer and clears only after fresh verification',async t=>{
+ const initial=account(),h=harness(t,initial);h.render();await h.history();
+ const notice='登录状态已过期，正在恢复登录；当前内容暂时只读';
+ h.render({...initial,renewing:true,notice});assert.equal(h.props.error,notice);assert.equal(h.props.sendDisabled,true);
+ h.render({...initial,renewing:true,notice:''});assert.equal(h.props.error,'账号状态正在恢复，暂时无法发送');
+ h.render(initial);assert.equal(h.props.error,'');
+});
+test('ordinary account notice cannot hide a permission refusal',async t=>{
+ const h=harness(t,account());h.render();await h.history();
+ h.render({...account('member-synthetic',{model:false,temporary:true,persistent:false}),notice:'普通账号提示'});
+ assert.equal(h.props.error,'模型服务暂未开放，已有记录仍可查看');
+});
+test('an actionable operation error retains priority over a renewing notice',async t=>{
+ const initial=account('member-synthetic',{model:false,temporary:false,persistent:false}),h=harness(t,initial);h.render();await h.history();
+ await assert.rejects(Promise.resolve().then(()=>h.props.onNew()),/可用.*范围/);h.render();const error=h.props.error;
+ h.render({...initial,renewing:true,notice:'登录状态已过期'});assert.equal(h.props.error,error);
+});

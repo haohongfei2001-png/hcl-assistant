@@ -147,7 +147,7 @@ test('auth-return discard bootstrap precedes the UI module in the document',()=>
 test('late authenticated status cannot reopen writes after its session deadline',async t=>{
  const h=harness(t);await enter(h);h.poll();
  h.requests[1].resolve({...authenticated,renewable:false,expires_at:Math.floor(Date.now()/1000)-1});await tick();h.render();
- assert.equal(h.signedIn,true);assert.equal(h.renewing,true);assert.match(h.notice,/只读/);
+ assert.equal(h.signedIn,true);assert.equal(h.renewing,true);assert.equal(h.notice,'登录状态已过期，正在恢复登录；当前内容暂时只读');
  h.poll();h.requests[2].resolve({...authenticated,expires_at:Math.floor(Date.now()/1000)+600});await tick();h.render();
  assert.equal(h.signedIn,true);assert.equal(h.renewing,false);assert.equal(h.notice,'');
 });
@@ -158,7 +158,7 @@ test('late session-renewal response keeps the existing account read-only',async 
  h.requests[1].resolve({...authenticated,renewable:true,expires_at:Math.floor(Date.now()/1000)+10});await tick();h.render();
  assert.equal(h.requests[2].path,'/v1/account/refresh');assert.equal(h.renewing,true);
  h.requests[2].resolve({...authenticated,renewable:true,expires_at:Math.floor(Date.now()/1000)-1});await tick();h.render();
- assert.equal(h.signedIn,true);assert.equal(h.renewing,true);assert.match(h.notice,/只读/);
+ assert.equal(h.signedIn,true);assert.equal(h.renewing,true);assert.equal(h.notice,'登录状态已过期，正在恢复登录；当前内容暂时只读');
  assert.equal(h.requests.length,3);
 });
 
