@@ -29,6 +29,13 @@ export function MemberEntry({children,onOwner,extra,notice,provider}:{children:(
     suspend();try{next=await api<Status>('/v1/account/refresh',{},controller.signal)}catch(error){if(String(error).startsWith('Error: 409:'))return;throw error}
    }
    if(!live.current||epoch!==revision.current)return;
+   // A status/renewal response may arrive after the session it describes expires.
+   // Keep the current view and draft read-only until a fresh session is verified.
+   if(next.authenticated&&typeof next.expires_at==='number'&&next.expires_at*1000<=Date.now()){
+    if(scope.current&&next.account_scope===scope.current){suspend();setError('登录状态已过期，正在恢复登录；当前内容暂时只读')}
+    else{clear();setStatus({available:next.available,authenticated:false});setServiceError(false);setError('登录状态已过期，请重新登录')}
+    return;
+   }
    if(!next.authenticated||next.account_scope!==scope.current)clearTemporary();
    if(next.authenticated)setError('');else setError(value=>value==='暂时连接不上账号服务，请重新检查连接'?'':value);
    configureCloud(true,false,next.authenticated);setRenewing(false);setServiceError(false);scope.current=next.account_scope||'';setStatus(next);

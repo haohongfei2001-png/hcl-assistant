@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 
 const development={enabled:true,authenticated:false,cloud:true,request_bound:true,configuration:{configured:true,provider_enabled:false,provider:'qwen'}};
 async function fixture(page,{owner=false,available=false,member=false,rights,model=false,historyUnavailable=false}={}){
- const state={owner,available,member,rights,model,posts:[],reads:[],holdStatus:null,heldStatusReads:0};
+ const state={owner,available,member,rights,model,posts:[],reads:[],holdStatus:null,heldStatusReads:0,sessionExpiresAt:null};
  await page.route('**/v1/**',async route=>{
   const request=route.request(),path=new URL(request.url()).pathname;
   if(request.method()==='POST')state.posts.push(path);else state.reads.push(path);
@@ -10,7 +10,7 @@ async function fixture(page,{owner=false,available=false,member=false,rights,mod
   if(path==='/v1/development/status')body={...development,authenticated:state.owner};
   else if(path==='/v1/account/status'){
    if(state.holdStatus){state.heldStatusReads++;await state.holdStatus;}
-   body={available:state.available,recovery_available:state.available,authenticated:state.member,account_scope:state.member?'member-route-synthetic':undefined,expires_at:Math.floor(Date.now()/1000)+3600,model_enabled:state.model,entitlements:state.rights};
+   body={available:state.available,recovery_available:state.available,authenticated:state.member,account_scope:state.member?'member-route-synthetic':undefined,expires_at:state.sessionExpiresAt??Math.floor(Date.now()/1000)+3600,model_enabled:state.model,entitlements:state.rights};
   }else if(path==='/v1/account/recovery/status')body={available:state.available,ready:false};
   else if(path==='/v1/account/register')body={confirmation_required:true,message:'请检查邮箱完成确认后登录'};
   else if(path==='/v1/account/login'){state.member=true;body={};}
@@ -140,4 +140,38 @@ test('unpaid member reads closed purchase information without any financial acti
  expect(state.reads).toContain('/v1/member/billing/catalog');expect(state.reads).toContain('/v1/member/billing/orders');
  expect(state.posts).toEqual([]);await expect(page.getByRole('button',{name:/创建订单|打开.*支付|核验.*付款|充值/})).toHaveCount(0);
  await expect(page.getByRole('link',{name:/支付/})).toHaveCount(0);
+});
+
+
+test('late expired session status preserves the draft read-only until fresh verification',async({page})=>{
+ const initial=Math.floor(Date.now()/1000),expiry=initial+600;
+ await page.clock.install({time:initial*1000});
+ const state=await fixture(page,{available:true,member:true,model:true,rights:{enabled:true,temporary:true,persistent:true}});
+ state.sessionExpiresAt=expiry;
+ await page.goto('/');await expect(page.getByLabel('消息',{exact:true})).toBeVisible();
+ await expect(page.getByRole('navigation',{name:'对话历史'})).toHaveText('还没有对话');
+ await page.clock.pauseAt((expiry-5)*1000);
+ await page.getByLabel('消息',{exact:true}).fill('LATE_SESSION_DRAFT');
+ await page.getByLabel('本次仅使用原创合成内容，并使用账号可用额度').check();
+ await expect(page.getByRole('button',{name:'发送',exact:true})).toBeEnabled();
+ let release;state.holdStatus=new Promise(resolve=>release=resolve);
+ try{
+  await page.evaluate(()=>window.dispatchEvent(new Event('hcla-member-status-refresh')));
+  await expect.poll(()=>state.heldStatusReads).toBeGreaterThan(0);
+  await page.clock.fastForward(expiry*1000-(await page.evaluate(()=>Date.now()))+1);
+  await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();
+  release();state.holdStatus=null;
+  // This distinct notice is set only after the expired response is consumed.
+  await expect(page.getByRole('alert').filter({hasText:'登录状态已过期'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'发送',exact:true})).toBeDisabled();
+  await page.getByLabel('消息',{exact:true}).press('Enter');
+  await expect(page.getByLabel('消息',{exact:true})).toHaveValue('LATE_SESSION_DRAFT');
+  expect(state.posts).toEqual([]);
+  state.sessionExpiresAt=expiry+3600;
+  await page.evaluate(()=>window.dispatchEvent(new Event('hcla-member-status-refresh')));
+  await expect(page.getByRole('alert').filter({hasText:'登录状态已过期'})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'发送',exact:true})).toBeEnabled();
+  await expect(page.getByLabel('消息',{exact:true})).toHaveValue('LATE_SESSION_DRAFT');
+  expect(state.posts).toEqual([]);
+ }finally{release();state.holdStatus=null}
 });

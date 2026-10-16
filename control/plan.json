@@ -571,16 +571,16 @@
     "delivery_status_document": "docs/DELIVERY_STATUS_20261007.md"
   },
   "writer": {
-    "branch": "product/ordinary-history-durability",
-    "scope": "ORDINARY_MEMBER_PERSISTENT_HISTORY_BROWSER_ACCEPTANCE_ZERO_PROVIDER",
-    "status": "SOURCE_REVIEWED",
+    "branch": "product/consumer-continuation-20261016",
+    "scope": "ORDINARY_MEMBER_LATE_SESSION_READ_ONLY_RECOVERY_ZERO_PROVIDER",
+    "status": "IMPLEMENTING",
     "previous_completed_writer": {
-      "branch": "product/delivery-status-closeout",
-      "pull_request": 58,
-      "adopted_main_sha": "72b646566cf037027c5bf50d3089fc199a8113ad",
-      "exact_main_ci": "https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/37572130386"
+      "branch": "product/membership-expiry-alert-regression",
+      "pull_request": 60,
+      "adopted_main_sha": "b083ac25e22176a58eb048068b90ceb485800c8c",
+      "exact_main_ci": "https://github.com/haohongfei2001-png/hcl-assistant/actions/runs/37908085626"
     },
-    "adoption_status_source": "Actual GitHub PR merge state and passing CI on that exact merged main; SOURCE_REVIEWED records source review only, not delivery acceptance."
+    "adoption_status_source": "Actual GitHub PR merge state and passing CI on that exact merged main; IMPLEMENTING is not delivery acceptance."
   },
   "delivery": "EXACT_HEAD_AND_MAIN_CI_REQUIRED",
   "runtime_sync": {
