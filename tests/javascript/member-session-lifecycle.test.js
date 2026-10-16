@@ -21,7 +21,7 @@ function harness(t){
  function render(){index=0;tree=module.exports.MemberEntry({onOwner(){},children:(logout,scope,notice,renewing,logoutPending,generation)=>({type:'signed-in',props:{logout,scope,notice,renewing,logoutPending,generation}})});while(scheduled.length)scheduled.shift()();return tree}
  function nodes(node){if(!node||typeof node!=='object')return [];return [node,...[node.props?.children].flat(Infinity).flatMap(nodes)]}
  t.after(()=>{for(const effect of effects)effect?.cleanup?.()});
- return {requests,render,refreshMembership(){window.dispatchEvent(new Event('hcla-member-status-refresh'))},poll(){for(const fn of [...intervals.values()])fn()},broadcast(){channels[0].onmessage({data:{type:'signed-in'}})},get signedIn(){return tree.type==='signed-in'},get notice(){return tree.props.notice},get generation(){return tree.props.generation},get alerts(){return nodes(tree).filter(n=>n.props?.role==='alert').map(n=>n.props.children)},logout(){tree.props.logout()},form(){return nodes(tree).find(n=>n.type==='form')},inputs(){return nodes(tree).filter(n=>n.type==='input')},buttons(){return nodes(tree).filter(n=>n.type==='button')}};
+ return {requests,render,refreshMembership(){window.dispatchEvent(new Event('hcla-member-status-refresh'))},poll(){for(const fn of [...intervals.values()])fn()},broadcast(){channels[0].onmessage({data:{type:'signed-in'}})},get signedIn(){return tree.type==='signed-in'},get notice(){return tree.props.notice},get renewing(){return tree.props.renewing},get generation(){return tree.props.generation},get alerts(){return nodes(tree).filter(n=>n.props?.role==='alert').map(n=>n.props.children)},logout(){tree.props.logout()},form(){return nodes(tree).find(n=>n.type==='form')},inputs(){return nodes(tree).filter(n=>n.type==='input')},buttons(){return nodes(tree).filter(n=>n.type==='button')}};
 }
 async function enter(h){h.render();h.requests[0].resolve(authenticated);await tick();h.render();assert.equal(h.signedIn,true)}
 async function entry(h,{register=false}={}){
@@ -141,4 +141,34 @@ test('auth-return discard bootstrap precedes the UI module in the document',()=>
  const html=readFileSync(new URL('../../apps/web/index.html',import.meta.url),'utf8');
  assert(html.indexOf('src="/recovery-bootstrap.js"')<html.indexOf('type="module"'));
  assert(!html.slice(0,html.indexOf('src="/recovery-bootstrap.js"')).includes('https://'));
+});
+
+
+test('late authenticated status cannot reopen writes after its session deadline',async t=>{
+ const h=harness(t);await enter(h);h.poll();
+ h.requests[1].resolve({...authenticated,renewable:false,expires_at:Math.floor(Date.now()/1000)-1});await tick();h.render();
+ assert.equal(h.signedIn,true);assert.equal(h.renewing,true);assert.equal(h.notice,'登录状态已过期，正在恢复登录；当前内容暂时只读');
+ h.poll();h.requests[2].resolve({...authenticated,expires_at:Math.floor(Date.now()/1000)+600});await tick();h.render();
+ assert.equal(h.signedIn,true);assert.equal(h.renewing,false);assert.equal(h.notice,'');
+});
+
+
+test('late session-renewal response keeps the existing account read-only',async t=>{
+ const h=harness(t);await enter(h);h.poll();
+ h.requests[1].resolve({...authenticated,renewable:true,expires_at:Math.floor(Date.now()/1000)+10});await tick();h.render();
+ assert.equal(h.requests[2].path,'/v1/account/refresh');assert.equal(h.renewing,true);
+ h.requests[2].resolve({...authenticated,renewable:true,expires_at:Math.floor(Date.now()/1000)-1});await tick();h.render();
+ assert.equal(h.signedIn,true);assert.equal(h.renewing,true);assert.equal(h.notice,'登录状态已过期，正在恢复登录；当前内容暂时只读');
+ assert.equal(h.requests.length,3);
+});
+
+
+test('expired status for a different account removes the old account view',async t=>{
+ const h=harness(t);await enter(h);h.poll();
+ h.requests[1].resolve({...authenticated,account_scope:'synthetic-member-b',expires_at:Math.floor(Date.now()/1000)-1});await tick();h.render();
+ assert.equal(h.signedIn,false);assert.deepEqual(h.alerts,['登录状态已过期，请重新登录']);
+});
+test('initial expired authenticated status stays at the signed-out entry',async t=>{
+ const h=harness(t);h.render();h.requests[0].resolve({...authenticated,expires_at:Math.floor(Date.now()/1000)-1});await tick();h.render();
+ assert.equal(h.signedIn,false);assert.deepEqual(h.alerts,['登录状态已过期，请重新登录']);
 });
